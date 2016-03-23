@@ -10,11 +10,11 @@ After displaying the animations, it will load and launch sdmc:/arm9payload.bin, 
 # How to generate a custom animation
 This process ***requires*** **ffmpeg** with the "transpose" video filter.
 
-You can use the command 
->ffmpeg -i "nameofanimation.gif" -s 400x240 -r 20 -pix_fmt bgr24 -vf "transpose=1" output.rgb
+You can use the command:
+>ffmpeg -i "nameofanimation.gif" -s 400x240 -r 10 -pix_fmt bgr24 -vf "transpose=1" output.rgb
 
 Copy the resulting output.rgb to sdmc:/anim, and *voila*!
 
 Please note that if you want to create a bottom screen animation, you have to set 320x240 instead of 400x240 and you should copy it to sdmc:/bottom_anim.
 
-## Yes, the files can be expected to be big. I limited both files' size to 64MB so if the sum of your animations is higher than 64MB, it will skip the animations.
+## Yes, the files are expected to be big, because they're RAW dumps. If the sum of your animations is higher than 50MB, it will skip the animations.
