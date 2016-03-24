@@ -11,11 +11,19 @@ After displaying the animations, it will load and launch sdmc:/arm9payload.bin, 
 This process ***requires*** **ffmpeg** with the "transpose" video filter and an animated image with size 400x240 or 320x240.
 
 You can use the command:
->ffmpeg -i "nameofanimation_withcorrectsize.gif" -r 10 -pix_fmt bgr24 -vf "transpose=1" output.rgb
+>ffmpeg -i "nameofanimation_withcorrectsize.gif" -r *framerate* -pix_fmt bgr24 -vf "transpose=1" output.rgb
 
-Copy the resulting output.rgb to sdmc:/anim, and *voila*!
+>*Framerate is recommended to be between 5 and 15, and both animations must have* ***the same framerate***
 
-Please note that if you want to create a bottom screen animation, you have to use a 320x240 image instead of 400x240 and you should copy it to sdmc:/bottom_anim.
+>*Best results are obtained with framerate 10*
+
+Copy the resulting output.rgb to sdmc:/anim/anim or sdmc:/anim/bottom_anim, edit your configuration file to reflect framerate changes, and *voila*!
+
+Please note that if you want to create a bottom screen animation, you have to use a 320x240 image instead of 400x240.
+
+# How to set framerate
+
+Inside the anim directory there should be a 'config' file. The sole purpose of this file is to indicate the framerate of **
 
 # Credits
 
