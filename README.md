@@ -8,14 +8,14 @@ Generate your custom animation(s) and copy it/them to your SD card root as sdmc:
 After displaying the animations, it will load and launch sdmc:/arm9payload.bin, so make sure to have an ARM9 payload sitting there!
 
 # How to generate a custom animation
-This process ***requires*** **ffmpeg** with the "transpose" video filter.
+This process ***requires*** **ffmpeg** with the "transpose" video filter and an animated image with size 400x240 or 320x240.
 
 You can use the command:
->ffmpeg -i "nameofanimation.gif" -s 400x240 -r 10 -pix_fmt bgr24 -vf "transpose=1" output.rgb
+>ffmpeg -i "nameofanimation_withcorrectsize.gif" -r 10 -pix_fmt bgr24 -vf "transpose=1" output.rgb
 
 Copy the resulting output.rgb to sdmc:/anim, and *voila*!
 
-Please note that if you want to create a bottom screen animation, you have to set 320x240 instead of 400x240 and you should copy it to sdmc:/bottom_anim.
+Please note that if you want to create a bottom screen animation, you have to use a 320x240 image instead of 400x240 and you should copy it to sdmc:/bottom_anim.
 
 # Credits
 
