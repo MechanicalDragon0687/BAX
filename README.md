@@ -17,4 +17,9 @@ Copy the resulting output.rgb to sdmc:/anim, and *voila*!
 
 Please note that if you want to create a bottom screen animation, you have to set 320x240 instead of 400x240 and you should copy it to sdmc:/bottom_anim.
 
+# Credits
+
+b1l1s for his ctr library and fs functions
+AuroraWright for the chainloader
+
 ## Yes, the files are expected to be big, because they're RAW dumps. If the sum of your animations is higher than 50MB, it will skip the animations.
