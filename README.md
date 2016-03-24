@@ -10,12 +10,10 @@ After displaying the animations, it will load and launch sdmc:/arm9payload.bin, 
 # How to generate a custom animation
 This process ***requires*** **ffmpeg** with the "transpose" video filter and an animated image with size 400x240 or 320x240.
 
-You can use the command:
->ffmpeg -i "nameofanimation_withcorrectsize.gif" -r *framerate* -pix_fmt bgr24 -vf "transpose=1" output.rgb
+You can use this command to scale a file, and perform needed operations (as an example):
+>ffmpeg -an -i <FILENAME> -r 30 -pix_fmt bgr24 -vf "scale=400x240,transpose=1" output.rgb
 
->*Framerate is recommended to be between 5 and 15, and both animations must have* ***the same framerate***
-
->*Best results are obtained with framerate 10*
+>*Framerate is recommended to be between 5 and 30, and both animations must have* ***the same framerate***
 
 Copy the resulting output.rgb to sdmc:/anim/anim or sdmc:/anim/bottom_anim, edit your configuration file to reflect framerate changes, and *voila*!
 
@@ -30,4 +28,4 @@ Inside the anim directory there should be a 'config' file. The sole purpose of t
 b1l1s for his ctr library and fs functions
 AuroraWright for the chainloader
 
-## Yes, the files are expected to be big, because they're RAW dumps. If the sum of your animations is higher than 50MB, it will skip the animations.
+## Yes, the files are expected to be big, because they're RAW dumps.
