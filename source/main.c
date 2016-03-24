@@ -25,7 +25,7 @@ void load_and_run() {
 int main(){
 	mountSDMC();
 	if (*(vu8 *)0x10010000 == 0) // check if this is a coldboot
-		drawBootScreen();
+		animationLoop();
 	load_and_run();
 	return 0;
 }

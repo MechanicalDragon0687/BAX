@@ -3,10 +3,23 @@
 #include "fatfs/ff.h"
 #include "types.h"
 
-#define MAX_SIZE	(50*1024*1024)
 #define LOAD_ADDR	0x24000000
 
 #include "fs.h"
+
+u8 rate = 15; // Default, overridden by config
+
+u32	topAnimSize,
+	topFrames,
+	bottomAnimSize,
+	bottomFrames,
+	delay_,
+	delay__;
+
+char *config      = "/anim/config";
+char *top_anim    = "/anim/anim";
+char *bottom_anim = "/anim/anim_bottom"; // define file names
+
 
 struct framebuffer_t { // thsnks to mid-kid for fb offsets
     u8 *top_left;
@@ -26,7 +39,7 @@ void clearScreen() {
 	memset(framebuffers->bottom,   0x00, BOTTOM_FB_SZ);
 }
 
-u32 max(u32 n_1, u32 n_2) {
+u32 max(u32 n_1, u32 n_2) { // Just because I don't like <math.h> :D
 	if (n_1 > n_2) return n_1;
 	else return n_2;
 }
@@ -35,30 +48,35 @@ void delay(u32 n) {
 	u32 i = n; while (i--) __asm("andeq r0, r0, r0"); // ASM NOP(e), supposed to delay animation
 }
 
-void drawBootScreen() {
-	clearScreen(); // clear the screen
+u32 loadFiles() {
+	topAnimSize 	= fileSize(top_anim);       // get top screen animation size
+	bottomAnimSize 	= fileSize(bottom_anim); // get bottom screen animation size
+	u32 configSize 	= fileSize(config);
 
-	char *config      = "/anim/config";
-	char *top_anim    = "/anim/anim";
-	char *bottom_anim = "/anim/anim_bottom"; // define file names
-
-	u8 rate = 15; // Default, overridden by config
-	u32 topAnimSize, topFrames = 0, bottomAnimSize, bottomFrames = 0; // frameRate
-
-	topAnimSize = fileSize(top_anim);       // get top screen animation size
-	bottomAnimSize = fileSize(bottom_anim); // get bottom screen animation size
-	u32 configSize = fileSize(config);
-
-	if (topAnimSize == 0 && bottomAnimSize == 0) return; // No animation, just chain already
+	if (topAnimSize == 0 && bottomAnimSize == 0) return 0; // No animation, just chain already
 
 	// No more 64MB check since we directly read to the framebuffer. It can be unbounded.
-	topFrames    = ((topAnimSize    - 1) / TOP_FB_SZ);    // get top screen frames
-	bottomFrames = ((bottomAnimSize - 1) / BOTTOM_FB_SZ); // get bottom screen frames
+	topFrames    = (topAnimSize		/	TOP_FB_SZ);    // get top screen frames
+	bottomFrames = (bottomAnimSize	/	BOTTOM_FB_SZ); // get bottom screen frames
 
 	// Read the config if it exists, otherwise default to 15fps
 	if (fileExists(config)) {
 		fileRead(&rate, config, configSize);
 	}
+	
+	return 1;
+}
+
+void multiplayDelay(u32 curframe, u32 maxPossibleFrames) {
+	if (curframe <= maxPossibleFrames) // If it's still playing
+		delay(delay__);
+	else delay(delay_);
+}
+
+void animationLoop() {
+	clearScreen(); // Clear to black
+	
+	if (!loadFiles()) return;
 
 	FIL bgr_anim_bot, bgr_anim_top;
 	unsigned int put_bot, put_top;
@@ -74,27 +92,21 @@ void drawBootScreen() {
 		put_bot = 0;
 	}
 
-	u32 frames = max(topFrames, bottomFrames); // get the maximum amount of frames between the two animations
-	u32 delay_ = (6990480 / rate); // need to take more accurate measurements, but this will do, it's quite a magic number
-	u32 delay__ = (delay_ / 2); // FIXME - THIS IS NOT OKAY.
+	u32 maxFrames = max(topFrames, bottomFrames); // Get the maximum amount of frames between the two animations
+	delay_ = (6990480 / rate); // Need to take more accurate measurements, but this will do, it's quite a magic number
+	delay__ = (delay_ / 2); // FIXME - THIS IS NOT OKAY. Hey, it's just a bad approximation, M'kay?
 
-	for (u32 curframe = 0; curframe < frames; curframe++) { // loop until the maximum amount of frames, increasing frame count by 1
+	for (u32 curframe = 0; curframe < maxFrames; curframe++) { // loop until the maximum amount of frames, increasing frame count by 1
 		if (topAnimSize != 0 && curframe < topFrames) { // if top animation exists and hasn't ended yet
-			f_read(&bgr_anim_top, framebuffers->top_left, TOP_FB_SZ,    &put_top); // AKA Read to the framebuffer directly.
+			f_read(&bgr_anim_top, framebuffers->top_left, TOP_FB_SZ, &put_top); // AKA Read to the framebuffer directly.
 
-			if (curframe <= bottomFrames) // check whether the bottom animation is playing
-				delay(delay__); // half the delay
-			else
-				delay(delay_); // whole delay
+			multiplayDelay(curframe, bottomFrames);
 		}
 
 		if (bottomAnimSize != 0 && curframe < bottomFrames) { // if bottom animation exists and hasn't ended yet
-			f_read(&bgr_anim_bot, framebuffers->bottom,   BOTTOM_FB_SZ, &put_bot); // AKA Read to the framebuffer directly.
+			f_read(&bgr_anim_bot, framebuffers->bottom, BOTTOM_FB_SZ, &put_bot); // AKA Read to the framebuffer directly.
 
-			if (curframe <= topFrames) // check whether the top animation is playing
-				delay(delay__); // half the delay
-			else
-				delay(delay_); // whole delay
+			multiplayDelay(curframe, topFrames);
 		}
 		// THIS HAS BEEN PARTIALLY CALIBRATED
 	}
