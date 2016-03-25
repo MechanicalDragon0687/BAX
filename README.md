@@ -11,7 +11,7 @@ After displaying the animations, it will load and launch sdmc:/arm9payload.bin, 
 This process ***requires*** **ffmpeg** with the "transpose" video filter and an animated image with size 400x240 or 320x240.
 
 You can use this command to scale a file, and perform needed operations (as an example):
->ffmpeg -an -i <FILENAME> -r 30 -pix_fmt bgr24 -vf "scale=400x240,transpose=1" output.rgb
+>ffmpeg -an -i "gif filename" -r 30 -pix_fmt bgr24 -vf "scale=400x240,transpose=1" output.rgb
 
 >*Framerate is recommended to be between 5 and 30, and both animations must have* ***the same framerate***
 
