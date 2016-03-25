@@ -2,9 +2,6 @@
 #include "memory.h"
 #include "fatfs/ff.h"
 #include "types.h"
-
-#define LOAD_ADDR	0x24000000
-
 #include "fs.h"
 
 struct framebuffer_t { // thsnks to mid-kid for fb offsets
@@ -62,15 +59,14 @@ void animationLoop() {
 
 	FIL bgr_anim_bot, bgr_anim_top;
 	unsigned int put_bot, put_top;
-	int ret = 0;
 
 	if (topFrames > 0) {
-		ret = f_open(&bgr_anim_top, top_anim, FA_READ);
+		f_open(&bgr_anim_top, top_anim, FA_READ);
 		put_top = 0;
 	}
 
 	if (bottomFrames > 0) {
-		ret = f_open(&bgr_anim_bot, bottom_anim, FA_READ);
+		f_open(&bgr_anim_bot, bottom_anim, FA_READ);
 		put_bot = 0;
 	}
 
