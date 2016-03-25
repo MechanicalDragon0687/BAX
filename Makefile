@@ -5,7 +5,7 @@ AS := arm-none-eabi-as
 LD := arm-none-eabi-ld
 OC := arm-none-eabi-objcopy
 
-name := FakeBrick9
+name := BootAnim9
 
 dir_source := source
 dir_data := data
