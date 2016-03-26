@@ -19,9 +19,21 @@ Copy the resulting output.rgb to sdmc:/anim/anim or sdmc:/anim/bottom_anim, edit
 
 Please note that if you want to create a bottom screen animation, you have to use a 320x240 image instead of 400x240.
 
-# How to set framerate
+# How to set the framerate
 
 Inside the anim directory there should be a 'config' file. The sole purpose of this file is to indicate the framerate of **
+
+# How to change the external payload path (won't provide support for modified payloads whatsoever)
+Run 'make clean' inside both the main folder and the external_loader folder.
+Change whatever you want in the external_loader folder (guess you might want to change the string that says "/arm9payload.bin").
+Run 'make' in the external folder, rename 'external_loader.bin' to 'chain.bin' and run 'xxd -i chain.bin > chain.h'.
+Replace the 'chain.h' in the main source directory with the one you just obtained.
+Run make in the main directory, and copy the resulting 'arm9loaderhax.bin' to your SD card.
+Done!
+
+This'll apply to all versions until I change the way the external payload boots.
+
+In the case that you currently don't have the 'xxd' utility (you should tho) you can use 'bin2c', however some changes will be required.
 
 # Credits
 
