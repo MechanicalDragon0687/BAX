@@ -102,7 +102,5 @@ void animationLoop() {
 		}
 		// THIS HAS BEEN PARTIALLY CALIBRATED
 	}
-
-	f_close(&bgr_anim_bot);
-	f_close(&bgr_anim_top);
+	// No, I did not forget to f_close() the files. This (somehow) caused a bug that has been fixed by removing these calls
 }
