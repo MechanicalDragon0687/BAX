@@ -31,7 +31,7 @@ INCLUDES	:=	include source/fatfs  source/fatfs/sdmmc
 #---------------------------------------------------------------------------------
 ARCH	:=	-mthumb -mthumb-interwork
 
-CFLAGS	:=	-g -Wall -O2\
+CFLAGS	:=	-g -Wall -Os\
 			-march=armv5te -mtune=arm946e-s -fomit-frame-pointer\
 			-ffast-math -Wno-main -std=c99\
 			$(ARCH)
