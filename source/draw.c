@@ -1,3 +1,4 @@
+#include "main.h"
 #include "draw.h"
 #include "memory.h"
 #include "fatfs/ff.h"
@@ -75,6 +76,10 @@ void animationLoop() {
 	u32 delay__ = (delay_ / 2); // FIXME - THIS IS NOT OKAY. Hey, it's just a bad approximation, M'kay?
 
 	for (u32 curframe = 0; curframe < maxFrames; curframe++) { // loop until the maximum amount of frames, increasing frame count by 1
+
+		if (HID_PAD & BUTTON_SELECT) // End the animation if the 'SELECT' key is pressed
+		curframe = maxFrames;
+
 		if (topAnimSize != 0 && curframe < topFrames) { // if top animation exists and hasn't ended yet
 			f_read(&bgr_anim_top, framebuffers->top_left, TOP_FB_SZ, &put_top); // AKA Read to the framebuffer directly.
 
