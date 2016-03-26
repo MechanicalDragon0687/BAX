@@ -19,9 +19,10 @@ Copy the resulting output.rgb to sdmc:/anim/anim or sdmc:/anim/bottom_anim, edit
 
 Please note that if you want to create a bottom screen animation, you have to use a 320x240 image instead of 400x240.
 
-# How to set the framerate
+## How to set the framerate
 
-Inside the anim directory there should be a 'config' file. The sole purpose of this file is to indicate the framerate of **
+Inside the anim directory there should be a 'config' file. The sole purpose of this file is to indicate the framerate of the animations, and you have to indicate it in hex.
+For example, if your framerate is 15, then the only char in 'config' should be 0x0F (or ASCII char 15).
 
 # How to change the external payload path (won't provide support for modified payloads whatsoever)
 Run 'make clean' inside both the main folder and the external_loader folder.
@@ -35,9 +36,10 @@ This'll apply to all versions until I change the way the external payload boots.
 
 In the case that you currently don't have the 'xxd' utility (you should tho) you can use 'bin2c', however some changes will be required.
 
-# Credits
+## Credits
 
-b1l1s for his ctr library and fs functions
-AuroraWright for the chainloader
+b1l1s for his ctr library and fs functions.
+dark-samus and AuroraWright for the chainloader.
+chaoskagami for better code overall and TheBaloneyBoy for ability to skip animations.
 
-## Yes, the files are expected to be big, because they're RAW dumps.
+### Yes, the files are expected to be big, because they're RAW dumps.
