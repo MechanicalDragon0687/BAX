@@ -50,8 +50,10 @@ void animationLoop() {
 	if (topAnimSize == 0 && bottomAnimSize == 0) return; // No animation, just chain already
 
 	// No more 64MB check since we directly read to the framebuffer. It can be unbounded.
-	topFrames    = ((topAnimSize    - 1) / TOP_FB_SZ);    // get top screen frames
-	bottomFrames = ((bottomAnimSize - 1) / BOTTOM_FB_SZ); // get bottom screen frames
+	if (topAnimSize)
+		topFrames    = ((topAnimSize    - 1) / TOP_FB_SZ);    // get top screen frames
+	if (bottomAnimSize)
+		bottomFrames = ((bottomAnimSize - 1) / BOTTOM_FB_SZ); // get bottom screen frames
 
 	// Read the config if it exists, otherwise default to 15fps
 	if (fileExists(config)) {
