@@ -29,6 +29,8 @@ extern "C" {
 #error Wrong configuration file (ffconf.h).
 #endif
 
+
+
 /* Definitions of volume management */
 
 #if _MULTI_PARTITION		/* Multiple partition configuration */

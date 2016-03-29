@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common.h"
+
 #include "sdmmc.h"
 #include "delay.h"
 
@@ -284,7 +286,7 @@ static void InitSD()
 static int Nand_Init()
 {
     inittarget(&handleNAND);
-    ioDelay(0xF000);
+    waitcycles(0xF000);
 
     sdmmc_send_command(&handleNAND,0,0);
 
@@ -335,7 +337,7 @@ static int SD_Init()
 {
     inittarget(&handleSD);
 
-    ioDelay(1u << 18); //Card needs a little bit of time to be detected, it seems
+    waitcycles(1u << 18); //Card needs a little bit of time to be detected, it seems
     
     //If not inserted
     if (!(*((vu16*)0x1000601c) & TMIO_STAT0_SIGSTATE)) return -1;

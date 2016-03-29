@@ -34,11 +34,11 @@ u32 max(u32 n1, u32 n2) { // Just because I don't like <math.h> :D
 void animationLoop() {
 	clearScreen(); // Clear to black
 	
-	u8 rate = 15; // Default, overridden by config
-
 	char *config      = "/anim/config";
 	char *top_anim    = "/anim/anim";
 	char *bottom_anim = "/anim/bottom_anim"; // define file names
+	
+	u8 rate = 15; // Default, overridden by config
 
 	u32	topAnimSize = 0, topFrames = 0,	bottomAnimSize = 0,	bottomFrames = 0;
 	
@@ -55,11 +55,11 @@ void animationLoop() {
 		bottomFrames = ((bottomAnimSize - 1) / BOTTOM_FB_SZ); // get bottom screen frames
 
 	// Read the config if it exists, otherwise default to 15fps
-	if (configSize) {
+	if (configSize)
+	{
 		FIL config_fil;
 		f_open(&config_fil, config, FA_READ);
 		f_read(&config_fil, &rate, configSize, NULL);
-		//f_close(&config_fil);
 	}
 
 	FIL bgr_anim_bot, bgr_anim_top;
