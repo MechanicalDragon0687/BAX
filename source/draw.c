@@ -27,9 +27,8 @@ void delay(u32 n) {
 	u32 i = n; while (i--) __asm("andeq r0, r0, r0"); // ASM NOP(e), supposed to delay animation
 }
 
-u32 max(u32 n_1, u32 n_2) { // Just because I don't like <math.h> :D
-	if (n_1 > n_2) return n_1;
-	else return n_2;
+u32 max(u32 n1, u32 n2) { // Just because I don't like <math.h> :D
+	return n1 >= n2 ? n1 : n2;
 }
 
 void animationLoop() {
@@ -56,8 +55,11 @@ void animationLoop() {
 		bottomFrames = ((bottomAnimSize - 1) / BOTTOM_FB_SZ); // get bottom screen frames
 
 	// Read the config if it exists, otherwise default to 15fps
-	if (fileExists(config)) {
-		fileRead(&rate, config, configSize);
+	if (configSize) {
+		FIL config_fil;
+		f_open(&config_fil, config, FA_READ);
+		f_read(&config_fil, &rate, configSize, NULL);
+		//f_close(&config_fil);
 	}
 
 	FIL bgr_anim_bot, bgr_anim_top;
@@ -80,10 +82,10 @@ void animationLoop() {
 	for (u32 curframe = 0; curframe < maxFrames; curframe++) { // loop until the maximum amount of frames, increasing frame count by 1
 
 		if (HID_PAD & BUTTON_SELECT) // End the animation if the 'SELECT' key is pressed
-		curframe = maxFrames;
+			curframe = maxFrames;
 
 		if (topAnimSize != 0 && curframe < topFrames) { // if top animation exists and hasn't ended yet
-			f_read(&bgr_anim_top, framebuffers->top_left, TOP_FB_SZ, &put_top); // AKA Read to the framebuffer directly.
+			f_read(&bgr_anim_top, framebuffers->top_left, TOP_FB_SZ, &put_top); // AKA write to the framebuffer directly.
 
 			if (curframe <= bottomFrames)
 				delay(delay__);
@@ -92,14 +94,14 @@ void animationLoop() {
 		}
 
 		if (bottomAnimSize != 0 && curframe < bottomFrames) { // if bottom animation exists and hasn't ended yet
-			f_read(&bgr_anim_bot, framebuffers->bottom, BOTTOM_FB_SZ, &put_bot); // AKA Read to the framebuffer directly.
+			f_read(&bgr_anim_bot, framebuffers->bottom, BOTTOM_FB_SZ, &put_bot); // AKA write to the framebuffer directly.
 
 			 if (curframe <= topFrames) // check whether the top animation is playing
   				delay(delay__); // half the delay
   			else
   				delay(delay_); // whole delay
-
 		}
+
 		// THIS HAS BEEN PARTIALLY CALIBRATED
 	}
 	// No, I did not forget to f_close() the files. This (somehow) caused a bug that has been fixed by removing these calls
