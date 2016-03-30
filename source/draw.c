@@ -76,7 +76,13 @@ void animationLoop() {
 	}
 
 	u32 maxFrames = max(topFrames, bottomFrames); // Get the maximum amount of frames between the two animations
-	u32 delay_ = (6990480 / rate); // Need to take more accurate measurements, but this will do, it's quite a magic number
+	
+	u32 delay_ = 0;
+
+	if (rate <= 24) {
+		delay_ = (6990480 / rate); // Need to take more accurate measurements, but this will do, it's quite a magic number
+	}
+
 	u32 delay__ = (delay_ / 2); // FIXME - THIS IS NOT OKAY. Hey, it's just a bad approximation, M'kay?
 
 	for (u32 curframe = 0; curframe < maxFrames; curframe++) { // loop until the maximum amount of frames, increasing frame count by 1
