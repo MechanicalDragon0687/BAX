@@ -4,3 +4,6 @@
 _start:
 
     bl main
+
+.die:
+    b .die
