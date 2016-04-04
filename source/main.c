@@ -4,18 +4,18 @@
 #include "draw.h"
 #include "memory.h"
 #include "fs.h"
-#include "chain.h"
+#include "loader.h"
 
 void load_and_run() {
-	memcpy((void*)PAYLOAD_ADDR, chain_bin, chain_bin_len);
+	memcpy((void*)PAYLOAD_ADDR, loader_bin, loader_bin_len);
 	((void(*)(void))PAYLOAD_ADDR)();
 }
 
-int main(){
+void main(){
 	mountSDMC();
     u16 pressed = HID_PAD;
-	if ((*(vu8 *)0x10010000 == 0) & !(pressed & BUTTON_R1)) // check if this is a coldboot and if key is pressed
+	if ((*(vu8 *)0x10010000 == 0) & !(pressed & BUTTON_R1)) // check if this is a coldboot or whether the R trigger is pressed
 		animationLoop();
 	load_and_run();
-	return 0;
+	return;
 }

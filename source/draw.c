@@ -5,17 +5,22 @@
 #include "types.h"
 #include "fs.h"
 
-struct framebuffer_t { // thsnks to mid-kid for fb offsets
+#define max(a,b) ({a > b ? a :  b; })
+
+#define delay(n) ({u32 i = n; while (i--) __asm("mov r0, #0"); /* ASM NOP(e), supposed to delay animation*/ })
+
+struct framebuffer_t { // Thanks to mid-kid for fb offsets
     u8 *top_left;
     u8 *top_right;
     u8 *bottom;
 };
+
 struct framebuffer_t* framebuffers = (struct framebuffer_t *) 0x23FFFE00;
 
 u32 fb_sz(u8* fb) {
-	if (fb == framebuffers->top_left || fb == framebuffers->top_right)
-		return TOP_FB_SZ;
-	else return BOTTOM_FB_SZ;
+	if (fb == framebuffers->bottom)
+		return BOTTOM_FB_SZ;
+	else return TOP_FB_SZ;
 }
 
 void clearScreen() {
@@ -23,21 +28,13 @@ void clearScreen() {
 	memset(framebuffers->bottom,   0x00, BOTTOM_FB_SZ);
 }
 
-void delay(u32 n) {
-	u32 i = n; while (i--) __asm("andeq r0, r0, r0"); // ASM NOP(e), supposed to delay animation
-}
-
-u32 max(u32 n1, u32 n2) { // Just because I don't like <math.h> :D
-	return n1 >= n2 ? n1 : n2;
-}
-
 void animationLoop() {
 	clearScreen(); // Clear to black
-	
+
 	char *config      = "/anim/config";
 	char *top_anim    = "/anim/anim";
 	char *bottom_anim = "/anim/bottom_anim"; // define file names
-	
+
 	u8 rate = 15; // Default, overridden by config
 
 	u32	topAnimSize = 0, topFrames = 0,	bottomAnimSize = 0,	bottomFrames = 0;
@@ -55,11 +52,11 @@ void animationLoop() {
 		bottomFrames = ((bottomAnimSize - 1) / BOTTOM_FB_SZ); // get bottom screen frames
 
 	// Read the config if it exists, otherwise default to 15fps
-	if (configSize)
-	{
+	if (configSize)	{
+		unsigned int br = 0; // Bytes read, not really useful FWIW
 		FIL config_fil;
 		f_open(&config_fil, config, FA_READ);
-		f_read(&config_fil, &rate, configSize, NULL);
+		f_read(&config_fil, &rate, 1, &br);
 	}
 
 	FIL bgr_anim_bot, bgr_anim_top;
@@ -76,12 +73,11 @@ void animationLoop() {
 	}
 
 	u32 maxFrames = max(topFrames, bottomFrames); // Get the maximum amount of frames between the two animations
-	
+
 	u32 delay_ = 0;
 
-	if (rate <= 24) {
+	if (rate <= 24)
 		delay_ = (6990480 / rate); // Need to take more accurate measurements, but this will do, it's quite a magic number
-	}
 
 	u32 delay__ = (delay_ / 2); // FIXME - THIS IS NOT OKAY. Hey, it's just a bad approximation, M'kay?
 
@@ -107,7 +103,6 @@ void animationLoop() {
   			else
   				delay(delay_); // whole delay
 		}
-
 		// THIS HAS BEEN PARTIALLY CALIBRATED
 	}
 	// No, I did not forget to f_close() the files. This (somehow) caused a bug that has been fixed by removing these calls
