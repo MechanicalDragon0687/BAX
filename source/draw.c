@@ -42,6 +42,14 @@ void loadAnimation(u32 maxAnimations) {
 	top_fname[6]    = rand_animation + '0'; // tfw no sprintf
 	bottom_fname[6] = rand_animation + '0'; // And strcat just craps itself
 
+	// I know the maximum theoterical limit of animations is 36
+	// Due to the fact that I could do something like
+	/* if (rand_animation > '0')
+		rand_animation += 'a' - '0';*/
+	// And I'll obtain animation directories ranging from '0' through '9'
+	// And then the whole alphabet, from 'a' to 'z'
+	// I won't though, 10 animations plenty, I mean who reboots their 3DS over 10 times a day?
+
 	configSize		= fileSize(config_fname); // Get config file size (mostly to check whether it exists, because rn it only reads 1 byte)
 	topAnimSize 	= fileSize(top_fname);    // Get top screen animation size
 	bottomAnimSize 	= fileSize(bottom_fname); // Get bottom screen animation size
@@ -86,9 +94,9 @@ void animationLoop(char *top_anim, char *bottom_anim, u32 topFrames, u32 bottomF
 
 	u32 maxFrames = max(topFrames, bottomFrames); // Get the maximum amount of frames between the two animations
 
-	u32 delay_ = 0; // Set delay to 0, for those using high fps animations
+	u32 delay_ = 0; // Set delay to 0, for those using high framerate animations
 
-	if (frameRate <= 24) // If animation is (relatively) low fps...
+	if (frameRate <= 24 && frameRate > 0) // If animation is (relatively) low fps...
 		delay_ = (6990480 / frameRate); // Need to take more accurate measurements, but this will do, it's quite a magic number
 
 	u32 delay__ = (delay_ / 2); // FIXME - THIS IS NOT OKAY. Hey, it's just a bad approximation, M'kay?
