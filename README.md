@@ -1,6 +1,10 @@
 # BootAnim9
 Custom boot animations for A9LH
 
+
+# THIS IS OUTDATED. I'LL UPDATE AS SOON AS POSSIBLE, FOR NOW JUST GO TO http://gbatemp.net/threads/release-a9lh-bootanim9-custom-boot-animations.420202/ FOR THE LATEST INSTRUCTIONS
+
+
 # How to install
 Compile with 'make' and copy the resulting arm9loaderhax.bin to your SD card root directory.
 Generate your custom animation(s) and copy it/them to your SD card root as sdmc:/anim and sdmc:/bottom_anim
