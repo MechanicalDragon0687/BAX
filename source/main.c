@@ -6,12 +6,12 @@
 #include "fatfs/ff.h"
 #include "fs.h"
 
-#include "chain.h"
+#include "loader.h"
 
 static FATFS fs;
 
 void chainload() { // Load and execute the chainloader
-	memcpy((void*)PAYLOAD_ADDR, chain_bin, chain_bin_len);
+	memcpy((void*)PAYLOAD_ADDR, loader_bin, loader_bin_len);
 	((void(*)(void))PAYLOAD_ADDR)();
 }
 
