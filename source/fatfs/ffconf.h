@@ -23,7 +23,7 @@
 /  and optional writing functions as well. */
 
 
-#define _FS_MINIMIZE	0
+#define _FS_MINIMIZE	3
 /* This option defines minimization level to remove some basic API functions.
 /
 /   0: All basic functions are enabled.
@@ -196,9 +196,9 @@
 /---------------------------------------------------------------------------*/
 
 #define _FS_NORTC	1
-#define _NORTC_MON	2
-#define _NORTC_MDAY	1
-#define _NORTC_YEAR	2015
+#define _NORTC_MON	8
+#define _NORTC_MDAY	19
+#define _NORTC_YEAR	2016
 /* The _FS_NORTC option switches timestamp feature. If the system does not have
 /  an RTC function or valid timestamp is not needed, set _FS_NORTC to 1 to disable
 /  the timestamp feature. All objects modified by FatFs will have a fixed timestamp

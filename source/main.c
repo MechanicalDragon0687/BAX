@@ -15,7 +15,7 @@ void chainload() { // Load and execute the chainloader
 	((void(*)(void))PAYLOAD_ADDR)();
 }
 
-u32 checkFiles() {
+u32 check_files() {
 	char   *top    = "/anim/0/anim",
 	       *bottom = "/anim/0/bottom_anim";
 
@@ -25,7 +25,7 @@ u32 checkFiles() {
 		top[6]    = i + '0';
 		bottom[6] = i + '0';
 
-		if (fileExists(top) + fileExists(bottom) > 0) // If at least one of them exists, then add 1
+		if (file_exists(top) + file_exists(bottom)) // If at least one of them exists
 			anims_amount++;
 
 		else break; // Otherwise, break the loop
@@ -39,13 +39,13 @@ void main() {
 	if (f_mount(&fs, "0:", 1) != FR_OK) // Mount the SD card
 		chainload(); // Try to chainload if mounting fails, shouldn't work but you never know ;)
 
-	u32 anims = checkFiles();
+	u32 anims = check_files();
 
 	if (!anims) // If anims == 0, then there are no animations
 		chainload(); // Just chainload, skip the animation entirely
 
 	if (!(*(vu8 *)0x10010000) & !(HID_PAD & BUTTON_R1)) // Check if this is a coldboot and if R trigger is pressed
-		loadAnimation(anims); // Load animations, with (anims) amount of animations
+		load_animation(anims); // Load animations, with (anims) amount of animations
 
 	chainload(); // When it finishes, chainload
 

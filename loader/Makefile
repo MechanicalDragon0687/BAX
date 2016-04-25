@@ -31,7 +31,7 @@ INCLUDES	:=	include source/fatfs  source/fatfs/sdmmc
 #---------------------------------------------------------------------------------
 ARCH	:=	-mthumb -mthumb-interwork
 
-CFLAGS	:=	-g -Wall -Os\
+CFLAGS	:=	-flto -Wall -Os\
 			-march=armv5te -mtune=arm946e-s -fomit-frame-pointer\
 			-ffast-math -Wno-main -std=c99\
 			$(ARCH)
@@ -105,8 +105,7 @@ $(BUILD):
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(OUTPUT).elf
- 
+	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).bin
  
 #---------------------------------------------------------------------------------
 else

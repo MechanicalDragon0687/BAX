@@ -1,6 +1,7 @@
 # BootAnim9
 Custom boot animations for A9LH
 
+###### Personal code is licensed under the Apache v2.0 license, everything under "/source/fatfs" is licensed under FatFS' license or GPLv2
 
 # THIS IS OUTDATED. I'LL UPDATE AS SOON AS POSSIBLE, FOR NOW JUST GO TO http://gbatemp.net/threads/release-a9lh-bootanim9-custom-boot-animations.420202/ FOR THE LATEST INSTRUCTIONS
 

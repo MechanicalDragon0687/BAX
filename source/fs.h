@@ -2,5 +2,5 @@
 
 #include "types.h"
 
-u32 fileSize(const char *path); // Returns file size
-u32 fileExists(char *path); // Returns 1 if so, 0 otherwise
+u32 file_size(const char *path);
+u32 file_exists(const char *path);
