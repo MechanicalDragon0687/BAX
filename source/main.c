@@ -1,10 +1,4 @@
-#include "main.h"
-
-#include "types.h"
-#include "draw.h"
-#include "memory.h"
-#include "fatfs/ff.h"
-#include "fs.h"
+#include "common.h"
 
 #include "loader.h"
 
@@ -28,24 +22,23 @@ u32 check_files() {
 		if (file_exists(top) + file_exists(bottom)) // If at least one of them exists
 			anims_amount++;
 
-		else break; // Otherwise, break the loop
+		else
+			break; // Otherwise, break the loop
 	}
-
 	return anims_amount;
 }
 
 void main() {
+    if (f_mount(&fs, "0:", 1) != FR_OK) // Mount the SD card
+        chainload(); // Try to chainload if mounting fails, shouldn't work but you never know ;)
 
-	if (f_mount(&fs, "0:", 1) != FR_OK) // Mount the SD card
-		chainload(); // Try to chainload if mounting fails, shouldn't work but you never know ;)
-
-	u32 anims = check_files();
+    u32 anims = check_files();
 
 	if (!anims) // If anims == 0, then there are no animations
-		chainload(); // Just chainload, skip the animation entirely
+        chainload(); // Just chainload, skip the animation entirely
 
-	if (!(*(vu8 *)0x10010000) & !(HID_PAD & BUTTON_R1)) // Check if this is a coldboot and if R trigger is pressed
-		load_animation(anims); // Load animations, with (anims) amount of animations
+	if (!(CFG_BOOTENV) & !(HID_PAD & KEY_LT)) // Check if this is a coldboot or R trigger is pressed
+        load_animation(anims); // Load animations, with (anims) amount of animations
 
 	chainload(); // When it finishes, chainload
 

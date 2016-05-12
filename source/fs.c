@@ -1,7 +1,6 @@
-#include "fs.h"
-#include "fatfs/ff.h"
+#include "common.h"
 
-u32 file_exists(const char *path) {
+bool file_exists(const char *path) {
 	FIL file;
 
 	if (f_open(&file, path, FA_READ) == FR_OK) {		// Check if file can be opened
@@ -12,9 +11,9 @@ u32 file_exists(const char *path) {
 	else return 0;
 }
 
-u32 file_size(const char *path){
+size_t file_size(const char *path){
     FIL fp;
-    u32 size = 0;
+    size_t size = 0;
 
     if(f_open(&fp, path, FA_READ) == FR_OK) {
         size = f_size(&fp);

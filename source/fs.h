@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types.h"
+#include "common.h"
 
-u32 file_size(const char *path);
-u32 file_exists(const char *path);
+size_t file_size(const char *path);
+bool file_exists(const char *path);

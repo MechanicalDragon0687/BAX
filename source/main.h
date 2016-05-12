@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types.h"
+#include "common.h"
 
 #define	PAYLOAD_ADDR    0x24F00000
 
