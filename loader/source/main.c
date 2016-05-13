@@ -86,7 +86,7 @@ void main() {
 	{
 		f_read(&payload_file, (void*)PAYLOAD_ADDRESS, f_size(&payload_file), &br);
 
-		if (f_open(&luma, luma_flag_name, FA_READ) != FR_OK && br < 0x20000)
+		if (f_open(&luma, luma_flag_name, FA_READ) == FR_OK && br < 0x20000)
 		{
 			f_close(&luma);
 			patch_luma((void*)PAYLOAD_ADDRESS, br);  // Only useful for Luma3DS, hopefully no other payload requires such a hack
