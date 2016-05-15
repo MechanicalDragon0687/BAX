@@ -14,7 +14,7 @@ struct framebuffer_t { // Thanks to mid-kid for the framebuffer structure
 struct framebuffer_t* framebuffers = (struct framebuffer_t *) 0x23FFFE00;
 
 void white_screen() { // Display a white screen    
-	memset(framebuffers->top_left, 0xFF, 288000);
+	memset(framebuffers->top_left, 0xFF, 0x46500);
 	while (1);
 }
 
@@ -47,7 +47,7 @@ static unsigned char *memsearch(unsigned char *startPos, const void *pattern, in
 void patch_luma(void *start, size_t len)
 {
 	char orig[] = {'s', 0, 'd', 0, 'm', 0, 'c', 0, ':', 0, '/', 0};
-	char buf[2 * (sizeof(luma_payload) - 1)] = {0};
+	char buf[74] = {0}; // [DOH's in german]
 
 	unsigned char *found = memsearch(start, orig, len, sizeof(orig));
 
@@ -62,7 +62,6 @@ void patch_luma(void *start, size_t len)
 	}
 
 	memcpy(found + 12, buf, sizeof(buf));
-	memset(found + 12 + sizeof(buf), 0, 74 - sizeof(buf)); // Zero out the rest of the payload name
 
 	return;
 }
@@ -88,7 +87,9 @@ void main() {
 	{
 		f_read(&payload_file, (void*)dest_addr, f_size(&payload_file), &br);
 		f_close(&payload_file);
-		if (br < 0x20000) // Pathchanger does it, so should I
+
+		if (br <= 0x20000) // 200kb is the max Luma3DS payload size defined in reboot.s
+		// Until it's updated with a larger filesize, this will do
 		{
 			patch_luma((void*)dest_addr, br);
 		}

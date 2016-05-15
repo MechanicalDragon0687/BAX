@@ -34,7 +34,7 @@ _start:
 @    mcr p15, 0, r11, c2, c0, 0	@ Data cacheable 0, 2, 5
 @    mcr p15, 0, r12, c2, c0, 1	@ Inst cacheable 0, 2, 5
 
-@ Need to learn about the Advanced RISC Machine, the code above makes everything go slower
+@    Need to learn about the Advanced RISC Machine, the code above makes everything go slower
 
     @ Enable caches
     mrc p15, 0, r4, c1, c0, 0  @ read control register
