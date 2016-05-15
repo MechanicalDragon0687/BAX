@@ -3,9 +3,10 @@
 #define max(a, b) (((a)>(b)) ? (a) : (b))
 
 #define fb_sz(fb) \
-	(fb == framebuffers->bottom ? BOTTOM_FB_SZ : TOP_FB_SZ)
+	(fb == framebuffers->bottom ? SUB_FB_SZ : TOP_FB_SZ)
 
-u8 rate = 0x0F; // Default, overridden by config (15 in decimal, for those of you who can't HEX)
+u8 cfg[2] = {30, 0};
+// cfg[0] is framerate, cfg[1] is the compression flag
 
 size_t top_anim_size, bottom_anim_size, config_size;
 
@@ -34,7 +35,7 @@ u32 get_read_delay()
 {
     FIL test_file;
 	FRESULT f_ret;
-    size_t br = 0, read_delay = 0;
+    size_t br, read_delay;
 	const char *test_fname = "/anim/calibrator";
 
 	REG_TM0CNT = 0b10000111;
@@ -44,10 +45,10 @@ u32 get_read_delay()
 		return 0;
 
 	f_ret = f_read(&test_file, framebuffers->top_left, TOP_FB_SZ, &br);
-	f_ret = f_read(&test_file, framebuffers->bottom, BOTTOM_FB_SZ, &br);
+	f_ret = f_read(&test_file, framebuffers->bottom, SUB_FB_SZ, &br);
 	f_close(&test_file);
 	
-	read_delay = REG_TM0VAL; // Get the timer's value
+	read_delay = REG_TM0VAL; // Get the timers value
 	REG_TM0CNT = 0b00000111; // Stop the timer
     REG_TM0VAL = 0; // Reset the timer to 0
 
@@ -63,24 +64,30 @@ void load_animation(u32 max)
     char *top_fname     = "/anim/0/anim";
     char *bottom_fname  = "/anim/0/bottom_anim";
 
-    config_fname[6] 	= rand_animation + '0'; // Yes, I'm directly modifying the '0' in the string
-    top_fname[6]   		= rand_animation + '0'; // tfw no sprintf
-    bottom_fname[6] 	= rand_animation + '0'; // And strcat just craps itself
+    config_fname[6]     = rand_animation + '0'; // Yes, I'm directly modifying the '0' in the string
+    top_fname[6]   	    = rand_animation + '0'; 
+    bottom_fname[6]     = rand_animation + '0';
 
-    config_size			= file_exists(config_fname); // Get config file size (mostly to check whether it exists, because rn it only reads 1 byte)
-    top_anim_size 		= file_size(top_fname);      // Get top screen animation size
-    bottom_anim_size 	= file_size(bottom_fname);   // Get bottom screen animation size
+    top_anim_size       = file_size(top_fname);      // Get top screen animation size
+    bottom_anim_size    = file_size(bottom_fname);   // Get bottom screen animation size
 
-    if (config_size)
-	{
-        FIL config_fil;
-        unsigned int br;
-        f_open(&config_fil, config_fname, FA_READ);
-        f_read(&config_fil, &rate, 1, &br);
+	FIL config_fil;
+	unsigned int br;
+    if (f_open(&config_fil, config_fname, FA_READ) == FR_OK)
+    {
+        f_read(&config_fil, &cfg, 2, &br);
         f_close(&config_fil);
     }
 
-    animation_loop(top_fname, bottom_fname, top_anim_size / TOP_FB_SZ, bottom_anim_size / BOTTOM_FB_SZ, rate); // Main animation loop, with filenames and amount of frames and stuff
+    if (br < 2) // Read less than 2 bytes
+        animation_loop(top_fname, bottom_fname, top_anim_size / TOP_FB_SZ, bottom_anim_size / SUB_FB_SZ, cfg[0]); // Main animation loop, with filenames and amount of frames and stuff
+
+    else if (cfg[1] == 1) // If 2 bytes were read and the second byte was a 1
+        compressed_animation_loop(top_fname, bottom_fname, cfg[0]);
+
+    clear_screen(framebuffers->top_left, 0x00);
+    clear_screen(framebuffers->bottom, 0x00);
+
     return;
 }
 
@@ -99,18 +106,130 @@ inline void delay(u32 n)
 {
 	REG_TM0CNT = 0b10000111;
 	REG_TM0VAL = 0;
-    while(REG_TM0VAL < n)
-        ;
+    while(REG_TM0VAL < n);
 
     REG_TM0VAL = 0;
 	REG_TM0CNT = 0b00000111;
 }
 
-void animation_loop(char *top_anim, char *bottom_anim, u32 top_frames, u32 bottom_frames, u8 frame_rate)
+void compressed_animation_loop(char *top_anim, char *bottom_anim, u8 frame_rate)
 {
+    char top_frame_prev[TOP_FB_SZ], top_frame_curr[TOP_FB_SZ], top_frame_comp[TOP_FB_SZ + 600],
+         sub_frame_prev[SUB_FB_SZ], sub_frame_curr[SUB_FB_SZ], sub_frame_comp[SUB_FB_SZ + 600];
+
+    memset(top_frame_prev, 0, TOP_FB_SZ); // Clear all buffers
+    memset(top_frame_curr, 0, TOP_FB_SZ);
+    memset(top_frame_comp, 0, TOP_FB_SZ + 600);
+    memset(sub_frame_prev, 0, SUB_FB_SZ);
+    memset(sub_frame_curr, 0, SUB_FB_SZ);
+    memset(sub_frame_comp, 0, SUB_FB_SZ + 600);
+
     clear_screen(framebuffers->top_left, 0x00);
     clear_screen(framebuffers->bottom, 0x00);
 
+    FIL bgr_anim_bot, bgr_anim_top;
+    unsigned int put_bot = 0, put_top = 0;
+    char top_anim_flag = 0, sub_anim_flag = 0;
+	
+	if (f_open(&bgr_anim_top, top_anim, FA_READ) == FR_OK) // If top animation exists
+    {
+		top_anim_flag = 1;
+	}
+
+    if (f_open(&bgr_anim_bot, bottom_anim, FA_READ) == FR_OK) // If bottom animation exists
+    {
+		sub_anim_flag = 1;
+	}
+
+    u32 delay_ = 65456 / frame_rate;
+    size_t read_delay = get_read_delay();
+
+    if (read_delay >= delay_) // Underflows are not nice...
+        delay_ = 0;
+
+    else
+        delay_ -= read_delay;
+
+    u32 delay__ = (delay_ >> 1);
+
+    qlz_state_decompress *state_decompress = (qlz_state_decompress*)0x24F00000; // This region should be clear
+    memset(state_decompress, 0, sizeof(qlz_state_compress));
+
+    size_t comp_size = 0;
+
+	while(1)
+	{
+        if (HID_PAD & (KEY_SELECT | KEY_START)) // End the animation if the 'SELECT' or 'START' key is being pressed
+			break;
+
+		if (top_anim_flag)
+		{
+			if (f_read(&bgr_anim_top, (void*)top_frame_comp, 9, &put_top) != FR_OK)
+				break;
+
+			comp_size = qlz_size_compressed(top_frame_comp);
+
+			f_read(&bgr_anim_top, (void*)top_frame_comp + 9, comp_size - 9, &put_top);
+
+			if (qlz_size_decompressed(top_frame_comp) != TOP_FB_SZ || put_top != (comp_size - 9))
+				break;
+
+			// Decompress the frame
+            qlz_decompress(top_frame_comp, top_frame_curr, (qlz_state_decompress*)0x24F00000);
+
+            // Delta decoding
+            for (u32 i = 0; i < TOP_FB_SZ; i++)
+                top_frame_curr[i] += top_frame_prev[i];
+
+			// Keep the current frame in memory
+			memcpy(top_frame_prev, top_frame_curr, TOP_FB_SZ);
+
+			// Copy to framebuffer
+			memcpy(framebuffers->top_left, top_frame_curr, TOP_FB_SZ);
+		}
+
+		if (sub_anim_flag)
+		{
+			if (f_read(&bgr_anim_bot, (void*)sub_frame_comp, 9, &put_bot) != FR_OK)
+				break;
+
+			comp_size = qlz_size_compressed(sub_frame_comp);
+
+			f_read(&bgr_anim_bot, (void*)sub_frame_comp + 9, comp_size - 9, &put_bot);
+
+			if (qlz_size_decompressed(sub_frame_comp) != SUB_FB_SZ || put_bot != (comp_size - 9))
+				break;
+
+			qlz_decompress(sub_frame_comp, sub_frame_curr, (qlz_state_decompress*)0x24F00000);
+
+			for (u32 i = 0; i < SUB_FB_SZ; i++)
+				sub_frame_curr[i] += sub_frame_prev[i];
+
+			// Keep the current frame in memory
+			memcpy(sub_frame_prev, sub_frame_curr, SUB_FB_SZ);
+
+			// Copy to framebuffer
+			memcpy(framebuffers->bottom, sub_frame_curr, SUB_FB_SZ);
+		}
+
+		if (top_anim_flag && sub_anim_flag)
+			delay(delay__);
+
+		else
+			delay(delay_);
+    }
+
+    if (top_anim_flag) // If top animation was opened, close it
+        f_close(&bgr_anim_top);
+
+    if (sub_anim_flag) // If bottom animation was opened, close it
+        f_close(&bgr_anim_bot);
+
+    return;
+}
+
+void animation_loop(char *top_anim, char *bottom_anim, u32 top_frames, u32 bottom_frames, u8 frame_rate)
+{
     FIL bgr_anim_bot, bgr_anim_top;
     unsigned int put_bot = 0, put_top = 0;
 
@@ -150,7 +269,7 @@ void animation_loop(char *top_anim, char *bottom_anim, u32 top_frames, u32 botto
 
         if (curframe < bottom_frames) // If bottom animation hasn't ended yet
         {
-            f_read(&bgr_anim_bot, framebuffers->bottom, BOTTOM_FB_SZ, &put_bot); // Write to the framebuffer directly
+            f_read(&bgr_anim_bot, framebuffers->bottom, SUB_FB_SZ, &put_bot); // Write to the framebuffer directly
 
             if (curframe <= top_frames) // check whether the top animation is playing
                 delay(delay__); // Half the delay
@@ -166,8 +285,5 @@ void animation_loop(char *top_anim, char *bottom_anim, u32 top_frames, u32 botto
     if (bottom_frames) // If bottom animation was opened, close it
         f_close(&bgr_anim_bot);
 
-    clear_screen(framebuffers->top_left, 0x000000);
-    clear_screen(framebuffers->bottom, 0x000000);
-
-    return;
+	return;
 }

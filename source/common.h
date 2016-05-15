@@ -39,3 +39,4 @@ typedef volatile u64         vu64;
 #include "draw.h"
 #include "fatfs/ff.h"
 #include "fs.h"
+#include "quicklz.h"
