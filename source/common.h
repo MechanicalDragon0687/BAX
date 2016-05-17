@@ -32,7 +32,8 @@ typedef volatile u64         vu64;
 #define REG_PRNG        (*(vu32*)0x10011000) // REG_PRNG
 #define REG_TM0VAL      (*(vu16*)0x10003000) // TIMER0_VAL
 #define REG_TM0CNT      (*(vu16*)0x10003002) // TIMER0_CNT
-#define HID_PAD         (*(vu32*)0x10146000 ^ 0xFFF) // HID_PAD
+#define HID_PAD         (*(vu16*)0x10146000 ^ 0xFFF) // HID_PAD
+#define PDN_GPU_CNT     (*(vu32*)0x10141200)
 
 #include "draw.h"
 #include "fatfs/ff.h"

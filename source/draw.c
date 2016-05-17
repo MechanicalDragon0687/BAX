@@ -1,21 +1,12 @@
 #include "common.h"
 
-#define max(a, b) (((a)>(b)) ? (a) : (b))
-
 #define fb_sz(fb) \
-    (fb == framebuffers->bottom ? SUB_FB_SZ : TOP_FB_SZ)
+    (fb == framebuffer->bottom ? SUB_FB_SZ : TOP_FB_SZ)
 
 char cfg[2] = {0};
 // cfg[0] is framerate, cfg[1] is the compression flag
 
-struct framebuffer_t
-{ // Thanks to mid-kid & CakesFW for fb offsets
-    u8 *top_left;
-    u8 *top_right;
-    u8 *bottom;
-};
-
-struct framebuffer_t* framebuffers = (struct framebuffer_t *) 0x23FFFE00;
+framebuffer_t *framebuffer = (framebuffer_t *)0x23FFFE00;
 
 void clear_screen(u8* fb, u32 rgb)
 {
@@ -43,8 +34,8 @@ u32 get_read_delay()
     if (f_ret != FR_OK)
         return 0;
 
-    f_ret = f_read(&test_file, framebuffers->top_left, TOP_FB_SZ, &br);
-    f_ret = f_read(&test_file, framebuffers->bottom, SUB_FB_SZ, &br);
+    f_ret = f_read(&test_file, framebuffer->top_left, TOP_FB_SZ, &br);
+    f_ret = f_read(&test_file, framebuffer->bottom, SUB_FB_SZ, &br);
     f_close(&test_file);
 
     read_delay = REG_TM0VAL; // Get the timers value
@@ -63,7 +54,7 @@ void load_animation(u32 max)
     char *top_fname     = "/anim/0/anim";
     char *bottom_fname  = "/anim/0/bottom_anim";
 
-    config_fname[6]     = rngesus + '0'; // Yes, I'm directly modifying the '0' in the string
+    config_fname[6]     = rngesus + '0';
     top_fname[6]   	    = rngesus + '0';
     bottom_fname[6]     = rngesus + '0';
 
@@ -76,12 +67,12 @@ void load_animation(u32 max)
     }
 
     if (cfg[0] < 1)
-        cfg[0] = 30; // Let's avoid division by zero/negatives, shall we?
+        cfg[0] = 15; // Let's avoid division by zero/negatives, shall we?
 
     animation_loop(top_fname, bottom_fname, cfg[0], cfg[1]);
 
-    clear_screen(framebuffers->top_left, 0x00);
-    clear_screen(framebuffers->bottom, 0x00);
+    clear_screen(framebuffer->top_left, 0x00);
+    clear_screen(framebuffer->bottom, 0x00);
 
     return;
 }
@@ -91,6 +82,7 @@ inline void delay(u32 n)
 {
     REG_TM0CNT = 0b10000111;
     REG_TM0VAL = 0;
+
     while(REG_TM0VAL < n);
 
     REG_TM0VAL = 0;
@@ -99,15 +91,15 @@ inline void delay(u32 n)
 
 void animation_loop(char *top_anim, char *bottom_anim, const char frame_rate, const char compressed)
 {
-    u32 delay_ = 65456 / frame_rate, read_delay = get_read_delay();
+    u32 delay_ = (65457 / frame_rate), read_delay = get_read_delay();
     FIL bgr_anim_bot, bgr_anim_top;
     unsigned int put_bot = 0, put_top = 0;
     char top_anim_flag = 0, sub_anim_flag = 0;
 
-    if (f_open(&bgr_anim_top, top_anim, FA_READ) == FR_OK) // If top animation can be opened
+    if (f_open(&bgr_anim_top, top_anim, FA_READ) == FR_OK) // If top animation opened fine
         top_anim_flag = 1;
 
-    if (f_open(&bgr_anim_bot, bottom_anim, FA_READ) == FR_OK) // If bottom animation can be opened
+    if (f_open(&bgr_anim_bot, bottom_anim, FA_READ) == FR_OK) // If bottom animation opened fine
         sub_anim_flag = 1;
 
     if (delay_ < read_delay) // Underflows are not nice...
@@ -126,28 +118,22 @@ void animation_loop(char *top_anim, char *bottom_anim, const char frame_rate, co
                 break;
 
             if (top_anim_flag)
-			{
-				f_read(&bgr_anim_top, framebuffers->top_left, TOP_FB_SZ, &put_top);
-				if (put_top != TOP_FB_SZ)
-					break; // Reached EOF
-			}
+				f_read(&bgr_anim_top, framebuffer->top_left, TOP_FB_SZ, &put_top);
 
 			if (sub_anim_flag)
-			{
-				f_read(&bgr_anim_bot, framebuffers->bottom, SUB_FB_SZ, &put_bot);
-				if (put_bot != SUB_FB_SZ)
-					break; // Reached EOF
-			}
+				f_read(&bgr_anim_bot, framebuffer->bottom, SUB_FB_SZ, &put_bot);
+
+            if (put_top != TOP_FB_SZ && put_bot != SUB_FB_SZ)
+                break;
 
             if (top_anim_flag && sub_anim_flag)
                 delay(delay__);
 
             else
                 delay(delay_);
-
 		}
 	}
-	
+
     else if (compressed == 1) // Compressed animation playback
     {
         char top_frame_prev[TOP_FB_SZ], top_frame_curr[TOP_FB_SZ], top_frame_comp[TOP_FB_SZ + 9],
@@ -164,7 +150,7 @@ void animation_loop(char *top_anim, char *bottom_anim, const char frame_rate, co
         memset(sub_frame_curr, 0, SUB_FB_SZ);
         memset(sub_frame_comp, 0, SUB_FB_SZ + 9);
 
-        qlz_state_decompress *state_decompress = (qlz_state_decompress*)0x24F00000; // This region should be clear
+        qlz_state_decompress *state_decompress = (qlz_state_decompress*)0x24F00000; // Hopefully there's nothing too interesting here :^)
         memset(state_decompress, 0, sizeof(qlz_state_compress));
 
         size_t comp_size = 0;
@@ -197,7 +183,7 @@ void animation_loop(char *top_anim, char *bottom_anim, const char frame_rate, co
                 memcpy(top_frame_prev, top_frame_curr, TOP_FB_SZ);
 
                 // Copy to framebuffer
-                memcpy(framebuffers->top_left, top_frame_curr, TOP_FB_SZ);
+                memcpy(framebuffer->top_left, top_frame_curr, TOP_FB_SZ);
             }
 
             if (sub_anim_flag) // If there's a bottom animation...
@@ -221,9 +207,9 @@ void animation_loop(char *top_anim, char *bottom_anim, const char frame_rate, co
                 memcpy(sub_frame_prev, sub_frame_curr, SUB_FB_SZ);
 
                 // Copy to framebuffer
-                memcpy(framebuffers->bottom, sub_frame_curr, SUB_FB_SZ);
+                memcpy(framebuffer->bottom, sub_frame_curr, SUB_FB_SZ);
             }
-
+            
             if (top_anim_flag && sub_anim_flag)
                 delay(delay__);
 
@@ -231,6 +217,7 @@ void animation_loop(char *top_anim, char *bottom_anim, const char frame_rate, co
                 delay(delay_);
         }
     }
+
     if (top_anim_flag) // If top animation was opened, close it
         f_close(&bgr_anim_top);
 

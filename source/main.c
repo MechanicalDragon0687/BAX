@@ -12,8 +12,8 @@ void chainload() // Load and execute the chainloader
 
 u32 check_files()
 {
-    char    *top    = "/anim/0/anim",
-            *bottom = "/anim/0/bottom_anim";
+    char  *top    = "/anim/0/anim",
+          *bottom = "/anim/0/bottom_anim";
 
     u32 count = 0;
 
@@ -35,15 +35,12 @@ void main()
     if (f_mount(&fs, "0:", 1) != FR_OK) // Mount the SD card
         chainload(); // Try to chainload if mounting fails, shouldn't work but you never know ;)
 
-    u32 anims = check_files();
+    u32 amt = check_files();
 
-    if (!anims) // If anims == 0, then there are no animations
-        chainload(); // Just chainload, skip the animation entirely
+    if (!(CFG_BOOTENV) & !(HID_PAD & KEY_LT) && (amt < 10)) // Check if this is a coldboot or R trigger is pressed
+        load_animation(amt); // Load animations
 
-    if (!(CFG_BOOTENV) & !(HID_PAD & KEY_LT)) // Check if this is a coldboot or R trigger is pressed
-        load_animation(anims); // Load animations, with (anims) amount of animations
-
-    chainload(); // When it finishes, chainload
+    chainload(); // When it finishes or amt == 0, chainload
 
     return;
 }
