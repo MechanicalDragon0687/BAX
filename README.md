@@ -6,7 +6,7 @@ Custom boot animations for A9LH
 Place the downloaded/compiled payload in root and place the payload to chainload as "/anim/arm9payload.bin".
 A special exception is made with [Luma3DS](https://github.com/AuroraWright/Luma3DS), its payload *must* be saved as "/anim/luma.bin".
 
-## How to create an animations
+## How to create an animation
 
 *Requires ffmpeg to be in PATH and ImageMagick to be installed.*
 
