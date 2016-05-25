@@ -5,6 +5,8 @@ AS := arm-none-eabi-as
 LD := arm-none-eabi-ld
 OC := arm-none-eabi-objcopy
 
+OCFLAGS = --set-section-flags .bss=alloc,load,contents
+
 name := BootAnim9
 
 dir_source := source
@@ -35,7 +37,7 @@ $(dir_loader)/loader.bin:
 	@sed 's/loader_loader/loader/' -i $(dir_source)/loader.h
 
 $(dir_build)/main.bin: $(dir_build)/main.elf
-	$(OC) -S -O binary $< $@
+	$(OC) $(OCFLAGS) -S -O binary $< $@
 
 $(dir_build)/main.elf: $(objects)
 	$(CC) -nostartfiles $(LDFLAGS) -T linker.ld $(OUTPUT_OPTION) $^

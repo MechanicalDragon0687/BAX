@@ -3,7 +3,7 @@
 bool file_exists(const char *path) {
     FIL file;
 
-    if (f_open(&file, path, FA_READ) == FR_OK) { // Check if file can be opened
+    if (f_open(&file, path, FA_READ) == FR_OK) {
         f_close(&file);
         return 1;
     }
