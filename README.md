@@ -36,9 +36,11 @@ SD card root: - arm9loaderhax.bin
 						           - anim
 			                       - bottom_anim
 								   - config
+
 			              - 1/
 						           - anim
 								   - config
+
                           - luma.bin
 
 In the case above, there're two animations (0 and 1), animation 0 has both animations (top and bottom) and a config file, while animation 1 has only a top screen animation.
@@ -49,8 +51,17 @@ It should also be noted that there's a Luma3DS installation, that's why the payl
 ## Credits
 
 chaoskagami for better code overall and TheBaloneyBoy for the ability to skip animations
+
 Docmudkipz for makeanim
+
 d0k3 for his [compression](https://github.com/d0k3/ban9comp) implementation
-b1l1s for his ctr library full of useful snippets and Normmatt for sdmmc functions
+
 \#Cakey for useful tips and pointers, as always
-Everyone else who supported me through these two awesome months! (yes, I'm looking at you Nintendohax)
+
+b1l1s for his ctr library full of useful fb snippets and Normmatt for sdmmc
+
+Everyone else who supported me through these two awesome months! (yes, I'm looking at you /r/Nintendohax)
+
+Special shoutout to [Housey](https://github.com/housebreaker) for creating some epic music that helped me focus during some rough times. You can find his awesome stuff [here](https://soundcloud.com/housebreaker1)
+
+As well as [A_Random_Guy](https://gbatemp.net/members/a_random_guy.366070/) for asking me to make FB9 and getting me into this beautiful mess :P

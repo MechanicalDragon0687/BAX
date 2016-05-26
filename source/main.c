@@ -7,48 +7,49 @@ framebuffer_t *framebuffer;
 
 void chainload() // Load and execute the chainloader
 {
-    if (!file_exists(main_payload) || !file_exists(luma_payload)) // Special case for BootCTR9
+    if (file_exists(main_payload) || file_exists(luma_payload)) // If neither arm9payload.bin nor luma.bin exist...
     {
-        memcpy((void*)0x24F00000, loader_bin, loader_bin_len);
+        memcpy((void*)0x24F00000, loader_bin, loader_bin_len); // Copy the chainloader into memory
     }
 
-    else if (file_exists(bctr9_payload))
+    else if (file_exists(bctr9_payload)) // If arm9bootloader.bin exists...
     {
         FIL bctr9_fil;
         size_t bctr9_len;
         f_open(&bctr9_fil, bctr9_payload, FA_READ);
-        f_read(&bctr9_fil, (void*)0x24F00000, 0x200000, &bctr9_len);
+        f_read(&bctr9_fil, (void*)0x24F00000, 0x200000, &bctr9_len); // Read file to memory
         f_close(&bctr9_fil);
     }
 
     else // u dun goof ;)
     {
-        clear_screen(framebuffer->top_left, 0xFF);
+        clear_screen(framebuffer->top_left, 0xFFFFFF); // White screen + inf loop
         while(1);
     }
 
-    ((void(*)(void))0x24F00000)();
+    ((void(*)(void))0x24F00000)(); // Jump to the loaded payload
 }
 
-int check_files()
+int check_anims()
 {
     char  *top    = "/anim/0/anim",
           *bottom = "/anim/0/bottom_anim";
 
-    int retval = 0;
+    int retval = 0; // Declare value to return
 
     for (int i = 0; i < 10; i++) // Check files from dir '0' to '9'
     {
-        memset(&top[6], i + '0', 1);
+        memset(&top[6], i + '0', 1); // Set the '0' in the string to '0' + x, 0 <= x < 10
         memset(&bottom[6], i + '0', 1);
 
         if (file_exists(top) + file_exists(bottom)) // If at least one of them exists
-            retval++;
+            retval++; // Increase return value
 
         else
-            break;
+            break; // If neither exists break out
     }
-    return retval;
+
+    return retval; // Return retval, should be between 0 and 9
 }
 
 void main()
@@ -56,12 +57,12 @@ void main()
     if (f_mount(&fs, "0:", 1) != FR_OK) // Mount the SD card
         chainload(); // Try to chainload if mounting fails, shouldn't work but you never know ;)
 
-    int amt = check_files();
+    int amt = check_anims(); // Check amount of animations
 
-    if (!(CFG_BOOTENV) & !(HID_PAD & KEY_LT) && (amt > 0)) // Check if this is a coldboot or R trigger is pressed
-        load_animation(amt); // Load animations
+    if (!(CFG_BOOTENV) & !(HID_PAD & KEY_LT) && (amt > 0)) // Check if this is a coldboot or R trigger is pressed, and make sure there's at least one animation
+        load_animation(amt); // Load randomizer
 
-    chainload(); // When it finishes or amt == 0, chainload
+    chainload(); // When it finishes , amt == 0 or left trigger is held, chainload
 
     return;
 }
