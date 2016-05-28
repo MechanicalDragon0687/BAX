@@ -18,7 +18,7 @@ size_t fb_sz(u8 *fb)
         return TOP_FB_SZ;
 
     else
-        return 0; // This should never happen unless I'm an idiot or someone messes with the source/binary
+        return 0; // This should never happen unless I'm an idiot or someone messes with the source/binary (or both)
 }
 
 // Given a framebuffer and an rgb value, clear the screen
@@ -59,10 +59,10 @@ size_t get_read_delay()
 
     f_close(&test_file);
 
-    if ((br_top + br_sub) < (((TOP_FB_SZ + SUB_FB_SZ)*8)/10)) // Sorry, invalid test buddy ;(. I leave a bit of error, just because
-        return 0; // Run as fast as possible
+    if ((br_top + br_sub) < (TOP_FB_SZ + SUB_FB_SZ)) // Amount of read data is less than intended. Sorry buddy, invalid test
+        return 0; // GOTTA GO FAST
 
-    // f_open and f_close are outside of the timer because they take additional time
+    // f_open and f_close are outside of the counter because they take additional time
     // Minimal error, but hey, if you have a precise timer don't let it go to waste :D
 
     return read_delay;
@@ -121,7 +121,7 @@ inline void delay(size_t n)
 
 void animation_loop(char *top_anim, char *bottom_anim, const char frame_rate, const char compressed)
 {
-    size_t delay_ = (65457 / frame_rate), // 65457 is 1 sec => delay_ is (1/frame_rate) in Hz
+    size_t delay_ = (65457 / frame_rate), // 65457 = 1 sec, because the prescaler is set to 1024
            read_delay = get_read_delay(), // File read delay, detailed above
            put_bot = 0, put_top = 0; // Read size vars
 
@@ -154,7 +154,7 @@ void animation_loop(char *top_anim, char *bottom_anim, const char frame_rate, co
             {
                 if (HID_PAD & (KEY_SELECT | KEY_START)) // End the animation if the 'SELECT' or 'START' key is pressed
                     break;
-    
+
                 if (top_anim_flag)
                 {
                     f_read(&bgr_anim_top, framebuffer->top_left, TOP_FB_SZ, &put_top); // Read an entire frame to framebuffer
@@ -286,5 +286,5 @@ void animation_loop(char *top_anim, char *bottom_anim, const char frame_rate, co
         if (sub_anim_flag) // If bottom animation was opened, close it
             f_close(&bgr_anim_bot);
     }
-        return;
+    return;
 }
