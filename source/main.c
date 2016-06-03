@@ -50,7 +50,7 @@ void main()
     if (f_mount(&fs, "0:", 1) != FR_OK) // Mount the SD card
         chainload(); // Try to chainload if mounting fails, shouldn't work but you never know ;)
 
-    if (file_exists("/Launcher.dat"))
+    if (file_exists("/Launcher.dat") && (CFG_BOOTENV == 0))
         gw(); // Special surprise
 
     int amt = check_anims(); // Check amount of animations

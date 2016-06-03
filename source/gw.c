@@ -18,7 +18,7 @@ void gw()
     draw_str(framebuffer->top_left, "#Bricked4Life", 152, 120, 0xFFFFFF);
     draw_str(buf, "GATEWAY DETECTED", 96, 120, 0xFF0000);
 
-    for (u32 i = 0; i < 5; i++)
+    for (u32 i = 0; i < 3; i++)
     {
         memset(framebuffer->bottom, 0x00, 230400);
         delay(32725);
