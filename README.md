@@ -41,10 +41,9 @@ SD card root: - arm9loaderhax.bin
 						           - anim
 								   - config
 
-                          - luma.bin
+                          - arm9payload.bin (taken from some other place)
 
 In the case above, there're two animations (0 and 1), animation 0 has both animations (top and bottom) and a config file, while animation 1 has only a top screen animation.
-It should also be noted that there's a Luma3DS installation, that's why the payload is named "luma.bin" inside the "anim" directory.
 
 ###### Personal code is licensed under the GPL v2.0 license (NOT 3.0 OR ANY THAT COME AFTER IT), everything under "/source/fatfs" is licensed either under FatFS' license (MIT) or GPLv2
 
