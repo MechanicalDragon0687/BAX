@@ -1,5 +1,3 @@
-// GW-exclusive feature ('_>')
-
 #include "common.h"
 
 #define set_pixel(fb, x, y, rgb) \
@@ -12,34 +10,34 @@
 
 framebuffer_t *framebuffer;
 
-void gw()
-{
-    u8 buf[230400] = {0x00};
-    draw_str(framebuffer->top_left, "#Bricked4Life", 152, 120, 0xFFFFFF);
-    draw_str(buf, "GATEWAY DETECTED", 96, 120, 0xFF0000);
-
-    for (u32 i = 0; i < 3; i++)
-    {
-        memset(framebuffer->bottom, 0x00, 230400);
-        delay(32725);
-        memcpy(framebuffer->bottom, buf, 230400);
-        delay(32725);
-    }
-    return;
-}
+// The saltiness is strong in this file
 
 void draw_str(const u8 *buf, const char *str, const u16 x, const u16 y, const u32 rgb)
 {
     u16 _x = x;
+    u16 _y = y;
 
     for (u32 i = 0; i < 50; i++)
     {
         if (str[i] == '\0')
             break;
 
-        draw_char (buf, _x, y, str[i], rgb);
-        _x += 8;
+        else if (str[i] == '\r')
+            _x = 0;
+
+        else if (str[i] == '\n')
+        {
+            _x = 0;
+            _y += 8;
+        }
+
+        else
+        {
+            draw_char (buf, _x, y, str[i], rgb);
+            _x += 8;
+        }
     }
+
     return;
 }
 

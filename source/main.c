@@ -2,12 +2,12 @@
 #include "loader.h" // loader binary converted to a char array, designed to load @ 0x24F00000
 
 static FATFS fs;
-const char main_payload[] = "/anim/arm9payload.bin", luma_payload[] = "/anim/luma.bin";
+const char main_payload[] = "/anim/arm9payload.bin";
 framebuffer_t *framebuffer;
 
 void chainload() // Load and execute the chainloader (hopefully)
 {
-    if (file_exists(main_payload) || file_exists(luma_payload)) // If arm9payload.bin or luma.bin exist...
+    if (file_exists(main_payload)) // If arm9payload.bin or luma.bin exist...
     {
         memcpy((void*)0x24F00000, loader_bin, loader_bin_len); // Load the chainloader
     }
@@ -16,7 +16,7 @@ void chainload() // Load and execute the chainloader (hopefully)
     {
         clear_screen(framebuffer->top_left, 0x00); // Clear screen
         draw_str(framebuffer->top_left, "No payload detected", 8, 8, 0xFFFFFF);
-        draw_str(framebuffer->top_left, "Make sure you have /anim/{luma, arm9payload}.bin", 8, 24, 0xFFFFFF);
+        draw_str(framebuffer->top_left, "Make sure you have /anim/arm9payload.bin", 8, 24, 0xFFFFFF);
         while(1);
     }
 
@@ -49,9 +49,6 @@ void main()
 {
     if (f_mount(&fs, "0:", 1) != FR_OK) // Mount the SD card
         chainload(); // Try to chainload if mounting fails, shouldn't work but you never know ;)
-
-    if (file_exists("/Launcher.dat") && (CFG_BOOTENV == 0))
-        gw(); // Special surprise
 
     int amt = check_anims(); // Check amount of animations
 
