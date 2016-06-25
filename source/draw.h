@@ -1,14 +1,28 @@
 #pragma once
 
-typedef struct framebuffer_t { // Thanks to mid-kid & his CakesFW/CakeHax for FB offsets
-    u8 *top_left;
-    u8 *top_right;
-    u8 *bottom;
-} framebuffer_t;
+#define TOP_FB_SZ 0x46500
+#define SUB_FB_SZ 0x38400
 
-extern framebuffer_t *framebuffer;
+// Straight outta HelloEntryPoint
+#define TOP_SCREEN0 (u8*)(*(u32*)0x23FFFE00)
+#define TOP_SCREEN1 (u8*)(*(u32*)0x23FFFE00)
+#define BOT_SCREEN0 (u8*)(*(u32*)0x23FFFE08)
+#define BOT_SCREEN1 (u8*)(*(u32*)0x23FFFE08)
 
-void delay(size_t n);
-void clear_screen(u8 *fb, u32 rgb); // Clear screen (fb) with color (rgb)
-void load_animation(int max); // Helper function, in order to use the randomizer
-void animation_loop(char *top_anim, char *bottom_anim, const char frame_rate, const char compressed); // Main animation loop
+// Given a framebuffer, get its length
+u32 fb_sz(u8 *fb);
+
+// Clear screen (fb) with color (rgb)
+void clear_screen(u8 *fb, u32 rgb);
+
+// Delay for n ticks (max is 2^16)
+void delay(u32 n);
+
+// Read a file and get how much time it takes to read it
+u32 get_read_delay();
+
+// Helper function, in order to use the randomizer
+void load_animation(u32 max);
+
+// Main animation loop
+void animation_loop(char *top_anim, char *bottom_anim, const u8 frame_rate, const u8 compression);

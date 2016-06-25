@@ -3,7 +3,6 @@
 
 static FATFS fs;
 const char main_payload[] = "/anim/arm9payload.bin";
-framebuffer_t *framebuffer;
 
 void chainload() // Load and execute the chainloader (hopefully)
 {
@@ -14,9 +13,9 @@ void chainload() // Load and execute the chainloader (hopefully)
 
     else // u dun goof ;)
     {
-        clear_screen(framebuffer->top_left, 0x00); // Clear screen
-        draw_str(framebuffer->top_left, "No payload detected", 8, 8, 0xFFFFFF);
-        draw_str(framebuffer->top_left, "Make sure you have /anim/arm9payload.bin", 8, 24, 0xFFFFFF);
+        clear_screen(TOP_SCREEN0, 0x00); // Clear screen
+        draw_str(TOP_SCREEN0, "No payload detected", 8, 8, 0xFFFFFF);
+        draw_str(TOP_SCREEN0, "Make sure you have /anim/arm9payload.bin", 8, 24, 0xFFFFFF);
         while(1);
     }
 
@@ -45,7 +44,7 @@ int check_anims()
     return retval; // Return retval, should be between 0 and 9
 }
 
-void main()
+void main(/*int argc, char **argv // Won't be used until a better chainloader comes along*/)
 {
     if (f_mount(&fs, "0:", 1) != FR_OK) // Mount the SD card
         chainload(); // Try to chainload if mounting fails, shouldn't work but you never know ;)

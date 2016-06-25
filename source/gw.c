@@ -8,8 +8,6 @@
 	*(u8*)(fb + offset++) = (rgb >> 16) & 0xFF; \
 }
 
-framebuffer_t *framebuffer;
-
 // The saltiness is strong in this file
 
 void draw_str(const u8 *buf, const char *str, const u16 x, const u16 y, const u32 rgb)
