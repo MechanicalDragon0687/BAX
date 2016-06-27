@@ -9,6 +9,14 @@
 #define BOT_SCREEN0 (u8*)(*(u32*)0x23FFFE08)
 #define BOT_SCREEN1 (u8*)(*(u32*)0x23FFFE08)
 
+// Colors
+#define RED   0xFF0000
+#define GREEN 0x00FF00
+#define BLUE  0x0000FF
+#define BLACK 0x000000
+#define WHITE 0xFFFFFF
+// Good enough :P
+
 // Given a framebuffer, get its length
 u32 fb_sz(u8 *fb);
 
@@ -17,12 +25,3 @@ void clear_screen(u8 *fb, u32 rgb);
 
 // Delay for n ticks (max is 2^16)
 void delay(u32 n);
-
-// Read a file and get how much time it takes to read it
-u32 get_read_delay();
-
-// Helper function, in order to use the randomizer
-void load_animation(u32 max);
-
-// Main animation loop
-void animation_loop(char *top_anim, char *bottom_anim, const u8 frame_rate, const u8 compression);

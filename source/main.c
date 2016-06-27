@@ -1,40 +1,37 @@
 #include "common.h"
-#include "loader.h" // loader binary converted to a char array, designed to load @ 0x24F00000
 
 static FATFS fs;
-const char main_payload[] = "/anim/arm9payload.bin";
 
-void chainload() // Load and execute the chainloader (hopefully)
+void error(const char *msg)
 {
-    if (file_exists(main_payload)) // If arm9payload.bin or luma.bin exist...
+    draw_str(TOP_SCREEN0, "Error:", 10, 10, 0xFFFFFF);
+    draw_str(TOP_SCREEN0, msg, 66, 10, 0xFFFFFF);
+    draw_str(TOP_SCREEN0, "Press any key to power off", 10, 26, 0xFFFFFF);
+
+    u32 pad = HID_PAD;
+    while(1)
     {
-        memcpy((void*)0x24F00000, loader_bin, loader_bin_len); // Load the chainloader
+        if (pad != HID_PAD)
+            break;
     }
 
-    else // u dun goof ;)
-    {
-        clear_screen(TOP_SCREEN0, 0x00); // Clear screen
-        draw_str(TOP_SCREEN0, "No payload detected", 8, 8, 0xFFFFFF);
-        draw_str(TOP_SCREEN0, "Make sure you have /anim/arm9payload.bin", 8, 24, 0xFFFFFF);
-        while(1);
-    }
-
-    ((void(*)(void))0x24F00000)(); // Jump to the loaded payload
+    i2cWriteRegister(0x03, 0x20, 1);
+    while(1);
 }
 
-int check_anims()
+u32 check_anims()
 {
-    char  *top    = "/anim/0/anim",
-          *bottom = "/anim/0/bottom_anim";
+    char top[]    = TOP_ANIM_PATH,
+         bottom[] = SUB_ANIM_PATH;
 
-    int retval = 0; // Declare value to return
+    u32 retval = 0; // Return value
 
-    for (int i = 0; i < 10; i++) // Check files from dir '0' to '9'
+    for (u32 i = 0; i < 10; i++) // Check files from dir '0' to '9'
     {
-        memset(&top[6], i + '0', 1); // Set the '0' in the string to '0' + x, 0 <= x < 10
-        memset(&bottom[6], i + '0', 1);
+        top[6]    = i + '0'; // Set the '0' in the string to '0' + i, therefore 0 <= i < 10
+        bottom[6] = i + '0';
 
-        if (file_exists(top) + file_exists(bottom)) // If at least one of them exists
+        if (file_exists(top) || file_exists(bottom)) // If at least one of them exists
             retval++; // Increase return value
 
         else
@@ -44,17 +41,17 @@ int check_anims()
     return retval; // Return retval, should be between 0 and 9
 }
 
-void main(/*int argc, char **argv // Won't be used until a better chainloader comes along*/)
+/** If there were any use for arguments, I'd bring them back */
+int main()
 {
     if (f_mount(&fs, "0:", 1) != FR_OK) // Mount the SD card
-        chainload(); // Try to chainload if mounting fails, shouldn't work but you never know ;)
+        error("Failed to mount SD.");
 
-    int amt = check_anims(); // Check amount of animations
+    u32 amt = check_anims(); // Check amount of animations
 
-    if (!(CFG_BOOTENV) & !(HID_PAD & KEY_LT) && (amt > 0)) // Check if this is a coldboot or R trigger is pressed, and make sure there's at least one animation
+    if ((CFG_BOOTENV == 0) && (amt > 0)) // Check if this is a coldboot and make sure there's at least one animation
         load_animation(amt); // Load randomizer
 
-    chainload(); // When it finishes , amt == 0 or left trigger is held, chainload
-
-    return;
+    error("END!");
+    return 0;
 }

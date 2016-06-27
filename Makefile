@@ -1,53 +1,144 @@
-rwildcard = $(foreach d, $(wildcard $1*), $(filter $(subst *, %, $2), $d) $(call rwildcard, $d/, $2))
+#---------------------------------------------------------------------------------
+.SUFFIXES:
+#---------------------------------------------------------------------------------
 
-CC := arm-none-eabi-gcc
-AS := arm-none-eabi-as
-LD := arm-none-eabi-ld
-OC := arm-none-eabi-objcopy
+ifeq ($(strip $(DEVKITARM)),)
+$(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
+endif
 
-OCFLAGS = --set-section-flags .bss=alloc,load,contents
+include $(DEVKITARM)/ds_rules
 
-name := BootAnim9
+#---------------------------------------------------------------------------------
+# TARGET is the name of the output
+# BUILD is the directory where object files & intermediate files will be placed
+# SOURCES is a list of directories containing source code
+# DATA is a list of directories containing data files
+# INCLUDES is a list of directories containing header files
+# SPECS is the directory containing the important build and link files
+#---------------------------------------------------------------------------------
+TARGET 		:=  arm9loaderhax
+BUILD		:=	build
+SOURCES		:=	source source/fatfs source/fatfs/sdmmc
+DATA		:=	data
+INCLUDES	:=	source source/fatfs source/fatfs/sdmmc
 
-dir_source := source
-dir_loader := loader
-dir_build := build
+#---------------------------------------------------------------------------------
+# Setup some defines
+#---------------------------------------------------------------------------------
 
-ASFLAGS := -mlittle-endian -mcpu=arm946e-s -march=armv5te
-CFLAGS := -flto -Wall -Wextra -MMD -MP -marm $(ASFLAGS) -fno-builtin -fshort-wchar -std=c11 -Wno-main -O2 -ffast-math
+#---------------------------------------------------------------------------------
+# options for code generation
+#---------------------------------------------------------------------------------
+ARCH	 :=	-marm -march=armv5te -mtune=arm946e-s
 
-objects = $(patsubst $(dir_source)/%.s, $(dir_build)/%.o, \
-			  $(patsubst $(dir_source)/%.c, $(dir_build)/%.o, \
-			  $(call rwildcard, $(dir_source), *.s *.c)))
+CFLAGS   := $(ARCH) \
+			-g -flto -Wall -O2 \
+			-fomit-frame-pointer -ffast-math \
+			-std=c99
 
-.PHONY: all
-all: arm9loaderhax.bin
+CFLAGS	 += $(INCLUDE) -DARM9
+CXXFLAGS := $(CFLAGS) -fno-rtti -fno-exceptions
 
-.PHONY: clean
+LDFLAGS  := -nostartfiles -T../linker.ld -g $(ARCH) -Wl,-Map,$(notdir $*.map)
+ASFLAGS	 :=	-g $(ARCH)
+
+#---------------------------------------------------------------------------------
+# list of directories containing libraries, this must be the top level containing
+# include and lib
+#---------------------------------------------------------------------------------
+LIBDIRS	:=
+
+#---------------------------------------------------------------------------------
+# any extra libraries we wish to link with the project (order is important)
+#---------------------------------------------------------------------------------
+LIBS    :=
+
+
+#---------------------------------------------------------------------------------
+# no real need to edit anything past this point unless you need to add additional
+# rules for different file extensions
+#---------------------------------------------------------------------------------
+ifneq ($(BUILD),$(notdir $(CURDIR)))
+#---------------------------------------------------------------------------------
+
+export OUTPUT	:=	$(CURDIR)/$(TARGET)
+
+export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
+			$(foreach dir,$(DATA),$(CURDIR)/$(dir))
+
+export DEPSDIR	:=	$(CURDIR)/$(BUILD)
+
+CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
+CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
+SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
+BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
+
+#---------------------------------------------------------------------------------
+# use CXX for linking C++ projects, CC for standard C
+#---------------------------------------------------------------------------------
+ifeq ($(strip $(CPPFILES)),)
+#---------------------------------------------------------------------------------
+	export LD	:=	$(CC)
+#---------------------------------------------------------------------------------
+else
+#---------------------------------------------------------------------------------
+	export LD	:=	$(CXX)
+#---------------------------------------------------------------------------------
+endif
+#---------------------------------------------------------------------------------
+
+export OFILES	:= $(addsuffix .o,$(BINFILES)) \
+			$(SFILES:.s=.o) $(CPPFILES:.cpp=.o) $(CFILES:.c=.o)
+
+export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
+			$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
+			-I$(CURDIR)/$(BUILD)
+
+export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
+
+.PHONY: $(BUILD) all clean
+
+#---------------------------------------------------------------------------------
+all: $(BUILD)
+
+$(BUILD):
+	@[ -d $(OUTPUT_D) ] || mkdir -p $(OUTPUT_D)
+	@[ -d $(BUILD) ] || mkdir -p $(BUILD)
+	@make --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+
+#---------------------------------------------------------------------------------
 clean:
-	@make -C $(dir_loader) clean
-	@rm -rf $(dir_build) arm9loaderhax.bin $(dir_source)/loader.h
+	@echo clean ...
+	@rm -fr $(BUILD) $(OUTPUT).bin
 
-arm9loaderhax.bin: $(dir_loader)/loader.bin $(dir_build)/main.bin
-	@cp -av $(dir_build)/main.bin $@
+#---------------------------------------------------------------------------------
+else
 
-$(dir_loader)/loader.bin:
-	@make -C $(dir_loader)
-	xxd -u -i $@ > $(dir_source)/loader.h
-	@sed 's/loader_loader/loader/' -i $(dir_source)/loader.h
+DEPENDS	:=	$(OFILES:.o=.d)
 
-$(dir_build)/main.bin: $(dir_build)/main.elf
-	$(OC) $(OCFLAGS) -S -O binary $< $@
+#---------------------------------------------------------------------------------
+# main targets
+#---------------------------------------------------------------------------------
+$(OUTPUT).bin	:	$(OUTPUT).elf
+$(OUTPUT).elf	:	$(OFILES)
 
-$(dir_build)/main.elf: $(objects)
-	$(CC) -nostartfiles $(LDFLAGS) -T linker.ld $(OUTPUT_OPTION) $^
+#---------------------------------------------------------------------------------
+%.bin: %.elf
+	@$(OBJCOPY) --set-section-flags .bss=alloc,load,contents -O binary $< $@
+	@echo built ... $(notdir $@)
+	@rm -f $(OUTPUT).elf
 
-$(dir_build)/%.o: $(dir_source)/%.c
-	@mkdir -p "$(@D)"
-	$(COMPILE.c) $(OUTPUT_OPTION) $<
+#---------------------------------------------------------------------------------
+# you need a rule like this for each extension you use as binary data
+#---------------------------------------------------------------------------------
+%.bin.o	:	%.bin
+#---------------------------------------------------------------------------------
+	@echo $(notdir $<)
+	@$(bin2o)
 
-$(dir_build)/%.o: $(dir_source)/%.s
-	@mkdir -p "$(@D)"
-	$(COMPILE.s) $(OUTPUT_OPTION) $<
+-include $(DEPENDS)
 
-include $(call rwildcard, $(dir_build), *.d)
+
+#---------------------------------------------------------------------------------------
+endif
+#---------------------------------------------------------------------------------------

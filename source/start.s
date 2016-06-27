@@ -2,22 +2,9 @@
 .align 4
 .global _start
 
-// From chaoskagami
 _start:
-    ldr r2, =argc
-    str r0, [r2]
-
-    ldr r2, =argv
-    str r1, [r2]
-
-    b mpu
-
-argc: .int 0x00000000
-argv: .int 0x00000000
-
-mpu:
     // Change the stack pointer
-    mov sp, #0x23000000
+    mov sp, #0x27000000
 
     // Give read/write access to all the memory regions
     ldr r5, =0x33333333
@@ -42,9 +29,6 @@ mpu:
 	ldr r0, =0x10000020
 	mov r1, #0x340
 	str r1, [r0]
-
-    ldr r0, argc
-    ldr r1, argv
 
     bl main
 

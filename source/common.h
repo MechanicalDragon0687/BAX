@@ -5,15 +5,26 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+typedef int8_t       s8;
+typedef int16_t      s16;
+typedef int32_t      s32;
+typedef int64_t      s64;
+
 typedef uint8_t      u8;
 typedef uint16_t     u16;
 typedef uint32_t     u32;
 typedef uint64_t     u64;
 
-typedef volatile u8          vu8;
-typedef volatile u16         vu16;
-typedef volatile u32         vu32;
-typedef volatile u64         vu64;
+typedef volatile u8  vu8;
+typedef volatile u16 vu16;
+typedef volatile u32 vu32;
+typedef volatile u64 vu64;
+
+#define TOP_ANIM_PATH   "/anim/0/anim"
+#define SUB_ANIM_PATH   "/anim/0/bottom_anim"
+#define CFG_ANIM_PATH   "/anim/0/config.txt"
+#define PAYLOAD_PATH    "/anim/arm9payload.bin"
+#define CALIB_PATH      "/anim/calibrator"
 
 #define KEY_A			(1 << 0)  // A
 #define KEY_B			(1 << 1)  // B
@@ -35,8 +46,10 @@ typedef volatile u64         vu64;
 #define HID_PAD         (*(vu16*)0x10146000 ^ 0xFFF) // HID_PAD
 #define PDN_GPU_CNT     (*(vu32*)0x10141200) // PDN_GPU_CNT
 
+#include "anim.h"
 #include "draw.h"
 #include "fatfs/ff.h"
 #include "fs.h"
 #include "gw.h"
+#include "i2c.h"
 #include "quicklz.h"
