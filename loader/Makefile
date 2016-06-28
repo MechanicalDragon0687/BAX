@@ -16,15 +16,12 @@ include $(DEVKITARM)/ds_rules
 # INCLUDES is a list of directories containing header files
 # SPECS is the directory containing the important build and link files
 #---------------------------------------------------------------------------------
-TARGET 		:=  arm9loaderhax
+TARGET 		:=  loader
 BUILD		:=	build
-SOURCES		:=	source source/fatfs source/fatfs/sdmmc
-DATA		:=	data
-INCLUDES	:=	source source/fatfs source/fatfs/sdmmc
+SOURCES		:=	src
+INCLUDES	:=	src
 
-NAME        :=  BootAnim9
-LOADER      :=  loader
-RELEASEDIR  :=  release
+NAME        :=  loader
 
 #---------------------------------------------------------------------------------
 # Setup some defines
@@ -36,7 +33,7 @@ RELEASEDIR  :=  release
 ARCH	 :=	-marm -march=armv5te -mtune=arm946e-s
 
 CFLAGS   := $(ARCH) \
-			-g -flto -Wall -O2 \
+			-g -flto -Wall -Os \
 			-fomit-frame-pointer -ffast-math \
 			-std=c99
 
@@ -100,30 +97,19 @@ export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 
 export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
-.PHONY: $(BUILD) all loader release clean
+.PHONY: $(BUILD) all clean
 
 #---------------------------------------------------------------------------------
 all: $(BUILD)
 
-$(BUILD): loader
+$(BUILD):
 	@[ -d $(OUTPUT_D) ] || mkdir -p $(OUTPUT_D)
 	@[ -d $(BUILD) ] || mkdir -p $(BUILD)
 	@make --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
-loader:
-	@make --no-print-directory -C $(CURDIR)/$(LOADER) -f $(CURDIR)/$(LOADER)/Makefile
-	
-release: $(BUILD) loader
-	@mkdir -p $(CURDIR)/$(RELEASEDIR)
-	@mkdir -p $(CURDIR)/$(RELEASEDIR)/anim
-	@cp -av $(CURDIR)/$(TARGET).bin $(CURDIR)/$(RELEASEDIR)/$(TARGET).bin
-	@cp -av $(CURDIR)/$(LOADER)/$(LOADER).bin $(CURDIR)/$(RELEASEDIR)/anim/$(LOADER).bin
-	@cp -av $(DATA)/calibrator $(CURDIR)/$(RELEASEDIR)/anim/calibrator
-
 #---------------------------------------------------------------------------------
 clean:
-	@make --no-print-directory -C $(CURDIR)/$(LOADER) -f $(CURDIR)/$(LOADER)/Makefile clean
-	@rm -rf $(BUILD) $(OUTPUT).bin $(CURDIR)/$(RELEASEDIR)
+	@rm -fr $(BUILD) $(OUTPUT).bin $(OUTPUT).elf
 	@echo cleaned $(NAME)
 
 #---------------------------------------------------------------------------------

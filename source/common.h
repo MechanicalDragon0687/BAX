@@ -23,6 +23,7 @@ typedef volatile u64 vu64;
 #define TOP_ANIM_PATH   "/anim/0/anim"
 #define SUB_ANIM_PATH   "/anim/0/bottom_anim"
 #define CFG_ANIM_PATH   "/anim/0/config.txt"
+#define LOADER_PATH     "/anim/loader.bin"
 #define PAYLOAD_PATH    "/anim/arm9payload.bin"
 #define CALIB_PATH      "/anim/calibrator"
 
@@ -46,10 +47,13 @@ typedef volatile u64 vu64;
 #define HID_PAD         (*(vu16*)0x10146000 ^ 0xFFF) // HID_PAD
 #define PDN_GPU_CNT     (*(vu32*)0x10141200) // PDN_GPU_CNT
 
+void error(const char *msg);
+
 #include "anim.h"
 #include "draw.h"
 #include "fatfs/ff.h"
 #include "fs.h"
 #include "gw.h"
 #include "i2c.h"
+#include "loader.h"
 #include "quicklz.h"

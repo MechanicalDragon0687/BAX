@@ -52,6 +52,7 @@ int main()
     if ((CFG_BOOTENV == 0) && (amt > 0)) // Check if this is a coldboot and make sure there's at least one animation
         load_animation(amt); // Load randomizer
 
-    error("END!");
+    chainload();
+    
     return 0;
 }
