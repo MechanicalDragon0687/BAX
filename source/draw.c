@@ -17,9 +17,9 @@ void clear_screen(u8 *fb, u32 rgb)
     u32 fb_len = fb_sz(fb),
         i = 0;
 
-    u8 r = rgb & 0xFF,
-       g = (rgb >> 8) & 0xFF,
-       b = (rgb >> 16) & 0xFF;
+    u8  r = rgb & 0xFF,
+        g = (rgb >> 8) & 0xFF,
+        b = (rgb >> 16) & 0xFF;
 
     if ((r == g) && (g == b))
         memset(fb, r, fb_len);
@@ -51,3 +51,4 @@ inline void delay(u32 n)
     REG_TM0CNT = 0x07; // Stop timer count
     REG_TM0VAL = 0; // Reset the timer
 }
+

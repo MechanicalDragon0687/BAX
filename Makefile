@@ -103,22 +103,22 @@ export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 .PHONY: $(BUILD) all loader release clean
 
 #---------------------------------------------------------------------------------
-all: $(BUILD)
+all: $(BUILD) loader
 
-$(BUILD): loader
+$(BUILD):
 	@[ -d $(OUTPUT_D) ] || mkdir -p $(OUTPUT_D)
 	@[ -d $(BUILD) ] || mkdir -p $(BUILD)
 	@make --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
 loader:
 	@make --no-print-directory -C $(CURDIR)/$(LOADER) -f $(CURDIR)/$(LOADER)/Makefile
-	
+
 release: $(BUILD) loader
-	@mkdir -p $(CURDIR)/$(RELEASEDIR)
 	@mkdir -p $(CURDIR)/$(RELEASEDIR)/anim
-	@cp -av $(CURDIR)/$(TARGET).bin $(CURDIR)/$(RELEASEDIR)/$(TARGET).bin
-	@cp -av $(CURDIR)/$(LOADER)/$(LOADER).bin $(CURDIR)/$(RELEASEDIR)/anim/$(LOADER).bin
-	@cp -av $(DATA)/calibrator $(CURDIR)/$(RELEASEDIR)/anim/calibrator
+	@cp -a $(CURDIR)/$(TARGET).bin $(CURDIR)/$(RELEASEDIR)/$(TARGET).bin
+	@cp -a $(CURDIR)/$(LOADER)/$(LOADER).bin $(CURDIR)/$(RELEASEDIR)/anim/$(LOADER).bin
+	@cp -a  $(DATA)/calibrator $(CURDIR)/$(RELEASEDIR)/anim/calibrator
+	@echo Done!
 
 #---------------------------------------------------------------------------------
 clean:
@@ -142,14 +142,6 @@ $(OUTPUT).elf	:	$(OFILES)
 	@$(OBJCOPY) --set-section-flags .bss=alloc,load,contents -O binary $< $@
 	@echo built $(NAME)
 	@rm -f $(OUTPUT).elf
-
-#---------------------------------------------------------------------------------
-# you need a rule like this for each extension you use as binary data
-#---------------------------------------------------------------------------------
-%.bin.o	:	%.bin
-#---------------------------------------------------------------------------------
-	@echo $(notdir $<)
-	@$(bin2o)
 
 -include $(DEPENDS)
 

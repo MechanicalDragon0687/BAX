@@ -4,7 +4,7 @@
 
 inline void set_pixel(const u8 *fb, const u16 x, const u16 y, const u32 rgb)
 {
-    if (y > 240 || y < 0 || x > 400 || x < 0) // This check is broken for bottom screen
+    if (y > 239 || x > (fb == TOP_SCREEN0 ? 399 : 319))
         return;
 
 	u32 offset = (240 * (x) + 240 - (y) - 1) * 3;
@@ -15,28 +15,15 @@ inline void set_pixel(const u8 *fb, const u16 x, const u16 y, const u32 rgb)
 
 void draw_str(const u8 *buf, const char *str, const u16 x, const u16 y, const u32 rgb)
 {
-    u16 _x = x;
-    u16 _y = y;
+    u16 _x = x,
+        _y = y;
 
-    for (u32 i = 0; i < 50; i++)
+    u8 i = 0;
+
+    while(str[i] != '\0')
     {
-        if (str[i] == '\0')
-            break;
-
-        else if (str[i] == '\r')
-            _x = x;
-
-        else if (str[i] == '\n')
-        {
-            _x = x;
-            _y += 8;
-        }
-
-        else
-        {
-            draw_char (buf, _x, _y, str[i], rgb);
-            _x += 8;
-        }
+        draw_char (buf, _x, _y, str[i++], rgb);
+        _x += 8;
     }
 
     return;
@@ -44,12 +31,12 @@ void draw_str(const u8 *buf, const char *str, const u16 x, const u16 y, const u3
 
 void draw_char(const u8 *fb, const u16 x, const u16 y, const u8 c, const u32 rgb)
 {
-    u16 _x, _y, _c = 0;
+    u16 _x, _y, _c;
 
-    if (c < 32 || c > 127) // Only printable characters allowed!
+    if (c < 0x20 || c > 0x7F) // Only printable characters allowed!
         return;
 
-    _c = (c - 32) << 3;
+    _c = (c - 0x20) << 3;
 
     for(_y = 0; _y < 8; _y++)
     {

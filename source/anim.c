@@ -13,8 +13,6 @@ u32 get_read_delay()
     if (f_ret != FR_OK)
         return 0; // GOTTA GO FAST
 
-    u8 tmp[TOP_FB_SZ] = {0};
-
     REG_TM0VAL = 0; // Reset the timer
     REG_TM0CNT = 0x87; // Configure the timer to count up
 
@@ -22,21 +20,14 @@ u32 get_read_delay()
     f_read(&test_file, TOP_SCREEN0, TOP_FB_SZ, &br_top);
     f_read(&test_file, BOT_SCREEN0, SUB_FB_SZ, &br_sub);
 
-    // memcpy speed
-    memcpy(tmp, TOP_SCREEN0, TOP_FB_SZ);
-    memcpy(tmp, BOT_SCREEN0, SUB_FB_SZ);
-
     REG_TM0CNT = 0x07; // Stop the timer
-    read_delay = REG_TM0VAL; // Read the timers
+    read_delay = REG_TM0VAL; // Read the timer value
 
     REG_TM0VAL = 0; // Reset the timer to 0
 
     f_close(&test_file);
 
-    if ((br_top + br_sub) < (TOP_FB_SZ + SUB_FB_SZ)) // Amount of read data is less than intended, sort of invalid test?
-        return 0;
-
-    return (u32)read_delay;
+    return read_delay;
 }
 
 // Helper function, gets a random number from 0 to (max-1) and loads it
@@ -81,7 +72,7 @@ void load_animation(u32 max)
 
     skip:
 
-    if (cfg[0] < 1)
+    if (cfg[0] == 0)
         cfg[0] = 15; // Let's avoid division by zero
 
     animation_loop(top_fname, sub_fname, cfg[0], cfg[1]);
@@ -95,7 +86,7 @@ void load_animation(u32 max)
 
 void animation_loop(char *top_anim, char *bottom_anim, const u8 fps, const u8 compression)
 {
-    u32 delay_base = (65457 / fps), // 65457 = 1 sec, because the prescaler is set to 1024
+    u32 delay_base = (65457 / fps), // 65457 = 1 sec
         read_delay = get_read_delay(); // File read delay, detailed above
 
     FIL bgr_anim_top,
@@ -137,7 +128,7 @@ void animation_loop(char *top_anim, char *bottom_anim, const u8 fps, const u8 co
         {
             while(1)
             {
-                if (HID_PAD & (KEY_SELECT | KEY_START)) // End the animation if the 'SELECT' or 'START' key is pressed
+                if (HID_PAD & KEY_SKIP) // End the animation if ABXY/Select/Start are being pressed
                     break;
 
                 if (top_)
@@ -180,17 +171,17 @@ void animation_loop(char *top_anim, char *bottom_anim, const u8 fps, const u8 co
             // https://sourceforge.net/p/sevenzip/discussion/45797/thread/b6bd62f8/#4a3d
             // Given TOP_FB_SZ/SUB_FB_SZ are (relatively) small, it makes no sense to use (+ 64K)
 
-            qlz_state_decompress *state_decompress = (qlz_state_decompress*)0x27F00000; // Hopefully there's nothing too interesting here :^)
+            qlz_state_decompress *state_decompress = (qlz_state_decompress*)0x27800000; // Hopefully there's nothing too interesting here :^)
             memset(state_decompress, 0, sizeof(qlz_state_decompress));
 
             while(1)
             {
-                if (HID_PAD & (KEY_SELECT | KEY_START)) // End the animation if the 'SELECT' or 'START' key is pressed
+                if (HID_PAD & KEY_SKIP) // End the animation if ABXY/Select/Start are being pressed
                     break;
 
                 if (top_) // If there's a top animation...
                 {
-                    f_read(&bgr_anim_top, (void*)top_frame_comp, 9, &put_top); // Read the top animations' QuickLZ header
+                    f_read(&bgr_anim_top, top_frame_comp, 9, &put_top); // Read the top animations' QuickLZ header
                     if (put_top != 9) // If it couldn't read the header
                     {
                         top_ = 0; // Disable the animation
@@ -199,7 +190,7 @@ void animation_loop(char *top_anim, char *bottom_anim, const u8 fps, const u8 co
 
                     comp_size = qlz_size_compressed(top_frame_comp); // Get compressed size
 
-                    f_read(&bgr_anim_top, (void*)top_frame_comp + 9, comp_size - 9, &put_top); // Read compressed buffer
+                    f_read(&bgr_anim_top, top_frame_comp + 9, comp_size - 9, &put_top); // Read compressed buffer
 
                     if (qlz_size_decompressed(top_frame_comp) != TOP_FB_SZ || put_top != (comp_size - 9)) // Check if invalid frame data / EOF
                         break;
@@ -215,7 +206,7 @@ void animation_loop(char *top_anim, char *bottom_anim, const u8 fps, const u8 co
 
                 if (sub_) // If there's a bottom animation...
                 {
-                    f_read(&bgr_anim_bot, (void*)sub_frame_comp, 9, &put_bot); // same as above, but for bottom animation :)
+                    f_read(&bgr_anim_bot, sub_frame_comp, 9, &put_bot); // same as above, but for bottom animation :)
                     if (put_bot != 9)
                     {
                         sub_ = 0;
@@ -224,7 +215,7 @@ void animation_loop(char *top_anim, char *bottom_anim, const u8 fps, const u8 co
 
                     comp_size = qlz_size_compressed(sub_frame_comp);
 
-                    f_read(&bgr_anim_bot, (void*)sub_frame_comp + 9, comp_size - 9, &put_bot);
+                    f_read(&bgr_anim_bot, sub_frame_comp + 9, comp_size - 9, &put_bot);
 
                     if (qlz_size_decompressed(sub_frame_comp) != SUB_FB_SZ || put_bot != (comp_size - 9))
                         break;

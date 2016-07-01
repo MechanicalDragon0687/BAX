@@ -2,23 +2,6 @@
 
 static FATFS fs;
 
-void error(const char *msg)
-{
-    draw_str(TOP_SCREEN0, "Error:", 10, 10, 0xFFFFFF);
-    draw_str(TOP_SCREEN0, msg, 66, 10, 0xFFFFFF);
-    draw_str(TOP_SCREEN0, "Press any key to power off", 10, 26, 0xFFFFFF);
-
-    u32 pad = HID_PAD;
-    while(1)
-    {
-        if (pad != HID_PAD)
-            break;
-    }
-
-    i2cWriteRegister(0x03, 0x20, 1);
-    while(1);
-}
-
 u32 check_anims()
 {
     char top[]    = TOP_ANIM_PATH,
@@ -45,7 +28,7 @@ u32 check_anims()
 int main()
 {
     if (f_mount(&fs, "0:", 1) != FR_OK) // Mount the SD card
-        error("Failed to mount SD.");
+        error("Failed to mount the sd card");
 
     u32 amt = check_anims(); // Check amount of animations
 
@@ -53,6 +36,6 @@ int main()
         load_animation(amt); // Load randomizer
 
     chainload();
-    
+
     return 0;
 }
