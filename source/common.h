@@ -20,12 +20,14 @@ typedef volatile u16 vu16;
 typedef volatile u32 vu32;
 typedef volatile u64 vu64;
 
-#define TOP_ANIM_PATH   "/anim/0/anim"
-#define SUB_ANIM_PATH   "/anim/0/bottom_anim"
-#define CFG_ANIM_PATH   "/anim/0/config.txt"
-#define LOADER_PATH     "/anim/loader.bin"
-#define PAYLOAD_PATH    "/anim/arm9payload.bin"
-#define CALIB_PATH      "/anim/calibrator"
+#define BASE_PATH       "/anim/"
+//#define BASE_PATH     "/3ds/arm9/anim/" SOON™
+
+#define TOP_ANIM_PATH   BASE_PATH "0/anim"
+#define SUB_ANIM_PATH   BASE_PATH "0/bottom_anim"
+#define CFG_ANIM_PATH   BASE_PATH "0/config.txt"
+#define PAYLOAD_PATH    BASE_PATH "arm9payload.bin"
+#define CALIB_PATH      BASE_PATH "calibrator"
 
 #define KEY_A           (1 << 0)  // A
 #define KEY_B           (1 << 1)  // B
@@ -37,19 +39,21 @@ typedef volatile u64 vu64;
 #define KEY_DLEFT       (1 << 5)  // DPAD LEFT
 #define KEY_DUP         (1 << 6)  // DPAD UP
 #define KEY_DDOWN       (1 << 7)  // DPAD DOWN
-#define KEY_RT          (1 << 8)  // RIGHT TRIGGER
-#define KEY_LT          (1 << 9)  // LEFT TRIGGER
+#define KEY_RT          (1 << 8)  // RIGHT SHOULDER TRIGGER
+#define KEY_LT          (1 << 9)  // LEFT SHOULDER TRIGGER
 
 #define KEY_SKIP        (KEY_A | KEY_B | KEY_X | KEY_Y | KEY_SELECT | KEY_START) // Keys to end the animation
 
 #define CFG_BOOTENV     (*(vu8 *)0x10010000) // CFG_BOOTENV
+#define PDN_GPU_CNT     (*(vu8 *)0x10141200) // PDN_GPU_CNT
 #define REG_PRNG        (*(vu32*)0x10011000) // REG_PRNG
 #define REG_TM0VAL      (*(vu16*)0x10003000) // TIMER0_VAL
 #define REG_TM0CNT      (*(vu16*)0x10003002) // TIMER0_CNT
 #define HID_PAD         (*(vu16*)0x10146000 ^ 0xFFF) // HID_PAD
-#define PDN_GPU_CNT     (*(vu32*)0x10141200) // PDN_GPU_CNT
 
 void error(const char *msg);
+void poweroff();
+void chainload();
 
 #include "anim.h"
 #include "draw.h"
@@ -57,5 +61,4 @@ void error(const char *msg);
 #include "fs.h"
 #include "gw.h"
 #include "i2c.h"
-#include "loader.h"
 #include "quicklz.h"

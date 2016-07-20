@@ -51,4 +51,3 @@ inline void delay(u32 n)
     REG_TM0CNT = 0x07; // Stop timer count
     REG_TM0VAL = 0; // Reset the timer
 }
-

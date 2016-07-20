@@ -1,151 +1,69 @@
-#---------------------------------------------------------------------------------
-.SUFFIXES:
-#---------------------------------------------------------------------------------
+# Makefile is originally from CakesFW by b1l1s / mid-kid
+# Slightly edited it to fit my purposes
 
-ifeq ($(strip $(DEVKITARM)),)
-$(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
-endif
+rwildcard = $(foreach d, $(wildcard $1*), $(filter $(subst *, %, $2), $d) $(call rwildcard, $d/, $2))
 
-include $(DEVKITARM)/ds_rules
+CC := arm-none-eabi-gcc
+AS := arm-none-eabi-as
+LD := arm-none-eabi-ld
+OC := arm-none-eabi-objcopy
 
-#---------------------------------------------------------------------------------
-# TARGET is the name of the output
-# BUILD is the directory where object files & intermediate files will be placed
-# SOURCES is a list of directories containing source code
-# DATA is a list of directories containing data files
-# INCLUDES is a list of directories containing header files
-# SPECS is the directory containing the important build and link files
-#---------------------------------------------------------------------------------
-TARGET 		:=  arm9loaderhax
-BUILD		:=	build
-SOURCES		:=	source source/fatfs source/fatfs/sdmmc
-DATA		:=	data
-INCLUDES	:=	source source/fatfs source/fatfs/sdmmc
+dir_source := source
+dir_build  := build
+dir_out    := release
+dir_loader := loader
 
-NAME        :=  BootAnim9
-LOADER      :=  loader
-RELEASEDIR  :=  release
+LIBPATHS  :=
 
-#---------------------------------------------------------------------------------
-# Setup some defines
-#---------------------------------------------------------------------------------
+LIBDIRS := $(foreach dir,$(LIBPATHS), -L$(dir)/lib)
+INCLUDES := $(foreach dir,$(LIBPATHS), -I$(dir)/include)
 
-#---------------------------------------------------------------------------------
-# options for code generation
-#---------------------------------------------------------------------------------
-ARCH	 :=	-marm -march=armv5te -mtune=arm946e-s
+LIBS :=
 
-CFLAGS   := $(ARCH) \
-			-g -flto -Wall -O2 \
-			-fomit-frame-pointer -ffast-math \
-			-std=c99
+ASFLAGS  := -mlittle-endian -march=armv5te -mcpu=arm946e-s
 
-CFLAGS	 += $(INCLUDE) -DARM9
-CXXFLAGS := $(CFLAGS) -fno-rtti -fno-exceptions
+CFLAGS   := $(ASFLAGS) -g -O2 -flto \
+			-marm -Wall -Wextra \
+			-Wno-main -ffast-math \
+			$(INCLUDE)
 
-LDFLAGS  := -nostartfiles -T../linker.ld -g $(ARCH) -Wl,-Map,$(notdir $*.map)
-ASFLAGS	 :=	-g $(ARCH)
+LDFLAGS  := -nostartfiles -T linker.ld $(LIBDIRS) $(LIBS) -g $(ASFLAGS) 
 
-#---------------------------------------------------------------------------------
-# list of directories containing libraries, this must be the top level containing
-# include and lib
-#---------------------------------------------------------------------------------
-LIBDIRS	:=
+objects = $(patsubst $(dir_source)/%.s, $(dir_build)/%.o, \
+			$(patsubst $(dir_source)/%.c, $(dir_build)/%.o, \
+			$(call rwildcard, $(dir_source), *.s *.c)))
 
-#---------------------------------------------------------------------------------
-# any extra libraries we wish to link with the project (order is important)
-#---------------------------------------------------------------------------------
-LIBS    :=
+.PHONY: all
+all: arm9loaderhax.bin
 
-
-#---------------------------------------------------------------------------------
-# no real need to edit anything past this point unless you need to add additional
-# rules for different file extensions
-#---------------------------------------------------------------------------------
-ifneq ($(BUILD),$(notdir $(CURDIR)))
-#---------------------------------------------------------------------------------
-
-export OUTPUT	:=	$(CURDIR)/$(TARGET)
-
-export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
-			$(foreach dir,$(DATA),$(CURDIR)/$(dir))
-
-export DEPSDIR	:=	$(CURDIR)/$(BUILD)
-
-CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
-CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
-SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
-BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
-
-#---------------------------------------------------------------------------------
-# use CXX for linking C++ projects, CC for standard C
-#---------------------------------------------------------------------------------
-ifeq ($(strip $(CPPFILES)),)
-#---------------------------------------------------------------------------------
-	export LD	:=	$(CC)
-#---------------------------------------------------------------------------------
-else
-#---------------------------------------------------------------------------------
-	export LD	:=	$(CXX)
-#---------------------------------------------------------------------------------
-endif
-#---------------------------------------------------------------------------------
-
-export OFILES	:= $(addsuffix .o,$(BINFILES)) \
-			$(SFILES:.s=.o) $(CPPFILES:.cpp=.o) $(CFILES:.c=.o)
-
-export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
-			$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
-			-I$(CURDIR)/$(BUILD)
-
-export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
-
-.PHONY: $(BUILD) all loader release clean
-
-#---------------------------------------------------------------------------------
-all: $(BUILD) loader
-
-$(BUILD):
-	@[ -d $(OUTPUT_D) ] || mkdir -p $(OUTPUT_D)
-	@[ -d $(BUILD) ] || mkdir -p $(BUILD)
-	@make --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
-
-loader:
-	@make --no-print-directory -C $(CURDIR)/$(LOADER) -f $(CURDIR)/$(LOADER)/Makefile
-
-release: $(BUILD) loader
-	@mkdir -p $(CURDIR)/$(RELEASEDIR)/anim
-	@cp -a $(CURDIR)/$(TARGET).bin $(CURDIR)/$(RELEASEDIR)/$(TARGET).bin
-	@cp -a $(CURDIR)/$(LOADER)/$(LOADER).bin $(CURDIR)/$(RELEASEDIR)/anim/$(LOADER).bin
-	@cp -a  $(DATA)/calibrator $(CURDIR)/$(RELEASEDIR)/anim/calibrator
-	@echo Done!
-
-#---------------------------------------------------------------------------------
+.PHONY: clean
 clean:
-	@make --no-print-directory -C $(CURDIR)/$(LOADER) -f $(CURDIR)/$(LOADER)/Makefile clean
-	@rm -rf $(BUILD) $(OUTPUT).bin $(CURDIR)/$(RELEASEDIR)
-	@echo cleaned $(NAME)
+	@rm -rf release $(dir_build) $(dir_out) arm9loaderhax.bin
+	@echo cleaned BootAnim9
 
-#---------------------------------------------------------------------------------
-else
+release: arm9loaderhax.bin
+	@mkdir -p release/anim
+	@cp -a arm9loaderhax.bin release/arm9loaderhax.bin
+	@cp -a data/calibrator release/anim/calibrator
+	@echo Release done!
 
-DEPENDS	:=	$(OFILES:.o=.d)
+arm9loaderhax.bin: $(dir_build)/main.elf
+	$(OC) -S -O binary $< $@
+	@echo built BootAnim9
 
-#---------------------------------------------------------------------------------
-# main targets
-#---------------------------------------------------------------------------------
-$(OUTPUT).bin	:	$(OUTPUT).elf
-$(OUTPUT).elf	:	$(OFILES)
+$(dir_build)/main.elf: $(objects)
+	$(CC) $^ $(LDFLAGS) $(OUTPUT_OPTION)
 
-#---------------------------------------------------------------------------------
-%.bin: %.elf
-	@$(OBJCOPY) --set-section-flags .bss=alloc,load,contents -O binary $< $@
-	@echo built $(NAME)
-	@rm -f $(OUTPUT).elf
+# Optimization flags for certain files
+$(dir_build)/anim.o: CFLAGS += -O3
+$(dir_build)/quicklz.o: CFLAGS += -O3
 
--include $(DEPENDS)
+$(dir_build)/%.o: $(dir_source)/%.c
+	@mkdir -p "$(@D)"
+	$(COMPILE.c) $(CFLAGS) $(OUTPUT_OPTION) $<
 
+$(dir_build)/%.o: $(dir_source)/%.s
+	@mkdir -p "$(@D)"
+	$(COMPILE.s) $(ASFLAGS) $(OUTPUT_OPTION) $<
 
-#---------------------------------------------------------------------------------------
-endif
-#---------------------------------------------------------------------------------------
+include $(call rwildcard, $(dir_build), *.d)

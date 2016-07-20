@@ -9,14 +9,6 @@
 #define BOT_SCREEN0 (u8*)(*(u32*)0x23FFFE08)
 #define BOT_SCREEN1 (u8*)(*(u32*)0x23FFFE08)
 
-// Colors
-#define RED   0xFF0000
-#define GREEN 0x00FF00
-#define BLUE  0x0000FF
-#define BLACK 0x000000
-#define WHITE 0xFFFFFF
-// Good enough :P
-
 // Given a framebuffer, get its length
 u32 fb_sz(u8 *fb);
 

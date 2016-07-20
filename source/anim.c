@@ -1,28 +1,26 @@
 #include "common.h"
 
-u8 cfg[2] = {0}; // per-animation configuration
+static u8 cfg[2] = {0}; // per-animation configuration
 // cfg[0] is the "framerate", cfg[1] is the compression flag
 
 u32 get_read_delay()
 {
     FIL test_file;
     FRESULT f_ret;
-    size_t br_top, br_sub, read_delay;
+    size_t br, read_delay;
 
     f_ret = f_open(&test_file, CALIB_PATH, FA_READ);
     if (f_ret != FR_OK)
         return 0; // GOTTA GO FAST
 
     REG_TM0VAL = 0; // Reset the timer
-    REG_TM0CNT = 0x87; // Configure the timer to count up
+    REG_TM0CNT = 0x87; // Start counting
 
     // Read speed
-    f_read(&test_file, TOP_SCREEN0, TOP_FB_SZ, &br_top);
-    f_read(&test_file, BOT_SCREEN0, SUB_FB_SZ, &br_sub);
+    f_read(&test_file, TOP_SCREEN0, TOP_FB_SZ + SUB_FB_SZ, &br);
 
     REG_TM0CNT = 0x07; // Stop the timer
     read_delay = REG_TM0VAL; // Read the timer value
-
     REG_TM0VAL = 0; // Reset the timer to 0
 
     f_close(&test_file);
@@ -33,9 +31,8 @@ u32 get_read_delay()
 // Helper function, gets a random number from 0 to (max-1) and loads it
 void load_animation(u32 max)
 {
-    u32 rng = (REG_PRNG % max); // Dice roll
+    u32 rng = (REG_PRNG % max);
 
-    // Load /anim/'<rng>'/{anim, bottom_anim, config.txt}
     char cfg_fname[] = CFG_ANIM_PATH, // "/anim/0/config.txt"
          top_fname[] = TOP_ANIM_PATH, // "/anim/0/anim"
          sub_fname[] = SUB_ANIM_PATH; // "/anim/0/bottom_anim"
@@ -53,9 +50,6 @@ void load_animation(u32 max)
         f_read(&cfg_fil, (void*)cfg_buf, 0x10, &br); // Read up to 16 bytes from the config file
         f_close(&cfg_fil);
 
-        if (!br) // File size is 0, skip
-            goto skip;
-
         u8 i;
 
         for (i = 0; (i < 2) && (i < br) && (cfg_buf[i] >= '0') && (cfg_buf[i] <= '9'); i++)
@@ -68,9 +62,12 @@ void load_animation(u32 max)
 
         if (!strcmp("lzd", &cfg_buf[i]))
             cfg[1] = 1; // If string is "lzd", then it uses ban9comp
-    }
 
-    skip:
+        /**
+        else if (!strcmp("someothermethod", &cfg_buf[i]))
+            cfg[1] = 2;
+        */
+    }
 
     if (cfg[0] == 0)
         cfg[0] = 15; // Let's avoid division by zero
@@ -97,7 +94,7 @@ void animation_loop(char *top_anim, char *bottom_anim, const u8 fps, const u8 co
 
     u8 top_anim_flag = 0, top_ = 0,  // if 1 -> top animation exists
        sub_anim_flag = 0, sub_ = 0;  // ^ same here, but with bottom animation
-       
+
     char top_frame_prev[TOP_FB_SZ] = {0}, sub_frame_prev[SUB_FB_SZ] = {0};
 
     if (f_open(&bgr_anim_top, top_anim, FA_READ) == FR_OK) // If top animation opened fine
@@ -139,7 +136,8 @@ void animation_loop(char *top_anim, char *bottom_anim, const u8 fps, const u8 co
                         top_ = 0; // Disable top animation, we reached EOF
 
                     memcpy(TOP_SCREEN0, top_frame_prev, TOP_FB_SZ);
-                }  
+                    // ^ pseudo double buffering, because memcpy is *way* faster than file reading
+                }
 
                 if (sub_)
                 {
@@ -192,7 +190,7 @@ void animation_loop(char *top_anim, char *bottom_anim, const u8 fps, const u8 co
 
                     f_read(&bgr_anim_top, top_frame_comp + 9, comp_size - 9, &put_top); // Read compressed buffer
 
-                    if (qlz_size_decompressed(top_frame_comp) != TOP_FB_SZ || put_top != (comp_size - 9)) // Check if invalid frame data / EOF
+                    if (qlz_size_decompressed(top_frame_comp) != TOP_FB_SZ || put_top != (comp_size - 9)) // Check for invalid frame data
                         break;
 
                     qlz_decompress(top_frame_comp, top_frame_curr, state_decompress); // Decompress the frame

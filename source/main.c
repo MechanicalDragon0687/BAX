@@ -2,6 +2,12 @@
 
 static FATFS fs;
 
+void poweroff()
+{
+    i2cWriteRegister(0x03, 0x20, 1);
+    while(1);
+}
+
 u32 check_anims()
 {
     char top[]    = TOP_ANIM_PATH,
@@ -27,6 +33,9 @@ u32 check_anims()
 /** If there were any use for arguments, I'd bring them back */
 int main()
 {
+    if (PDN_GPU_CNT == 1) // no screen init is not supported bruh
+        poweroff();
+
     if (f_mount(&fs, "0:", 1) != FR_OK) // Mount the SD card
         error("Failed to mount the sd card");
 
