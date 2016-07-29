@@ -55,15 +55,17 @@ and a config file, while animation 1 has only a top screen animation and no conf
 
 #### Credits
 
-- chaoskagami and TheBaloneyBoy for code improvements
+- chaoskagami and TheBaloneyBoy for code contributions
 
 - Docmudkipz for makeanim
 
 - d0k3 for his [compression](https://github.com/d0k3/ban9comp) implementation
 
-- \#Cakey for useful tips and pointers, as always
-
 - Normmatt for sdmmc.c/h, ChaN for FatFS
+
+- gemarcano for start.s
+
+- \#Cakey for useful tips and pointers, as always
 
 - Everyone else who supported me through these four awesome months! (yes, I'm looking at you /r/Nintendohacks!)
 

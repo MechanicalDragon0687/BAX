@@ -42,7 +42,7 @@ typedef volatile u64 vu64;
 #define KEY_RT          (1 << 8)  // RIGHT SHOULDER TRIGGER
 #define KEY_LT          (1 << 9)  // LEFT SHOULDER TRIGGER
 
-#define KEY_SKIP        (KEY_A | KEY_B | KEY_X | KEY_Y | KEY_SELECT | KEY_START) // Keys to end the animation
+#define KEY_SKIP        (KEY_A | KEY_B | KEY_X | KEY_Y) // Keys to end the animation
 
 #define CFG_BOOTENV     (*(vu8 *)0x10010000) // CFG_BOOTENV
 #define PDN_GPU_CNT     (*(vu8 *)0x10141200) // PDN_GPU_CNT
@@ -51,14 +51,5 @@ typedef volatile u64 vu64;
 #define REG_TM0CNT      (*(vu16*)0x10003002) // TIMER0_CNT
 #define HID_PAD         (*(vu16*)0x10146000 ^ 0xFFF) // HID_PAD
 
-void error(const char *msg);
 void poweroff();
 void chainload();
-
-#include "anim.h"
-#include "draw.h"
-#include "fatfs/ff.h"
-#include "fs.h"
-#include "gw.h"
-#include "i2c.h"
-#include "quicklz.h"

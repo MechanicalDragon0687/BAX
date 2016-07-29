@@ -845,4 +845,3 @@ size_t qlz_decompress(const char *source, void *destination, qlz_state_decompres
 #endif
 	return dsiz;
 }
-

@@ -1,13 +1,18 @@
 #pragma once
 
+#include "common.h"
+
 #define TOP_FB_SZ 0x46500
 #define SUB_FB_SZ 0x38400
 
-// Straight outta HelloEntryPoint
-#define TOP_SCREEN0 (u8*)(*(u32*)0x23FFFE00)
-#define TOP_SCREEN1 (u8*)(*(u32*)0x23FFFE00)
-#define BOT_SCREEN0 (u8*)(*(u32*)0x23FFFE08)
-#define BOT_SCREEN1 (u8*)(*(u32*)0x23FFFE08)
+typedef struct fb_t
+{
+	u8 *top_left;
+	u8 *top_right;
+	u8 *bottom;
+} fb_t;
+
+extern fb_t *framebuffer;
 
 // Given a framebuffer, get its length
 u32 fb_sz(u8 *fb);
@@ -16,4 +21,16 @@ u32 fb_sz(u8 *fb);
 void clear_screen(u8 *fb, u32 rgb);
 
 // Delay for n ticks (max is 2^16)
-void delay(u32 n);
+void delay(const u16 n);
+
+// Draws string str at (x, y) with color rgb
+void draw_str(const u8 *fb, const char *str, const u16 x, const u16 y, const u32 rgb);
+
+// Draw char c in framebuffer fb at (x, y) with color rgb
+void draw_char(const u8 *fb, const u16 x, const u16 y, const u8 c, const u32 rgb);
+
+// Display error message
+void error(const char *msg);
+
+// Font
+const char font[768];

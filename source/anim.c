@@ -1,7 +1,35 @@
 #include "common.h"
+#include "anim.h"
+#include "draw.h"
+#include "fatfs/ff.h"
+#include "fs.h"
+#include "quicklz.h"
 
 static u8 cfg[2] = {0}; // per-animation configuration
 // cfg[0] is the "framerate", cfg[1] is the compression flag
+
+//extern fb_t *framebuffer;
+
+u32 check_anims()
+{
+    char top[]    = TOP_ANIM_PATH,
+         bottom[] = SUB_ANIM_PATH;
+
+    u32 retval = 0; // Return value
+
+    for (u32 i = 0; i < 10; i++) // Check files from dir '0' to '9'
+    {
+        top[6]    = i + '0'; // Set the '0' in the string to '0' + i, therefore 0 <= i < 10
+        bottom[6] = i + '0';
+
+        if (file_exists(top) || file_exists(bottom)) // If at least one of them exists
+            retval++; // Increase return value
+
+        else
+            break; // If neither exists break out
+    }
+    return retval; // Return retval, should be between 0 and 9
+}
 
 u32 get_read_delay()
 {
@@ -17,7 +45,7 @@ u32 get_read_delay()
     REG_TM0CNT = 0x87; // Start counting
 
     // Read speed
-    f_read(&test_file, TOP_SCREEN0, TOP_FB_SZ + SUB_FB_SZ, &br);
+    f_read(&test_file, framebuffer->top_left, TOP_FB_SZ + SUB_FB_SZ, &br);
 
     REG_TM0CNT = 0x07; // Stop the timer
     read_delay = REG_TM0VAL; // Read the timer value
@@ -47,7 +75,7 @@ void load_animation(u32 max)
     {
         char cfg_buf[0x10] = {0};
 
-        f_read(&cfg_fil, (void*)cfg_buf, 0x10, &br); // Read up to 16 bytes from the config file
+        f_read(&cfg_fil, cfg_buf, 0x10, &br); // Read up to 16 bytes from the config file
         f_close(&cfg_fil);
 
         u8 i;
@@ -75,8 +103,8 @@ void load_animation(u32 max)
     animation_loop(top_fname, sub_fname, cfg[0], cfg[1]);
     // Animation loop, cfg[0] is framerate and cfg[1] is compression (0 or 1 currently)
 
-    clear_screen(TOP_SCREEN0, 0);
-    clear_screen(BOT_SCREEN0, 0);
+    clear_screen(framebuffer->top_left, 0);
+    clear_screen(framebuffer->bottom, 0);
 
     return;
 }
@@ -135,7 +163,7 @@ void animation_loop(char *top_anim, char *bottom_anim, const u8 fps, const u8 co
                     if (put_top < TOP_FB_SZ) // If it couldn't read the entire frame...
                         top_ = 0; // Disable top animation, we reached EOF
 
-                    memcpy(TOP_SCREEN0, top_frame_prev, TOP_FB_SZ);
+                    memcpy(framebuffer->top_left, top_frame_prev, TOP_FB_SZ);
                     // ^ pseudo double buffering, because memcpy is *way* faster than file reading
                 }
 
@@ -146,7 +174,7 @@ void animation_loop(char *top_anim, char *bottom_anim, const u8 fps, const u8 co
                     if (put_bot < SUB_FB_SZ)
                         sub_ = 0;
 
-                    memcpy(BOT_SCREEN0, sub_frame_prev, SUB_FB_SZ);
+                    memcpy(framebuffer->bottom, sub_frame_prev, SUB_FB_SZ);
                 }
 
                 if (!top_ && !sub_)
@@ -199,7 +227,7 @@ void animation_loop(char *top_anim, char *bottom_anim, const u8 fps, const u8 co
                         top_frame_curr[i] += top_frame_prev[i];
 
                     memcpy(top_frame_prev, top_frame_curr, TOP_FB_SZ); // Keep a copy of the fb
-                    memcpy(TOP_SCREEN0, top_frame_curr, TOP_FB_SZ); // Display it on the screen
+                    memcpy(framebuffer->top_left, top_frame_curr, TOP_FB_SZ); // Display it on the screen
                 }
 
                 if (sub_) // If there's a bottom animation...
@@ -224,7 +252,7 @@ void animation_loop(char *top_anim, char *bottom_anim, const u8 fps, const u8 co
                         sub_frame_curr[i] += sub_frame_prev[i];
 
                     memcpy(sub_frame_prev, sub_frame_curr, SUB_FB_SZ);
-                    memcpy(BOT_SCREEN0, sub_frame_curr, SUB_FB_SZ);
+                    memcpy(framebuffer->bottom, sub_frame_curr, SUB_FB_SZ);
                 }
 
                 skip_1:
@@ -239,6 +267,8 @@ void animation_loop(char *top_anim, char *bottom_anim, const u8 fps, const u8 co
             }
             break;
         }
+
+        default:
 
         if (top_anim_flag) // If top animation was opened, close it
             f_close(&bgr_anim_top);

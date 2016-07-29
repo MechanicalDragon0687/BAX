@@ -2,6 +2,9 @@
 
 #include "common.h"
 
+// Get amount of animations
+u32 check_anims();
+
 // Read a file and get how much time it takes to read it
 u32 get_read_delay();
 

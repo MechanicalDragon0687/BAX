@@ -13,25 +13,22 @@ dir_build  := build
 dir_out    := release
 dir_loader := loader
 
-LIBPATHS  :=
-
-LIBDIRS := $(foreach dir,$(LIBPATHS), -L$(dir)/lib)
-INCLUDES := $(foreach dir,$(LIBPATHS), -I$(dir)/include)
-
-LIBS :=
-
 ASFLAGS  := -mlittle-endian -march=armv5te -mcpu=arm946e-s
 
 CFLAGS   := $(ASFLAGS) -g -O2 -flto \
 			-marm -Wall -Wextra \
-			-Wno-main -ffast-math \
+			-fomit-frame-pointer -fshort-wchar \
+			-Wpedantic -pedantic \
+			-Wcast-align -Wmissing-include-dirs \
+			-Wredundant-decls -Wshadow \
+			-Wno-unused -Wno-main -ffast-math \
 			$(INCLUDE)
 
-LDFLAGS  := -nostartfiles -T linker.ld $(LIBDIRS) $(LIBS) -g $(ASFLAGS) 
+LDFLAGS  := -nostartfiles -T linker.ld -g $(ASFLAGS)
 
 objects = $(patsubst $(dir_source)/%.s, $(dir_build)/%.o, \
-			$(patsubst $(dir_source)/%.c, $(dir_build)/%.o, \
-			$(call rwildcard, $(dir_source), *.s *.c)))
+		  $(patsubst $(dir_source)/%.c, $(dir_build)/%.o, \
+		  $(call rwildcard, $(dir_source), *.s *.c)))
 
 .PHONY: all
 all: arm9loaderhax.bin
@@ -56,6 +53,7 @@ $(dir_build)/main.elf: $(objects)
 
 # Optimization flags for certain files
 $(dir_build)/anim.o: CFLAGS += -O3
+$(dir_build)/draw.o: CFLAGS += -O3
 $(dir_build)/quicklz.o: CFLAGS += -O3
 
 $(dir_build)/%.o: $(dir_source)/%.c

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "fatfs/ff.h"
 
 bool file_exists(const char *path) {
     FIL file;
