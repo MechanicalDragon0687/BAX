@@ -38,20 +38,6 @@ void clear_screen(u8 *fb, u32 rgb)
     }
 }
 
-// Thanks to hartmannaf for letting me know about 3dbrew.org/wiki/TIMER_Registers
-inline void delay(const u16 n)
-{
-    if (n == 0) // In case delay is 0
-        return;
-
-    REG_TM0VAL = 0; // Reset the timer
-    REG_TM0CNT = 0x87; // Start timer count
-
-    while(REG_TM0VAL < n); // Delay n ticks
-
-    REG_TM0CNT = 0x07; // Stop timer count
-}
-
 inline void set_pixel(u8 *fb, const u16 x, const u16 y, const u32 rgb)
 {
     if (y > 239 || x > (fb == framebuffer->top_left ? 399 : 319))

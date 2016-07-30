@@ -20,14 +20,17 @@ typedef volatile u16 vu16;
 typedef volatile u32 vu32;
 typedef volatile u64 vu64;
 
-#define BASE_PATH       "/anim/"
+#define MAX_ANIMATIONS  16
+
+#define TOP_ANIM_PATH   "/anim"
+#define SUB_ANIM_PATH   "/bottom_anim"
+#define CFG_ANIM_PATH   "/config.txt"
+
+#define BASE_PATH       "/anim"
 //#define BASE_PATH     "/3ds/arm9/anim/" SOON™
 
-#define TOP_ANIM_PATH   BASE_PATH "0/anim"
-#define SUB_ANIM_PATH   BASE_PATH "0/bottom_anim"
-#define CFG_ANIM_PATH   BASE_PATH "0/config.txt"
-#define PAYLOAD_PATH    BASE_PATH "arm9payload.bin"
-#define CALIB_PATH      BASE_PATH "calibrator"
+#define PAYLOAD_PATH    BASE_PATH "/arm9payload.bin"
+#define CALIB_PATH      BASE_PATH "/calibrator"
 
 #define KEY_A           (1 << 0)  // A
 #define KEY_B           (1 << 1)  // B

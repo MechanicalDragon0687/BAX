@@ -20,9 +20,6 @@ u32 fb_sz(u8 *fb);
 // Clear screen (fb) with color (rgb)
 void clear_screen(u8 *fb, u32 rgb);
 
-// Delay for n ticks (max is 2^16)
-void delay(const u16 n);
-
 // Draws string str at (x, y) with color rgb
 void draw_str(const u8 *fb, const char *str, const u16 x, const u16 y, const u32 rgb);
 

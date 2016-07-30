@@ -8,66 +8,61 @@
 static u8 cfg[2] = {0}; // per-animation configuration
 // cfg[0] is the "framerate", cfg[1] is the compression flag
 
-//extern fb_t *framebuffer;
+// Concatenate two strings together
+void concat(char *str1, char *str2) { strcpy(str1 + strlen(str1), str2); }
 
-u32 check_anims()
+// Helper function, randomizer
+void load_animation()
 {
-    char top[]    = TOP_ANIM_PATH,
-         bottom[] = SUB_ANIM_PATH;
+	char folders[MAX_ANIMATIONS][255] = {{0}};
 
-    u32 retval = 0; // Return value
+    char tmp_dir[255] = {0}, top_fname [255]= {0}, sub_fname[255] = {0}, cfg_fname[255] = {0};
+    u32 count = 0;
 
-    for (u32 i = 0; i < 10; i++) // Check files from dir '0' to '9'
-    {
-        top[6]    = i + '0'; // Set the '0' in the string to '0' + i, therefore 0 <= i < 10
-        bottom[6] = i + '0';
-
-        if (file_exists(top) || file_exists(bottom)) // If at least one of them exists
-            retval++; // Increase return value
-
-        else
-            break; // If neither exists break out
-    }
-    return retval; // Return retval, should be between 0 and 9
-}
-
-u32 get_read_delay()
-{
-    FIL test_file;
     FRESULT f_ret;
-    size_t br, read_delay;
+    DIR anim_dir;
+    FILINFO file_info;
 
-    f_ret = f_open(&test_file, CALIB_PATH, FA_READ);
-    if (f_ret != FR_OK)
-        return 0; // GOTTA GO FAST
+    f_ret = f_opendir(&anim_dir, BASE_PATH);
+    while (f_ret == FR_OK && count < MAX_ANIMATIONS)
+    {
+        f_ret = f_readdir(&anim_dir, &file_info); // Find an element within the folder
+        if ((file_info.fattrib & AM_DIR) && f_ret == FR_OK && file_info.fname[0])
+        {
+            concat(tmp_dir, BASE_PATH"/");
+            concat(tmp_dir, file_info.fname); // tmp_dir = "/anim/<folder>"
 
-    REG_TM0VAL = 0; // Reset the timer
-    REG_TM0CNT = 0x87; // Start counting
+            concat(top_fname, tmp_dir);
+            concat(top_fname, TOP_ANIM_PATH); // top_fname = "/anim/<folder>/anim"
 
-    // Read speed
-    f_read(&test_file, framebuffer->top_left, TOP_FB_SZ + SUB_FB_SZ, &br);
+            concat(sub_fname, tmp_dir);
+            concat(sub_fname, SUB_ANIM_PATH); // sub_fname = "/anim/<folder>/bottom_anim"
 
-    REG_TM0CNT = 0x07; // Stop the timer
-    read_delay = REG_TM0VAL; // Read the timer value
-    REG_TM0VAL = 0; // Reset the timer to 0
+            if (file_exists(top_fname) || file_exists(sub_fname)) // Directory contains animations
+                concat(folders[count++], tmp_dir);
 
-    f_close(&test_file);
+            memset(tmp_dir,   0, 255);
+            memset(top_fname, 0, 255);
+            memset(sub_fname, 0, 255);
+        }
 
-    return read_delay;
-}
+        if (f_ret != FR_OK || file_info.fname[0] == 0)
+            break;
+    }
+    f_closedir(&anim_dir);
 
-// Helper function, gets a random number from 0 to (max-1) and loads it
-void load_animation(u32 max)
-{
-    u32 rng = (REG_PRNG % max);
+    if (!count)
+        return;
 
-    char cfg_fname[] = CFG_ANIM_PATH, // "/anim/0/config.txt"
-         top_fname[] = TOP_ANIM_PATH, // "/anim/0/anim"
-         sub_fname[] = SUB_ANIM_PATH; // "/anim/0/bottom_anim"
+    u32 rnd = REG_PRNG % count;
 
-    cfg_fname[6] = rng + '0'; // Set the number obtained + '0' in the string
-    top_fname[6] = rng + '0'; // So it'll load "/anim/x/..." instead of "/anim/0/..."
-    sub_fname[6] = rng + '0';
+    concat(top_fname, folders[rnd]);
+    concat(sub_fname, folders[rnd]);
+    concat(cfg_fname, folders[rnd]);
+
+    concat(top_fname, TOP_ANIM_PATH);
+    concat(sub_fname, SUB_ANIM_PATH);
+    concat(cfg_fname, CFG_ANIM_PATH);
 
     FIL cfg_fil;
     size_t br = 0;
@@ -107,6 +102,45 @@ void load_animation(u32 max)
     clear_screen(framebuffer->bottom, 0);
 
     return;
+}
+
+// Thanks to hartmannaf for letting me know about 3dbrew.org/wiki/TIMER_Registers
+inline void delay(const u16 n)
+{
+    if (!n) // In case delay is 0
+        return;
+
+    REG_TM0VAL = 0; // Reset the timer
+    REG_TM0CNT = 0x83; // Start timer count
+
+    while(REG_TM0VAL < n); // Delay n ticks
+
+    REG_TM0CNT = 0x03; // Stop timer count
+}
+
+u32 get_read_delay()
+{
+    FIL test_file;
+    FRESULT f_ret;
+    size_t br, read_delay;
+
+    f_ret = f_open(&test_file, CALIB_PATH, FA_READ);
+    if (f_ret != FR_OK)
+        return 0; // GOTTA GO FAST
+
+    REG_TM0VAL = 0; // Reset the timer
+    REG_TM0CNT = 0x83; // Start counting
+
+    // Read speed
+    f_read(&test_file, framebuffer->top_left, TOP_FB_SZ + SUB_FB_SZ, &br);
+
+    REG_TM0CNT = 0x03; // Stop the timer
+    read_delay = REG_TM0VAL; // Read the timer value
+    REG_TM0VAL = 0; // Reset the timer to 0
+
+    f_close(&test_file);
+
+    return read_delay;
 }
 
 void animation_loop(char *top_anim, char *bottom_anim, const u8 fps, const u8 compression)

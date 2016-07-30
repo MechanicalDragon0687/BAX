@@ -10,18 +10,13 @@
 
 ## How to install
 
-Create a folder called `anim`, move your current `arm9loaderhax.bin` to `anim` and rename it to `arm9payload.bin`.
-Extract the BootAnim9 zip to root, and make sure there's a file called `arm9loaderhax.bin` in the root, and that it's
-size is approximately 15-17KB.
-
-Place the downloaded/compiled payload and create a folder called "anim" on root and place the payload to
-chainload as "/anim/arm9payload.bin".
+Create a folder on your SD card called `anim`, move your current `arm9loaderhax.bin` to `anim` and rename it to `arm9payload.bin`.
+Extract the BootAnim9 zip to the SD and install any animations you want (16 is the maximum amount, more are possible though).
 
 ### How to install animations
 
-Create directories called `0` through `9` in the "/anim/" folder. Place whatever animations
-you downloaded/created inside said folders, making sure not to leave spaces between them
-(for example, you can't place animations in folder `0` and `2` without placing any in folder `1`).
+Create directories called whatever you want and place either "anim" or "bottom_anim" in there (or both). `config.txt` should
+be in the same folder, of course.
 
 The randomizer will pick one of your animations and play it back on each coldboot (so it won't play again when rebooting).
 
@@ -35,7 +30,7 @@ SD card root:
 
 				- calibrator (this file is used for timing purposes)
 
-				- 0/
+				- mh4/
 
 					- anim
 
@@ -43,27 +38,29 @@ SD card root:
 
 					- config.txt
 
-				- 1/
+				- doom/
 
 					- anim
 
-				- arm9payload.bin (can be your CFW/bootloader of choice)
+				- arm9payload.bin (your CFW/bootloader/payload)
 
 
-In the case above, there're two animations (0 and 1), animation 0 has both animations (top and bottom)
-and a config file, while animation 1 has only a top screen animation and no config.
+In the case above, there're two animations "mh4" has both animations (top and bottom)
+and a config file, while "doom" has only a top screen animation and no config.
 
 #### Credits
 
 - chaoskagami and TheBaloneyBoy for code contributions
 
-- Docmudkipz for makeanim
+- Docmudkipz for [makeanim](https://github.com/docmudkipz/makeanim)
 
 - d0k3 for his [compression](https://github.com/d0k3/ban9comp) implementation
 
 - Normmatt for sdmmc.c/h, ChaN for FatFS
 
 - gemarcano for start.s
+
+- bilis for his amazing [qemu](https://github.com/b1l1s/qemu) fork
 
 - \#Cakey for useful tips and pointers, as always
 

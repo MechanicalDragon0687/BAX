@@ -8,5 +8,5 @@ SECTIONS
     .bss : { __bss_start = .; *(.bss COMMON) } __bss_end = .;
     .rodata : { *(.rodata) }
     . = ALIGN(4);
-    __end__ = 0x20400000;
+    __end__ = 0x28000000;
 }

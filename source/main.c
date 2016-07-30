@@ -22,10 +22,8 @@ int main()
     if (f_mount(&fs, "0:", 0) != FR_OK) // Mount the SD card
         error("Failed to mount the sd card");
 
-    u32 amt = check_anims(); // Check amount of animations
-
-    if (!CFG_BOOTENV && amt) // Check if this is a coldboot and make sure there's at least one animation
-        load_animation(amt); // Load randomizer
+    if (!CFG_BOOTENV) // Check if this is a coldboot and make sure there's at least one animation
+        load_animation(); // Load randomizer
 
     chainload();
 
