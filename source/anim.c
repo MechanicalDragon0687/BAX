@@ -24,10 +24,15 @@ void load_animation()
     FILINFO file_info;
 
     f_ret = f_opendir(&anim_dir, BASE_PATH);
-    while (f_ret == FR_OK && count < MAX_ANIMATIONS)
+    if (f_ret != FR_OK)
+        return;
+
+    while ((count < MAX_ANIMATIONS) && (f_readdir(&anim_dir, &file_info) == FR_OK))
     {
-        f_ret = f_readdir(&anim_dir, &file_info); // Find an element within the folder
-        if ((file_info.fattrib & AM_DIR) && f_ret == FR_OK && file_info.fname[0])
+        if (file_info.fname[0] == 0)
+            break;
+
+        if (file_info.fattrib & AM_DIR) // If it's a folder
         {
             concat(tmp_dir, BASE_PATH"/");
             concat(tmp_dir, file_info.fname); // tmp_dir = "/anim/<folder>"
@@ -45,10 +50,8 @@ void load_animation()
             memset(top_fname, 0, 255);
             memset(sub_fname, 0, 255);
         }
-
-        if (f_ret != FR_OK || file_info.fname[0] == 0)
-            break;
     }
+
     f_closedir(&anim_dir);
 
     if (!count)
@@ -66,6 +69,7 @@ void load_animation()
 
     FIL cfg_fil;
     size_t br = 0;
+
     if (f_open(&cfg_fil, cfg_fname, FA_READ) == FR_OK) // Open cfg_name
     {
         char cfg_buf[0x10] = {0};

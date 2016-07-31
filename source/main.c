@@ -13,7 +13,6 @@ void poweroff()
     while(1);
 }
 
-/** If there were any use for arguments, I'd bring them back */
 int main()
 {
     if (PDN_GPU_CNT == 1) // no screen init is not supported bruh
