@@ -20,4 +20,4 @@ typedef struct
     uint32_t fg, bg;
 } console;
 
-void term_init(console *out, uint16_t fg, uint16_t bg, const enum screens sid);
+void term_init(console *out, const uint32_t fg, const uint32_t bg, const enum screens sid);

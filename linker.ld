@@ -15,7 +15,7 @@ SECTIONS
 
     __end__ = .;
 
-    __svc_stack_start = 0x08100000;
+    __sys_stack_start = 0x08100000;
     __irq_stack_start = . + 0x4000;
     __abt_stack_start = . + 0x8000;
     __und_stack_start = . + 0xC000;

@@ -10,7 +10,7 @@
 
 static console *active_console = NULL;
 
-void term_draw_char(uint8_t *fb, const uint32_t x, const uint32_t y, const uint8_t c, const uint16_t yc, const uint16_t nc)
+void draw_char(uint8_t *fb, const uint32_t x, const uint32_t y, const uint8_t c, const uint32_t yc, const uint32_t nc)
 {
     const uint32_t _c = (c & 0x7F) * FONT_Y;
     for (uint32_t _y = 0; _y < FONT_Y; _y++)
@@ -23,7 +23,7 @@ void term_draw_char(uint8_t *fb, const uint32_t x, const uint32_t y, const uint8
     return;
 }
 
-void term_scroll(console *term)
+void scroll_fb(console *term)
 {
     for (uint32_t x = 0; x < (term->width * FONT_X); x++)
     {
@@ -51,7 +51,7 @@ void term_putc(__attribute__((unused)) void *p, char c)
     }
     if (active_console->y >= active_console->height)
     {
-        term_scroll(active_console);
+        scroll_fb(active_console);
         active_console->y = active_console->height - 1;
     }
     switch(c)
@@ -67,7 +67,7 @@ void term_putc(__attribute__((unused)) void *p, char c)
             return;
         default:
             // regular character
-            term_draw_char(active_console->fb, active_console->x * FONT_X, active_console->y * FONT_Y, c, active_console->fg, active_console->bg);
+            draw_char(active_console->fb, active_console->x * FONT_X, active_console->y * FONT_Y, c, active_console->fg, active_console->bg);
             active_console->x++;
             return;
     }
@@ -80,7 +80,7 @@ void set_active_console(console *in)
     return;
 }
 
-void term_init(console *out, uint16_t fg, uint16_t bg, const enum screens sid)
+void term_init(console *out, const uint32_t fg, const uint32_t bg, const enum screens sid)
 {
     if (!out) return;
     out->fb = get_framebuffer(sid);
@@ -94,6 +94,5 @@ void term_init(console *out, uint16_t fg, uint16_t bg, const enum screens sid)
 
     clear_screen(sid, bg);
     init_printf(NULL, term_putc);
-
     return;
 }

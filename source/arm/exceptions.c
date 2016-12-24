@@ -22,7 +22,11 @@ void __attribute__((noreturn)) print_registers(uint32_t *regs)
         // formatting
     }
 
-    printf(" SPSR = 0x%08X | CPSR = 0x%08X\n", regs[16], regs[17]);
+    printf("SPSR = 0x%08X | CPSR = 0x%08X\n", regs[16], regs[17]);
+    printf("Entering WFI state\n");
 
-    while(1);
+    wfi();
+    printf("u wot");
+
+    while(1) wfi();
 }

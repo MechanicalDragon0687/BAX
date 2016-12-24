@@ -13,7 +13,8 @@ ARCH := -march=armv5te -mcpu=arm946e-s
 
 ASFLAGS := $(ARCH)
 
-CFLAGS   := $(ASFLAGS) -g -ffreestanding -O2 -flto \
+# O0 is currently being used to ease debugging - O2/LTO will be used in releases
+CFLAGS   := $(ASFLAGS) -g -ffreestanding -O0 \
 			-mthumb-interwork -mthumb -fomit-frame-pointer \
 			-Wall -Wextra -Wno-main -ffast-math \
 			$(ARCH) -mtune=arm946e-s -I$(dir_source)

@@ -68,3 +68,12 @@ get_bootenv:
     ldr r0, =0x10010000 @ CFG_BOOTENV
     ldr r0, [r0]
     bx lr
+
+.arm
+@ void wfi(void)
+
+.type wfi, %function
+.global wfi
+wfi:
+    mcr p15, 0, r0, c7, c0, 4
+    bx lr
