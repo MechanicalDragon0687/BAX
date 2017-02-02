@@ -8,7 +8,7 @@
 /*-----------------------------------------------------------------------*/
 
 #include "diskio.h"		/* FatFs lower layer API */
-#include "disk/sdmmc/sdmmc.h"
+#include <disk/sdmmc/sdmmc.h>
 
 
 /*-----------------------------------------------------------------------*/
@@ -16,7 +16,7 @@
 /*-----------------------------------------------------------------------*/
 
 DSTATUS disk_status (
-	BYTE pdrv __attribute((unused))		/* Physical drive nmuber to identify the drive */
+	BYTE pdrv __attribute((unused))		/* Physical drive number to identify the drive */
 )
 {
 	return RES_OK;
@@ -29,11 +29,10 @@ DSTATUS disk_status (
 /*-----------------------------------------------------------------------*/
 
 DSTATUS disk_initialize (
-	BYTE pdrv __attribute((unused))		/* Physical drive nmuber to identify the drive */
+	BYTE pdrv __attribute((unused))		/* Physical drive number to identify the drive */
 )
 {
-	sdmmc_sdcard_init();
-	return RES_OK;
+	return sdmmc_sdcard_init();
 }
 
 
@@ -43,33 +42,31 @@ DSTATUS disk_initialize (
 /*-----------------------------------------------------------------------*/
 
 DRESULT disk_read (
-	BYTE pdrv __attribute((unused)), /* Physical drive nmuber to identify the drive */
+	BYTE pdrv __attribute((unused)), /* Physical drive number to identify the drive */
 	BYTE *buff,		/* Data buffer to store read data */
 	DWORD sector,	/* Start sector in LBA */
 	UINT count		/* Number of sectors to read */
 )
 {
-	if (!sdmmc_sdcard_readsectors(sector, count, buff)) return RES_OK;
-	else return RES_ERROR;
+	return sdmmc_sdcard_readsectors(sector, count, (uint8_t*)buff);
 }
 
 
-
+#ifndef _FS_READONLY
 /*-----------------------------------------------------------------------*/
 /* Write Sector(s)                                                       */
 /*-----------------------------------------------------------------------*/
 
 DRESULT disk_write (
-	BYTE pdrv __attribute((unused)),			/* Physical drive nmuber to identify the drive */
+	BYTE pdrv __attribute((unused)), /* Physical drive number to identify the drive */
 	const BYTE *buff,	/* Data to be written */
 	DWORD sector,		/* Start sector in LBA */
 	UINT count			/* Number of sectors to write */
 )
 {
-	if (!sdmmc_sdcard_writesectors(sector, count, (uint8_t*)buff)) return RES_OK;
-	else return RES_ERROR;
+	return sdmmc_sdcard_writesectors(sector, count, (uint8_t*)buff);
 }
-
+#endif
 
 
 /*-----------------------------------------------------------------------*/
@@ -77,7 +74,7 @@ DRESULT disk_write (
 /*-----------------------------------------------------------------------*/
 
 DRESULT disk_ioctl (
-	BYTE pdrv __attribute((unused)),		/* Physical drive nmuber (0..) */
+	BYTE pdrv __attribute((unused)),		/* Physical drive number (0..) */
 	BYTE cmd __attribute((unused)),	     	/* Control code */
 	void *buff __attribute((unused))		/* Buffer to send/receive control data */
 )

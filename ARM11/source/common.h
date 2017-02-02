@@ -1,11 +1,7 @@
 #pragma once
 
-#include <stdlib.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdbool.h>
-
-#define MAX_PAYLOAD_SIZE  0xFFE00
+#define UNUSED_MEM_LOC    0x27000000
+#define MAX_PAYLOAD_SIZE  0x000FFE00
 
 #define MAX_ANIMATIONS 10
 

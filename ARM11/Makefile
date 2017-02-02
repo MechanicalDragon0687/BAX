@@ -9,33 +9,29 @@ include $(DEVKITARM)/base_tools
 dir_source  := source
 dir_build   := build
 
-ARCH := -march=armv5te -mcpu=arm946e-s
+ARCH := -march=armv6k -mcpu=mpcore -mfloat-abi=hard
 
 ASFLAGS := $(ARCH)
 
-# O0 is currently being used to ease debugging - O2 will be used in releases
-CFLAGS   := $(ASFLAGS) -g -ffreestanding -O0 -flto \
-			-mthumb -mno-thumb-interwork -fomit-frame-pointer \
+CFLAGS   := $(ASFLAGS) -g -ffreestanding -Os -flto \
+			-marm -fomit-frame-pointer \
 			-Wall -Wextra -Wno-main -ffast-math \
-			$(ARCH) -mtune=arm946e-s -I$(dir_source) \
-			-Wl,--gc-section,--use-blx -ffunction-sections
+			$(ARCH) -mtune=mpcore -I$(dir_source) \
+			-Wl,--gc-section,--use-blx -ffunction-sections \
+			-mtp=soft
 
-LDFLAGS  := -nostartfiles -ffreestanding -T linker.ld -g $(ASFLAGS)
+LDFLAGS  := -nostartfiles -nostdlib -ffreestanding -T linker.ld -g $(ASFLAGS)
 
 objects = $(patsubst $(dir_source)/%.s, $(dir_build)/%.s.o, \
 		  $(patsubst $(dir_source)/%.c, $(dir_build)/%.c.o, \
 		  $(call rwildcard, $(dir_source), *.s *.c)))
 
 .PHONY: all
-all: external $(dir_build)/main.bin
+all: $(dir_build)/main.bin
 
 .PHONY: clean
 clean:
-	make -C ARM11 -f Makefile clean
 	@rm -rf $(dir_build) $(dir_out)
-
-external:
-	make -C ARM11 -f Makefile
 
 $(dir_build)/main.bin: $(dir_build)/main.elf
 	$(OBJCOPY) -S -O binary $< $@

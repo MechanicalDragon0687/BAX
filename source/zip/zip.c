@@ -5,10 +5,9 @@
 
 #include <zip/zip.h>
 
-#include <io/printf.h>
-
 // TODO: Add ZIP error handling
-// TODO2: Do it THE RIGHT WAY™
+// TODO: Do it THE RIGHT WAY™
+// TODO: kete
 size_t zip_extract_file(const char *filename, uint8_t *dest, uint8_t *zip_data, const size_t max_size)
 {
     uint8_t *dataptr = zip_data;

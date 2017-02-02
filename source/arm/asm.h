@@ -11,4 +11,6 @@ void use_high_exception_vectors(void);
 uint32_t get_bootenv(void);
 void wfi(void);
 
-void chainload(const void *payload, const size_t len);
+void chainload(void *payload, size_t len);
+
+uint32_t ctr_rand(void);

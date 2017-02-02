@@ -10,7 +10,7 @@
 
 static console *active_console = NULL;
 
-void draw_char(uint8_t *fb, const uint32_t x, const uint32_t y, const uint8_t c, const uint32_t yc, const uint32_t nc)
+void draw_char(uint8_t *fb, const uint32_t x, const uint32_t y, const uint8_t c, const uint16_t color)
 {
     const uint32_t _c = (c & 0x7F) * FONT_Y;
     for (uint32_t _y = 0; _y < FONT_Y; _y++)
@@ -18,18 +18,19 @@ void draw_char(uint8_t *fb, const uint32_t x, const uint32_t y, const uint8_t c,
         uint8_t mask = 0x80;
         uint8_t row = font[_y + _c];
         for (uint32_t _x = 0; _x < FONT_X; _x++, mask >>= 1)
-            gfx_set_pixel(fb, x + _x, y + _y, (row & mask) ? yc : nc);
+            gfx_set_pixel(fb, x + _x, y + _y, (row & mask) ? color : ~color);
     }
     return;
 }
 
 void scroll_fb(console *term)
 {
+    uint8_t *base_fb = get_framebuffer(term->screen);
     for (uint32_t x = 0; x < (term->width * FONT_X); x++)
     {
-        uint8_t *src  = term->fb + (x * HEIGHT * BPP),
+        uint8_t *src  = base_fb + (x * HEIGHT * BPP),
                         // source is framebuffer column
-                        *dest = term->fb + (((x * HEIGHT) + FONT_Y) * BPP);
+                        *dest = base_fb + (((x * HEIGHT) + FONT_Y) * BPP);
                         // destination framebuffer + one line (bottom-top)
         uint32_t mvsize = ((HEIGHT - FONT_Y) * BPP),
                           // move all data on column except for the first line (top-bottom)
@@ -67,7 +68,7 @@ void term_putc(__attribute__((unused)) void *p, char c)
             return;
         default:
             // regular character
-            draw_char(active_console->fb, active_console->x * FONT_X, active_console->y * FONT_Y, c, active_console->fg, active_console->bg);
+            draw_char(get_framebuffer(active_console->screen), active_console->x * FONT_X, active_console->y * FONT_Y, c, active_console->fg);
             active_console->x++;
             return;
     }
@@ -80,19 +81,18 @@ void set_active_console(console *in)
     return;
 }
 
-void term_init(console *out, const uint32_t fg, const uint32_t bg, const enum screens sid)
+void term_init(console *out, const uint16_t fg, const enum screens sid)
 {
     if (!out) return;
-    out->fb = get_framebuffer(sid);
+    out->screen = sid;
     out->width = (sid == TOP_SCREEN ? (400/FONT_X) : (320/FONT_X));
     out->height = (HEIGHT/FONT_Y);
     out->x = 0;
     out->y = 0;
     out->fg = fg;
-    out->bg = bg;
     active_console = out;
 
-    clear_screen(sid, bg);
+    clear_screen(sid, ~fg);
     init_printf(NULL, term_putc);
     return;
 }

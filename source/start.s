@@ -1,9 +1,9 @@
 .section .text.start
 .align 4
 
+.arm
 .global _main_
 _main_:
-
     bl disable_irqs      @ in case the entrypoint didnt do it for us...
 
 	bl flush_all_caches
@@ -14,7 +14,7 @@ _main_:
 
     mrs r1, cpsr
     orr r1, r1, #0x1F
-    msr cpsr_c, r1 @ switch over to system pmode
+    msr cpsr_c, r1       @ switch over to system mode
 
     bl setup_stacks      @ set up sys/abt/und stacks
 
@@ -29,7 +29,7 @@ _main_:
 
     bl flush_all_caches  @ caches are nightmare inducing
 
-    blx bax_main             @ jump to the main entrypoint
+    bl bax_main         @ jump to the main code
 
     mvn ip, #0
     bkpt                 @ should never get here
@@ -40,10 +40,11 @@ clear_bss:
     ldr r1, =__bss_end
     mov r2, #0
     clr_bss_loop:
-        ldr r2, [r0], #4
+        str r2, [r0], #4
         cmp r0, r1
         blt clr_bss_loop
     bx lr
+
 
 setup_stacks:
     @ Set up the stacks for all CPU modes

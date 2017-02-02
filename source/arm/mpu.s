@@ -1,26 +1,29 @@
+.arm
 .type mpu_disable, %function
 .global mpu_disable
 mpu_disable:
     @ http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0201d/I1014121.html
     mrc p15, 0, r0, c1, c0, 0
-    bic r0, #0x40000
-    bic r0, #0x01000
-    bic r0, #0x00004
-    bic r0, #0x00001
+    bic r0, #(1 << 18) @ ITCM
+    bic r0, #(1 << 12) @ Instruction cache
+    bic r0, #(1 << 2)  @ Data cache
+    bic r0, #(1 << 0)  @ Memory Protection Unit
     mcr p15, 0, r0, c1, c0, 0  @ write control register
     bx lr
 
+.arm
 .type mpu_enable, %function
 .global mpu_enable
 mpu_enable:
     mrc p15, 0, r0, c1, c0, 0
-    orr r0, r0, #0x40000
-    orr r0, r0, #0x01000
-    orr r0, r0, #0x00004
-    orr r0, r0, #0x00001
+    orr r0, #(1 << 18)
+    orr r0, #(1 << 12)
+    orr r0, #(1 << 2)
+    orr r0, #(1 << 0)
     mcr p15, 0, r0, c1, c0, 0  @ write control register
     bx lr
 
+.arm
 .type mpu_setup, %function
 .global mpu_setup
 mpu_setup:
@@ -29,16 +32,16 @@ mpu_setup:
     mcr p15, 0, r0, c5, c0, 3 @ Write instruction access permission bits
 
     ldr r0, =mpu_table
-    ldmia r0, {r0-r7}
-    mcr p15, 0, r0, c6, c0, 0
-    mcr p15, 0, r1, c6, c1, 0
-    mcr p15, 0, r2, c6, c2, 0
-    mcr p15, 0, r3, c6, c3, 0
-    mcr p15, 0, r4, c6, c4, 0
-    mcr p15, 0, r5, c6, c5, 0
-    mcr p15, 0, r6, c6, c6, 0
-    mcr p15, 0, r7, c6, c7, 0
-    mov r0, #0b01101010
+    ldmia r0, {r1-r8}
+    mcr p15, 0, r1, c6, c0, 0
+    mcr p15, 0, r2, c6, c1, 0
+    mcr p15, 0, r3, c6, c2, 0
+    mcr p15, 0, r4, c6, c3, 0
+    mcr p15, 0, r5, c6, c4, 0
+    mcr p15, 0, r6, c6, c5, 0
+    mcr p15, 0, r7, c6, c6, 0
+    mcr p15, 0, r8, c6, c7, 0
+    mov r0, #0b00101000
     mcr p15, 0, r0, c3, c0, 0
     mcr p15, 0, r0, c2, c0, 0
     mcr p15, 0, r0, c2, c0, 1

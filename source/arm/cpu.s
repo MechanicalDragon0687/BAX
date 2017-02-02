@@ -1,7 +1,7 @@
-.arm
 @ void flush_all_caches(void)
 
-.type enable_irqs, %function
+.arm
+.type flush_all_caches, %function
 .global flush_all_caches
 flush_all_caches:
     mov r0, #0
@@ -11,9 +11,9 @@ flush_all_caches:
     bx lr
 
 
-.arm
 @ void enable_irqs(void)
 
+.arm
 .type enable_irqs, %function
 .global enable_irqs
 enable_irqs:
@@ -23,9 +23,9 @@ enable_irqs:
     bx lr
 
 
-.arm
 @ void disable_irqs(void)
 
+.arm
 .type disable_irqs, %function
 .global disable_irqs
 disable_irqs:
@@ -35,9 +35,9 @@ disable_irqs:
     bx lr
 
 
-.arm
 @ void use_low_exception_vectors(void)
 
+.arm
 .type use_low_exception_vectors, %function
 .global use_low_exception_vectors
 use_low_exception_vectors:
@@ -47,9 +47,9 @@ use_low_exception_vectors:
     bx lr
 
 
-.arm
 @ void use_high_exception_vectors(void)
 
+.arm
 .type use_high_exception_vectors, %function
 .global use_high_exception_vectors
 use_high_exception_vectors:
@@ -59,19 +59,9 @@ use_high_exception_vectors:
     bx lr
 
 
-.thumb
-@ uint32_t get_bootenv(void)
-
-.type get_bootenv, %function
-.global get_bootenv
-get_bootenv:
-    ldr r0, =0x10010000 @ CFG_BOOTENV
-    ldr r0, [r0]
-    bx lr
-
-.arm
 @ void wfi(void)
 
+.arm
 .type wfi, %function
 .global wfi
 wfi:

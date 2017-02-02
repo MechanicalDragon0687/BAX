@@ -6,6 +6,7 @@
 
 #include <disk/fatfs/ff.h>
 #include <disk/sdmmc/sdmmc.h>
+#include <io/printf.h>
 
 bool file_exists(const char *path)
 {
@@ -53,18 +54,21 @@ uint32_t find_files(const char *base_path, const char *pattern, uint32_t max, ch
     DIR dirent;
     FILINFO fno;
     ret = f_findfirst(&dirent, &fno, base_path, pattern);
-    size_t base_len = strlen(base_path);
     while (ret == FR_OK && fno.fname[0] && ctr < max)
     {
         if (!(fno.fattrib & AM_DIR) && out[ctr])
         {
-            strcpy(out[ctr], base_path);
-            out[ctr][base_len] = '/';
-            strcat(out[ctr], fno.fname);
+            memset(out[ctr], 0, _MAX_LFN + 1);
+
+            strncat(out[ctr], base_path, _MAX_LFN + 1);
+            strncat(out[ctr], "/", _MAX_LFN + 1);
+            strncat(out[ctr], fno.fname, _MAX_LFN + 1);
+
             ctr++;
         }
         ret = f_findnext(&dirent, &fno);        
     }
+
     f_closedir(&dirent);
     return ctr;
 }

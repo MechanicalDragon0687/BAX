@@ -1,0 +1,18 @@
+BootAnimX memory map
+
+address   size      area       description
+
+08000000  00100000  ARM9 RAM   ARM9 stack
+
+20000000  01800000  FCRAM      top screen vid
+21800000  01800000  FCRAM      bottom screen vid
+
+23000000  01000000  FCRAM      ARM9 payload/chainloader/misc stuff
+
+24000000  03000000  FCRAM      unused
+
+26000000  01000000  FCRAM      ARM11 stack
+27000000  01000000  FCRAM      ARM11 heap
+
+ARM11 payload @ 1FFF4C80
+ARM9 payload  @ 23F00000

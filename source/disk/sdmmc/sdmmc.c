@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
-#include "sdmmc.h"
+#include <disk/sdmmc/sdmmc.h>
 
 #define DATA32_SUPPORT
 

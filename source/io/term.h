@@ -15,9 +15,9 @@ enum screens
 
 typedef struct
 {
-    uint8_t *fb;
+    int screen;
     uint32_t x, y, width, height;
-    uint32_t fg, bg;
+    uint16_t fg;
 } console;
 
-void term_init(console *out, const uint32_t fg, const uint32_t bg, const enum screens sid);
+void term_init(console *out, const uint16_t fg, const enum screens sid);

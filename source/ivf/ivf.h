@@ -6,8 +6,8 @@
 
 // https://wiki.multimedia.cx/index.php?title=IVF
 
-#define IVF_MAGIC  ('F' << 24 | 'I' << 16 | 'K' << 8 | 'D') // 'DKIF'
-#define VP8_FOURCC ('0' << 24 | '8' << 16 | 'P' << 8 | 'V') // 'VP80'
+#define IVF_MAGIC  ('D' | 'K' << 8 | 'I' << 16 | 'F' << 24) // 'DKIF'
+#define VP8_FOURCC ('V' | 'P' << 8 | '8' << 16 | '0' << 24) // 'VP80'
 
 typedef struct
 {
@@ -20,7 +20,7 @@ typedef struct
 	uint32_t framerate;
 	uint32_t timescale;
 	uint32_t framecount;
-	uint32_t unused;
+	uint32_t dummy;
 } ivf_header;
 
-bool ivf_is_vp8(const ivf_header *hdr);
+bool check_ivf(const ivf_header *hdr);
