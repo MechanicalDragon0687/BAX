@@ -4,36 +4,23 @@
 .type flush_all_caches, %function
 .global flush_all_caches
 flush_all_caches:
+@ http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0201d/ch03s03s05.html
+    mov r1, #0
+    outer:
+        mov r0, #0
+        inner:
+            orr r2, r1, r0
+            mcr p15, 0, r2, c7, c14, 2
+            add r0, r0, #0x20
+            cmp r0, #0x400
+            bne inner
+        add r1, r1, #0x40000000
+        cmp r1, #0x0
+        bne outer
     mov r0, #0
     mcr p15, 0, r0, c7, c5, 0
-    mcr p15, 0, r0, c7, c6, 0
-    mcr p15, 0, r0, c7, c10, 0
+    mcr p15, 0, r0, c7, c10, 4
     bx lr
-
-
-@ void enable_irqs(void)
-
-.arm
-.type enable_irqs, %function
-.global enable_irqs
-enable_irqs:
-    mrs r0, cpsr
-    bic r0, r0, #0x80
-    msr cpsr_c, r0
-    bx lr
-
-
-@ void disable_irqs(void)
-
-.arm
-.type disable_irqs, %function
-.global disable_irqs
-disable_irqs:
-    mrs r0, cpsr
-    orr r0, r0, #0x80
-    msr cpsr_c, r0
-    bx lr
-
 
 @ void use_low_exception_vectors(void)
 
@@ -65,5 +52,6 @@ use_high_exception_vectors:
 .type wfi, %function
 .global wfi
 wfi:
+    mov r0, #0
     mcr p15, 0, r0, c7, c0, 4
     bx lr

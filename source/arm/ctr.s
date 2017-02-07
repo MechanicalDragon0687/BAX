@@ -22,7 +22,7 @@ chainload:
     bx r3
 
 
-@ uint32_t get_bootenv(void)
+@ u32 get_bootenv(void)
 
 .arm
 .type get_bootenv, %function
@@ -33,7 +33,7 @@ get_bootenv:
     bx lr
 
 
-@ uint32_t ctr_rand(void)
+@ u32 ctr_rand(void)
 
 .arm
 .type ctr_rand, %function

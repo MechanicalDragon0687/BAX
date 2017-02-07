@@ -2,11 +2,12 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include <common.h>
 #include <i2c/i2c.h>
 
 //-----------------------------------------------------------------------------
 
-static const struct { uint8_t bus_id, reg_addr; } dev_data[] = {
+static const struct { u8 bus_id, reg_addr; } dev_data[] = {
     {0, 0x4A}, {0, 0x7A}, {0, 0x78},
     {1, 0x4A}, {1, 0x78}, {1, 0x2C},
     {1, 0x2E}, {1, 0x40}, {1, 0x44},
@@ -14,50 +15,50 @@ static const struct { uint8_t bus_id, reg_addr; } dev_data[] = {
     {2, 0xA4}, {2, 0x9A}, {2, 0xA0},
 };
 
-inline uint8_t i2cGetDeviceBusId(uint8_t device_id) {
+inline u8 i2cGetDeviceBusId(u8 device_id) {
     return dev_data[device_id].bus_id;
 }
 
-inline uint8_t i2cGetDeviceRegAddr(uint8_t device_id) {
+inline u8 i2cGetDeviceRegAddr(u8 device_id) {
     return dev_data[device_id].reg_addr;
 }
 
 //-----------------------------------------------------------------------------
 
-static volatile uint8_t* reg_data_addrs[] = {
-    (volatile uint8_t*)(I2C1_REG_OFF + I2C_REG_DATA),
-    (volatile uint8_t*)(I2C2_REG_OFF + I2C_REG_DATA),
-    (volatile uint8_t*)(I2C3_REG_OFF + I2C_REG_DATA),
+static vu8* reg_data_addrs[] = {
+    (vu8*)(I2C1_REG_OFF + I2C_REG_DATA),
+    (vu8*)(I2C2_REG_OFF + I2C_REG_DATA),
+    (vu8*)(I2C3_REG_OFF + I2C_REG_DATA),
 };
 
-inline volatile uint8_t* i2cGetDataReg(uint8_t bus_id) {
+inline vu8* i2cGetDataReg(u8 bus_id) {
     return reg_data_addrs[bus_id];
 }
 
 //-----------------------------------------------------------------------------
 
-static volatile uint8_t* reg_cnt_addrs[] = {
-    (volatile uint8_t*)(I2C1_REG_OFF + I2C_REG_CNT),
-    (volatile uint8_t*)(I2C2_REG_OFF + I2C_REG_CNT),
-    (volatile uint8_t*)(I2C3_REG_OFF + I2C_REG_CNT),
+static vu8* reg_cnt_addrs[] = {
+    (vu8*)(I2C1_REG_OFF + I2C_REG_CNT),
+    (vu8*)(I2C2_REG_OFF + I2C_REG_CNT),
+    (vu8*)(I2C3_REG_OFF + I2C_REG_CNT),
 };
 
-inline volatile uint8_t* i2cGetCntReg(uint8_t bus_id) {
+inline vu8* i2cGetCntReg(u8 bus_id) {
     return reg_cnt_addrs[bus_id];
 }
 
 //-----------------------------------------------------------------------------
 
-inline void i2cWaitBusy(uint8_t bus_id) {
+inline void i2cWaitBusy(u8 bus_id) {
     while (*i2cGetCntReg(bus_id) & 0x80);
 }
 
-inline bool i2cGetResult(uint8_t bus_id) {
+inline bool i2cGetResult(u8 bus_id) {
     i2cWaitBusy(bus_id);
     return (*i2cGetCntReg(bus_id) >> 4) & 1;
 }
 
-void i2cStop(uint8_t bus_id, uint8_t arg0) {
+void i2cStop(u8 bus_id, u8 arg0) {
     *i2cGetCntReg(bus_id) = (arg0 << 5) | 0xC0;
     i2cWaitBusy(bus_id);
     *i2cGetCntReg(bus_id) = 0xC5;
@@ -65,14 +66,14 @@ void i2cStop(uint8_t bus_id, uint8_t arg0) {
 
 //-----------------------------------------------------------------------------
 
-bool i2cSelectDevice(uint8_t bus_id, uint8_t dev_reg) {
+bool i2cSelectDevice(u8 bus_id, u8 dev_reg) {
     i2cWaitBusy(bus_id);
     *i2cGetDataReg(bus_id) = dev_reg;
     *i2cGetCntReg(bus_id) = 0xC2;
     return i2cGetResult(bus_id);
 }
 
-bool i2cSelectRegister(uint8_t bus_id, uint8_t reg) {
+bool i2cSelectRegister(u8 bus_id, u8 reg) {
     i2cWaitBusy(bus_id);
     *i2cGetDataReg(bus_id) = reg;
     *i2cGetCntReg(bus_id) = 0xC0;
@@ -81,9 +82,9 @@ bool i2cSelectRegister(uint8_t bus_id, uint8_t reg) {
 
 //-----------------------------------------------------------------------------
 
-uint8_t i2cReadRegister(uint8_t dev_id, uint8_t reg) {
-    uint8_t bus_id = i2cGetDeviceBusId(dev_id);
-    uint8_t dev_addr = i2cGetDeviceRegAddr(dev_id);
+u8 i2cReadRegister(u8 dev_id, u8 reg) {
+    u8 bus_id = i2cGetDeviceBusId(dev_id);
+    u8 dev_addr = i2cGetDeviceRegAddr(dev_id);
 
     for (size_t i = 0; i < 8; i++) {
         if (i2cSelectDevice(bus_id, dev_addr) && i2cSelectRegister(bus_id, reg)) {
@@ -100,9 +101,9 @@ uint8_t i2cReadRegister(uint8_t dev_id, uint8_t reg) {
     return 0xff;
 }
 
-bool i2cReadRegisterBuffer(unsigned int dev_id, int reg, uint8_t* buffer, size_t buf_size) {
-    uint8_t bus_id = i2cGetDeviceBusId(dev_id);
-    uint8_t dev_addr = i2cGetDeviceRegAddr(dev_id);
+bool i2cReadRegisterBuffer(unsigned int dev_id, int reg, u8* buffer, size_t buf_size) {
+    u8 bus_id = i2cGetDeviceBusId(dev_id);
+    u8 dev_addr = i2cGetDeviceRegAddr(dev_id);
 
     size_t j = 0;
     while (!i2cSelectDevice(bus_id, dev_addr)
@@ -132,9 +133,9 @@ bool i2cReadRegisterBuffer(unsigned int dev_id, int reg, uint8_t* buffer, size_t
     return true;
 }
 
-bool i2cWriteRegister(uint8_t dev_id, uint8_t reg, uint8_t data) {
-    uint8_t bus_id = i2cGetDeviceBusId(dev_id);
-    uint8_t dev_addr = i2cGetDeviceRegAddr(dev_id);
+bool i2cWriteRegister(u8 dev_id, u8 reg, u8 data) {
+    u8 bus_id = i2cGetDeviceBusId(dev_id);
+    u8 dev_addr = i2cGetDeviceRegAddr(dev_id);
 
     for (int i = 0; i < 8; i++) {
         if (i2cSelectDevice(bus_id, dev_addr) && i2cSelectRegister(bus_id, reg)) {

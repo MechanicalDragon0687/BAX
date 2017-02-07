@@ -9,6 +9,7 @@
 
 #include "diskio.h"		/* FatFs lower layer API */
 #include <disk/sdmmc/sdmmc.h>
+#include <common.h>
 
 
 /*-----------------------------------------------------------------------*/
@@ -48,7 +49,7 @@ DRESULT disk_read (
 	UINT count		/* Number of sectors to read */
 )
 {
-	return sdmmc_sdcard_readsectors(sector, count, (uint8_t*)buff);
+	return sdmmc_sdcard_readsectors(sector, count, (u8*)buff);
 }
 
 
@@ -64,7 +65,7 @@ DRESULT disk_write (
 	UINT count			/* Number of sectors to write */
 )
 {
-	return sdmmc_sdcard_writesectors(sector, count, (uint8_t*)buff);
+	return sdmmc_sdcard_writesectors(sector, count, (u8*)buff);
 }
 #endif
 

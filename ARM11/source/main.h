@@ -1,6 +1,11 @@
 #pragma once
 
-#define FB_SIZE(x) ((x) ? (320*240*4) : (400*240*4))
+#include <types.h>
+
+void vramfill(u32 start, u32 end, u32 val);
+void screen_init(u32 mode);
+
+#define FB_SIZE(x)  ((x) ? (320*240*4) : (400*240*4))
 
 #define VRAM_START  (0x18300000)
 
@@ -13,18 +18,18 @@
 #define FB_SUB_A    (FB_TOPR_B + FB_SIZE(0))
 #define FB_SUB_B    (FB_SUB_A + FB_SIZE(1))
 
-#define VRAM_END   (FB_SUB_B + FB_SIZE(1))
+#define VRAM_END    (FB_SUB_B + FB_SIZE(1))
 
 // LCD Registers (3dbrew.org/wiki/LCD_Registers)
-#define PDN_GPU_CNT        (*((volatile uint32_t*)(0x10141200)))
-#define LCD_REGS(x)        (*((volatile uint32_t*)(0x10202000 + (x))))
-#define LCD_CFG(s, x)      (*((volatile uint32_t*)(0x10202200 + ((s) * 0x800) + (x))))
+#define PDN_GPU_CNT        (*((vu32*)(0x10141200)))
+#define LCD_REGS(x)        (*((vu32*)(0x10202000 + (x))))
+#define LCD_CFG(s, x)      (*((vu32*)(0x10202200 + ((s) * 0x800) + (x))))
 
 // PCD Registers (http://3dbrew.org/wiki/GPU/External_Registers#LCD_Source_Framebuffer_Setup)
-#define FBSETUP_PCDX(s, x) (*((volatile uint32_t*)(0x10400400 + ((s) * 0x100)  + (x))))
+#define FBSETUP_PCDX(s, x) (*((vu32*)(0x10400400 + ((s) * 0x100)  + (x))))
 
 // PSC Registers (http://3dbrew.org/wiki/GPU/External_Registers#Memory_Fill)
-#define MEMFILL_PSCX(a, x)   (*((volatile uint32_t*)(0x10400010 + (x) + ((a) * 0x10))))
+#define MEMFILL_PSCX(a, x)   (*((vu32*)(0x10400010 + (x) + ((a) * 0x10))))
 
 // Framebuffer formats
 

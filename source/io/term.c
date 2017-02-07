@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <string.h>
 
+#include <common.h>
+
 #include <gfx/gfx.h>
 
 #include <io/term.h>
@@ -10,14 +12,14 @@
 
 static console *active_console = NULL;
 
-void draw_char(uint8_t *fb, const uint32_t x, const uint32_t y, const uint8_t c, const uint16_t color)
+void draw_char(u16 *fb, const u32 x, const u32 y, const u8 c, const u16 color)
 {
-    const uint32_t _c = (c & 0x7F) * FONT_Y;
-    for (uint32_t _y = 0; _y < FONT_Y; _y++)
+    const u32 _c = (c & 0x7F) * FONT_Y;
+    for (u32 _y = 0; _y < FONT_Y; _y++)
     {
-        uint8_t mask = 0x80;
-        uint8_t row = font[_y + _c];
-        for (uint32_t _x = 0; _x < FONT_X; _x++, mask >>= 1)
+        u8 mask = 0x80;
+        u8 row = font[_y + _c];
+        for (u32 _x = 0; _x < FONT_X; _x++, mask >>= 1)
             gfx_set_pixel(fb, x + _x, y + _y, (row & mask) ? color : ~color);
     }
     return;
@@ -25,17 +27,18 @@ void draw_char(uint8_t *fb, const uint32_t x, const uint32_t y, const uint8_t c,
 
 void scroll_fb(console *term)
 {
-    uint8_t *base_fb = get_framebuffer(term->screen);
-    for (uint32_t x = 0; x < (term->width * FONT_X); x++)
+    u16 *base_fb = get_framebuffer(term->screen);
+    for (u32 x = 0; x < (term->width * FONT_X); x++)
     {
-        uint8_t *src  = base_fb + (x * HEIGHT * BPP),
-                        // source is framebuffer column
-                        *dest = base_fb + (((x * HEIGHT) + FONT_Y) * BPP);
-                        // destination framebuffer + one line (bottom-top)
-        uint32_t mvsize = ((HEIGHT - FONT_Y) * BPP),
-                          // move all data on column except for the first line (top-bottom)
-                          stsize = (FONT_Y * BPP);
-                          // clear the line of text
+        u16 *src   = base_fb + (x * HEIGHT * BPP),
+                     // source is framebuffer column
+                     *dest = base_fb + (((x * HEIGHT) + FONT_Y) * BPP);
+                     // destination framebuffer + one line (bottom-top)
+        u32 mvsize = ((HEIGHT - FONT_Y) * BPP),
+                     // move all data on column except for the first line (top-bottom)
+                     stsize = (FONT_Y * BPP);
+                     // clear the line of text
+
         memmove(dest, src, mvsize);
         memset(src, 0, stsize);
     }
@@ -81,7 +84,7 @@ void set_active_console(console *in)
     return;
 }
 
-void term_init(console *out, const uint16_t fg, const enum screens sid)
+void term_init(console *out, const u16 fg, const enum screens sid)
 {
     if (!out) return;
     out->screen = sid;

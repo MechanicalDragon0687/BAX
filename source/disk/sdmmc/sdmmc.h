@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include <common.h>
+
 #define SDMMC_BASE				0x10006000
 
 #define REG_SDCMD				0x00
@@ -81,30 +83,30 @@ extern "C" {
 #endif
 
 	typedef struct mmcdevice {
-		uint8_t* rData;
-		const uint8_t* tData;
-		uint32_t size;
-		uint32_t error;
-		uint16_t stat0;
-		uint16_t stat1;
-		uint32_t ret[4];
-		uint32_t initarg;
-		uint32_t isSDHC;
-		uint32_t clk;
-		uint32_t SDOPT;
-		uint32_t devicenumber;
-		uint32_t total_size; //size in sectors of the device
-		uint32_t res;
+		u8* rData;
+		const u8* tData;
+		u32 size;
+		u32 error;
+		u16 stat0;
+		u16 stat1;
+		u32 ret[4];
+		u32 initarg;
+		u32 isSDHC;
+		u32 clk;
+		u32 SDOPT;
+		u32 devicenumber;
+		u32 total_size; //size in sectors of the device
+		u32 res;
 	} mmcdevice;
 
 	int sdmmc_sdcard_init();
-	int sdmmc_sdcard_readsectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out);
-	int sdmmc_sdcard_writesectors(uint32_t sector_no, uint32_t numsectors, const uint8_t *in);
+	int sdmmc_sdcard_readsectors(u32 sector_no, u32 numsectors, u8 *out);
+	int sdmmc_sdcard_writesectors(u32 sector_no, u32 numsectors, const u8 *in);
 
-	int sdmmc_nand_readsectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out);
-	int sdmmc_nand_writesectors(uint32_t sector_no, uint32_t numsectors, const uint8_t *in);
+	int sdmmc_nand_readsectors(u32 sector_no, u32 numsectors, u8 *out);
+	int sdmmc_nand_writesectors(u32 sector_no, u32 numsectors, const u8 *in);
 
-	int sdmmc_get_cid(bool isNand, uint32_t *info);
+	int sdmmc_get_cid(bool isNand, u32 *info);
 
 	void InitSD();
 	int Nand_Init();
@@ -115,39 +117,39 @@ extern "C" {
 #endif
 
 //---------------------------------------------------------------------------------
-static inline uint16_t sdmmc_read16(uint16_t reg) {
+static inline u16 sdmmc_read16(u16 reg) {
 //---------------------------------------------------------------------------------
-	return *(volatile uint16_t*)(SDMMC_BASE + reg);
+	return *(vu16*)(SDMMC_BASE + reg);
 }
 
 //---------------------------------------------------------------------------------
-static inline void sdmmc_write16(uint16_t reg, uint16_t val) {
+static inline void sdmmc_write16(u16 reg, u16 val) {
 //---------------------------------------------------------------------------------
-	*(volatile uint16_t*)(SDMMC_BASE + reg) = val;
+	*(vu16*)(SDMMC_BASE + reg) = val;
 }
 
 //---------------------------------------------------------------------------------
-static inline uint32_t sdmmc_read32(uint16_t reg) {
+static inline u32 sdmmc_read32(u16 reg) {
 //---------------------------------------------------------------------------------
-	return *(volatile uint32_t*)(SDMMC_BASE + reg);
+	return *(vu32*)(SDMMC_BASE + reg);
 }
 
 //---------------------------------------------------------------------------------
-static inline void sdmmc_write32(uint16_t reg, uint32_t val) {
+static inline void sdmmc_write32(u16 reg, u32 val) {
 //---------------------------------------------------------------------------------
-	*(volatile uint32_t*)(SDMMC_BASE + reg) = val;
+	*(vu32*)(SDMMC_BASE + reg) = val;
 }
 
 //---------------------------------------------------------------------------------
-static inline void sdmmc_mask16(uint16_t reg, const uint16_t clear, const uint16_t set) {
+static inline void sdmmc_mask16(u16 reg, const u16 clear, const u16 set) {
 //---------------------------------------------------------------------------------
-	uint16_t val = sdmmc_read16(reg);
+	u16 val = sdmmc_read16(reg);
 	val &= ~clear;
 	val |= set;
 	sdmmc_write16(reg, val);
 }
 
-static inline void setckl(uint32_t data)
+static inline void setckl(u32 data)
 {
 	sdmmc_mask16(REG_SDCLKCTL,0x100,0);
 	sdmmc_mask16(REG_SDCLKCTL,0x2FF,data&0x2FF);

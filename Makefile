@@ -11,16 +11,14 @@ dir_build   := build
 
 ARCH := -march=armv5te -mcpu=arm946e-s
 
-ASFLAGS := $(ARCH)
+ASFLAGS := $(ARCH) -gxcoff++
 
-# O0 is currently being used to ease debugging - O2 will be used in releases
-CFLAGS   := $(ASFLAGS) -g -ffreestanding -O0 -flto \
+CFLAGS   := $(ARCH) -ggdb -ffreestanding -Os -flto \
 			-mthumb -mno-thumb-interwork -fomit-frame-pointer \
-			-Wall -Wextra -Wno-main -ffast-math \
-			$(ARCH) -mtune=arm946e-s -I$(dir_source) \
-			-Wl,--gc-section,--use-blx -ffunction-sections
+			-Wall -Wextra -Wno-unused-parameter -ffast-math \
+			$(ARCH) -mtune=arm946e-s -I$(dir_source) -ffunction-sections
 
-LDFLAGS  := -nostartfiles -ffreestanding -T linker.ld -g $(ASFLAGS)
+LDFLAGS  := $(ARCH) -Wl,--gc-section,--use-blx,-Map,$(dir_build)/linker.map -nostartfiles -ffreestanding -T linker.ld
 
 objects = $(patsubst $(dir_source)/%.s, $(dir_build)/%.s.o, \
 		  $(patsubst $(dir_source)/%.c, $(dir_build)/%.c.o, \

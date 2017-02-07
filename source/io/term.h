@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <common.h>
 
 #define FONT_X (8)
 #define FONT_Y (16)
@@ -16,8 +17,8 @@ enum screens
 typedef struct
 {
     int screen;
-    uint32_t x, y, width, height;
-    uint16_t fg;
-} console;
+    u32 x, y, width, height;
+    u16 fg;
+} __attribute__((packed)) console;
 
-void term_init(console *out, const uint16_t fg, const enum screens sid);
+void term_init(console *out, const u16 fg, const enum screens sid);

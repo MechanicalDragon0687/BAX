@@ -1,18 +1,19 @@
 BootAnimX memory map
 
-address   size      area       description
+address   size      region     description
 
 08000000  00100000  ARM9 RAM   ARM9 stack
 
-20000000  01800000  FCRAM      top screen vid
-21800000  01800000  FCRAM      bottom screen vid
+1FF80000  0007FFD8  AXI WRAM   ARM11 binary
+1FFFFFD8  00000028  AXI WRAM   ARM IPC memory
 
-23000000  01000000  FCRAM      ARM9 payload/chainloader/misc stuff
+20000000  00800000  FCRAM      top screen vid
+20800000  00800000  FCRAM      bottom screen vid
 
-24000000  03000000  FCRAM      unused
+21000000  01000000  FCRAM      ARM11 stack
+22000000  01000000  FCRAM      ARM11 heap
 
-26000000  01000000  FCRAM      ARM11 stack
-27000000  01000000  FCRAM      ARM11 heap
+23000000  01000000  FCRAM      ARM9 binary/chainloader/misc stuff
+24000000  01000000  FCRAM      ARM9 heap
 
-ARM11 payload @ 1FFF4C80
-ARM9 payload  @ 23F00000
+25000000  03000000  FCRAM      unused

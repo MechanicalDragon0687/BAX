@@ -1,24 +1,33 @@
-#include <unistd.h>
-
 #include <main.h>
+#include <types.h>
 
-volatile uint32_t *a11_entry = (volatile uint32_t*)(0x1FFFFFF8);
-volatile uint32_t *a11_vars  = (volatile uint32_t*)(0x1FFF4C70);
-volatile uint32_t *cakehaxfb = (volatile uint32_t*)(0x23FFFE00);
+vu32 *a11_entry = (vu32*)(0x1FFFFFF8);
+vu32 *a11_vars  = (vu32*)(0x1FFFFFD8);
+vu32 *cakehaxfb = (vu32*)(0x23FFFE00);
 
 void clean(void)
 {
     a11_entry[0] = 0;
     a11_entry[1] = 0;
-    for (int i = 0; i < 4; i++)
-        a11_vars[i] = 0;
+    a11_vars[0]  = 0;
+}
+
+void vramfill(u32 start, u32 end, u32 val)
+{
+    MEMFILL_PSCX(0, 0x00) = start >> 3;
+    MEMFILL_PSCX(0, 0x04) = end >> 3;
+    MEMFILL_PSCX(0, 0x08) = val;
+    MEMFILL_PSCX(0, 0x0C) = 0x201;
+
+    while(!(MEMFILL_PSCX(0, 0x0C) & (2)));
+    return;
 }
 
 // mad props to bilis, Normmatt, dark_samus/stuckpixel
 // and everyone else who helped to figure this out
-void screen_init(uint32_t mode)
+void screen_init(u32 mode)
 {
-    uint32_t stride;
+    u32 stride;
 
     mode &= 7;
 
@@ -27,6 +36,8 @@ void screen_init(uint32_t mode)
     else if (mode == GL_RGBA8_OES) stride = (240 * 4);
 
     PDN_GPU_CNT = 0x1007F;
+    // Power on the GPU
+
     LCD_REGS(0x14) = 0x00000001;
     LCD_REGS(0x0C) &= 0xFFFEFFFE;
 
@@ -102,7 +113,7 @@ void screen_init(uint32_t mode)
     FBSETUP_PCDX(1, 0x9C) = 0x00000000;
 
     // Disco register
-    for (uint32_t i = 0; i < 256; i++)
+    for (vu32 i = 0; i < 256; i++)
     {
         FBSETUP_PCDX(0, 0x84) = 0x10101 * i;
         FBSETUP_PCDX(1, 0x84) = 0x10101 * i;
@@ -115,38 +126,30 @@ void screen_init(uint32_t mode)
     return;
 }
 
-void vramfill(uint32_t start, uint32_t end, uint32_t val)
-{
-    MEMFILL_PSCX(0, 0x00) = start >> 3;
-    MEMFILL_PSCX(0, 0x04) = end >> 3;
-    MEMFILL_PSCX(0, 0x08) = val;
-    MEMFILL_PSCX(0, 0x0C) = 0x201;
-
-    while(!(MEMFILL_PSCX(0, 0x0C) & (2)));
-
-    return;
-}
-
 void main(void)
 {
     while(1)
     {
         clean();
 
-        while(!a11_vars[0] && !a11_entry[0]);
+        while(1)
+        {
+            if (a11_vars[0]) break;
+            if (a11_entry[0]) break;
+        }
 
         if (a11_entry[0])
         {
-            uint32_t entry = a11_entry[0];
+            u32 entry = a11_entry[0];
             if (entry == 0x544f4f42) entry = a11_entry[1]; // yls8
-            void (*boot)(int, char*) = (void*)(entry);
+            void (*boot)(int, char*) = (void (*)(int, char*))(entry);
             boot(0, NULL);
         }
 
-        uint32_t cmd = a11_vars[0];
+        u32 cmd = a11_vars[0];
 
-        uint32_t args[3];
-        for (int i = 0; i < 3; i++)
+        u32 args[7];
+        for (int i = 0; i < 7; i++)
             args[i] = a11_vars[1+i];
 
         switch(cmd)

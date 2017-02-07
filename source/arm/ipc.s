@@ -23,7 +23,7 @@ a11_loop:
 .global wait11
 .type wait11, %function
 wait11:
-    ldr r0, =0x1FFF4C70
+    ldr r0, =0x1FFFFFD8
     .wait11:
         ldr r1, [r0]
         cmp r1, #0

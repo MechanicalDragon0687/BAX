@@ -4,22 +4,17 @@
 .arm
 .global _main_
 _main_:
-    bl disable_irqs      @ in case the entrypoint didnt do it for us...
+    msr cpsr_c, #0xD3    @ system mode, interrupts disabled
 
-	bl flush_all_caches
-	bl mpu_disable
-    bl flush_all_caches  @ just in case
+    bl flush_all_caches
+    bl mpu_disable
 
     bl clear_bss
 
-    mrs r1, cpsr
-    orr r1, r1, #0x1F
-    msr cpsr_c, r1       @ switch over to system mode
+    ldr sp, =__sys_stack @ set up the stack
 
-    bl setup_stacks      @ set up sys/abt/und stacks
-
-	bl mpu_setup         @ set up MPU
-	bl mpu_enable        @ enable MPU/ITCM/DTCM/etc
+    bl mpu_setup         @ set up the MPU regions/caches
+    bl mpu_enable        @ enable MPU/ITCM/etc
 
     bl install_exception_vectors
 
@@ -27,48 +22,31 @@ _main_:
     mov r1, #0x340
     strh r1, [r0]        @ fix SD mounting issue
 
+    bl setup_heap
+
     bl flush_all_caches  @ caches are nightmare inducing
 
-    bl bax_main         @ jump to the main code
+    bl bax_main          @ branch to the main code
 
-    mvn ip, #0
-    bkpt                 @ should never get here
-
+    b _main_ @ wot
 
 clear_bss:
     ldr r0, =__bss_start
     ldr r1, =__bss_end
     mov r2, #0
-    clr_bss_loop:
+    .clear_bss:
         str r2, [r0], #4
         cmp r0, r1
-        blt clr_bss_loop
+        blt .clear_bss
     bx lr
 
+setup_heap:
+    ldr r0, =fake_heap_start
+    ldr r1, =0x24000000
+    str r1, [r0]
 
-setup_stacks:
-    @ Set up the stacks for all CPU modes
-    @ start by clearing mode bits
-    mrs r0, cpsr
-    mov r1, r0         @ save current mode
-    bic r0, r0, #0x1F  @ clear the processor mode bits
-
-    @ SYS Mode
-    orr r2, r0, #0x1F
-    msr cpsr_c, r2
-    ldr sp, =__sys_stack_start
-
-    @ ABT Mode
-    orr r2, r0, #0x17
-    msr cpsr_c, r2
-    ldr sp, =__abt_stack_start
-
-    @ UND Mode
-    orr r2, r0, #0x1B
-    msr cpsr_c, r2
-    ldr sp, =__und_stack_start
-
-    @ Restore pmode
-    msr cpsr_c, r1
+    ldr r0, =fake_heap_end
+    add r1, #0x1000000
+    str r1, [r0]
 
     bx lr

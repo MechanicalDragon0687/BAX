@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include <common.h>
+
 #define I2C1_REG_OFF 0x10161000
 #define I2C2_REG_OFF 0x10144000
 #define I2C3_REG_OFF 0x10148000
@@ -13,25 +15,21 @@
 #define I2C_REG_CNTEX 2
 #define I2C_REG_SCL   4
 
-#define I2C_DEV_MCU  3
-#define I2C_DEV_GYRO 10
-#define I2C_DEV_IR   13
+u8 i2cGetDeviceBusId(u8 device_id);
+u8 i2cGetDeviceRegAddr(u8 device_id);
 
-uint8_t i2cGetDeviceBusId(uint8_t device_id);
-uint8_t i2cGetDeviceRegAddr(uint8_t device_id);
+vu8* i2cGetDataReg(u8 bus_id);
+vu8* i2cGetCntReg(u8 bus_id);
 
-volatile uint8_t* i2cGetDataReg(uint8_t bus_id);
-volatile uint8_t* i2cGetCntReg(uint8_t bus_id);
+void i2cWaitBusy(u8 bus_id);
+bool i2cGetResult(u8 bus_id);
+u8 i2cGetData(u8 bus_id);
+void i2cStop(u8 bus_id, u8 arg0);
 
-void i2cWaitBusy(uint8_t bus_id);
-bool i2cGetResult(uint8_t bus_id);
-uint8_t i2cGetData(uint8_t bus_id);
-void i2cStop(uint8_t bus_id, uint8_t arg0);
+bool i2cSelectDevice(u8 bus_id, u8 dev_reg);
+bool i2cSelectRegister(u8 bus_id, u8 reg);
 
-bool i2cSelectDevice(uint8_t bus_id, uint8_t dev_reg);
-bool i2cSelectRegister(uint8_t bus_id, uint8_t reg);
+u8 i2cReadRegister(u8 dev_id, u8 reg);
+bool i2cWriteRegister(u8 dev_id, u8 reg, u8 data);
 
-uint8_t i2cReadRegister(uint8_t dev_id, uint8_t reg);
-bool i2cWriteRegister(uint8_t dev_id, uint8_t reg, uint8_t data);
-
-bool i2cReadRegisterBuffer(unsigned int dev_id, int reg, uint8_t* buffer, size_t buf_size);
+bool i2cReadRegisterBuffer(unsigned int dev_id, int reg, u8* buffer, size_t buf_size);

@@ -3,14 +3,17 @@
 #include <common.h>
 
 extern char a11bin[];
-extern uint32_t a11bin_len;
+extern u32 a11bin_len;
 
 void __attribute__((naked, target("arm"))) a11_loop(void);
 void wait11(void);
 
+bool ipc_available(void);
 void init11(void);
-void screen_init(uint32_t mode);
-void vramfill(uint32_t start, uint32_t end, uint32_t val);
+void screen_init(u32 mode);
+void vramfill(u32 start, u32 end, u32 val);
+
+u32 play_mjpeg(void *dest, void *src, u32 len);
 
 enum pxfmt
 {

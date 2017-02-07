@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define HID_PAD (*(volatile uint32_t*)(0x10146000))
+#define HID_PAD (*(vu32*)(0x10146000))
 
 #define KEY_A     (1 << 0)
 #define KEY_B     (1 << 1)

@@ -9,18 +9,18 @@ include $(DEVKITARM)/base_tools
 dir_source  := source
 dir_build   := build
 
-ARCH := -march=armv6k -mcpu=mpcore -mfloat-abi=hard
+ARCH := -march=armv6k -mcpu=mpcore -mfloat-abi=hard -mfpu=vfp
 
-ASFLAGS := $(ARCH)
+ASFLAGS := $(ARCH) -gxcoff++
 
-CFLAGS   := $(ASFLAGS) -g -ffreestanding -Os -flto \
-			-marm -fomit-frame-pointer \
-			-Wall -Wextra -Wno-main -ffast-math \
-			$(ARCH) -mtune=mpcore -I$(dir_source) \
+CFLAGS   := $(ARCH) -ggdb -ffreestanding -O2 -flto \
+			-marm -mno-thumb-interwork -fomit-frame-pointer \
+			-Wall -Wextra -Wno-unused-function -mno-unaligned-access \
+			-Wpedantic -ffast-math -mtune=mpcore -I$(dir_source) \
 			-Wl,--gc-section,--use-blx -ffunction-sections \
 			-mtp=soft
 
-LDFLAGS  := -nostartfiles -nostdlib -ffreestanding -T linker.ld -g $(ASFLAGS)
+LDFLAGS  := $(ARCH) -nostartfiles -ffreestanding -T linker.ld -g
 
 objects = $(patsubst $(dir_source)/%.s, $(dir_build)/%.s.o, \
 		  $(patsubst $(dir_source)/%.c, $(dir_build)/%.c.o, \

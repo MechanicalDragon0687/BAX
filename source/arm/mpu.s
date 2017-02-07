@@ -28,8 +28,8 @@ mpu_enable:
 .global mpu_setup
 mpu_setup:
     ldr r0, =0x33333333
-    mcr p15, 0, r0, c5, c0, 2 @ Write data access permission bits
-    mcr p15, 0, r0, c5, c0, 3 @ Write instruction access permission bits
+    mcr p15, 0, r0, c5, c0, 2
+    mcr p15, 0, r0, c5, c0, 3
 
     ldr r0, =mpu_table
     ldmia r0, {r1-r8}
@@ -41,7 +41,8 @@ mpu_setup:
     mcr p15, 0, r6, c6, c5, 0
     mcr p15, 0, r7, c6, c6, 0
     mcr p15, 0, r8, c6, c7, 0
-    mov r0, #0b00101000
+
+    mov r0, #0b00101011 @ ITCM, ARM9 RAM, VRAM & FCRAM
     mcr p15, 0, r0, c3, c0, 0
     mcr p15, 0, r0, c2, c0, 0
     mcr p15, 0, r0, c2, c0, 1

@@ -57,7 +57,7 @@ abrt_handler:
     stmia sp!, {r3-r7}  @ store sp, lr, pc, spsr and cpsr
 
     sub r0, sp, #(18*4)
-    mov sp, r3
+    ldr sp, =__abt_stack
 
     blx print_registers
 

@@ -1,5 +1,5 @@
 .arm
-@ uint8_t *get_framebuffer(const int screen)
+@ u32 *get_framebuffer(const int screen)
 
 .type get_framebuffer, %function
 .global get_framebuffer
@@ -13,7 +13,7 @@ get_framebuffer:
 
 
 .arm
-@ void clear_screen(const int screen, const uint32_t rgb)
+@ void clear_screen(const int screen, const u16 rgb)
 
 .type clear_screen, %function
 .global clear_screen
@@ -43,7 +43,7 @@ clear_screen:
 
 
 .arm
-@ void gfx_set_pixel(uint8_t *fb, const uint32_t x, const uint32_t y, const uint16_t rgb)
+@ void gfx_set_pixel(u16 *fb, const u32 x, const u32 y, const u16 rgb)
 
 .type gfx_set_pixel, %function
 .global gfx_set_pixel
@@ -57,7 +57,7 @@ gfx_set_pixel:
     add r1, r1, #239       @ r1 := r1 + 239
 
     add r0, r0, r1, lsl #1
-    bic r0, #1 @ Make sure it's halfword aligned
+    bic r0, #1 @ Make sure it's half-word aligned
 
     strh r3, [r0]
 

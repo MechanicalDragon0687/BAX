@@ -25,10 +25,3 @@ typedef volatile u8  vu8;
 typedef volatile u16 vu16;
 typedef volatile u32 vu32;
 typedef volatile u64 vu64;
-
-#define MAX_ANIMATIONS    10
-#define MAX_PAYLOAD_SIZE  0xFFE00
-
-#define BASE_PATH         "0:/bax"
-
-#define ARM9_PAYLOAD_PATH BASE_PATH "/arm9payload.bin"
