@@ -1,22 +1,32 @@
 #include <common.h>
+#include <gfx/text.h>
+#include <arm/exceptions.h>
 
-#include <arm/asm.h>
-#include <io/term.h>
-#include <io/printf.h>
-
-void __attribute__((noreturn, target("arm"))) print_registers(u32 *regs)
+const char *xrq_names[] =
 {
-    // order of registers is r0-r15, cpsr (pre-exception), cpsr (post-exception)
-    // TODO: Make sure framebuffers are set up
+    "Reset", "Undefined", "Software interrupt",
+    "Prefetch abort", "Data abort", "Reserved", "IRQ", "FIQ"
+};
 
-    console bottom_out;
-    term_init(&bottom_out, ~0, BOTTOM_SCREEN);
-    printf("exception\n\n");
+void fatal_xrq(int xrq_n, uint32_t *regs)
+{
+    char regdump[11][TEXT_WIDTH];
 
-    for (int i = 0; i < 16; i++)
-        printf(" r%02d = 0x%08X %c", i, regs[i], !(i % 2) ? '|' : '\n');
-    // formatting
+    memset(regdump, 0, 11*TEXT_WIDTH);
 
-    printf("CPSR = 0x%08X | EPSR = 0x%08X\n", regs[16], regs[17]);
-    while(1) wfi();
+    strcpy(regdump[0], xrq_names[xrq_n]);
+
+    msprintf(regdump[2], "R00 = %X | R01 = %X", regs[0], regs[1]);
+    msprintf(regdump[3], "R02 = %X | R03 = %X", regs[2], regs[3]);
+    msprintf(regdump[4], "R04 = %X | R05 = %X", regs[4], regs[5]);
+    msprintf(regdump[5], "R06 = %X | R07 = %X", regs[6], regs[7]);
+    msprintf(regdump[6], "R08 = %X | R09 = %X", regs[8], regs[9]);
+    msprintf(regdump[7], "R10 = %X | R11 = %X", regs[10], regs[11]);
+    msprintf(regdump[8], "R12 = %X | R13 = %X", regs[12], regs[13]);
+    msprintf(regdump[9], "R14 = %X | R15 = %X", regs[14], regs[15]);
+
+    msprintf(regdump[10], "PSR = %X | XPSR = %X", regs[16], regs[17]);
+
+    show_text(regdump, 11);
+    return;
 }

@@ -1,0 +1,124 @@
+#include <common.h>
+
+#include <anim/bax.h>
+#include <gfx/gfx.h>
+#include <fs/ff/ff.h>
+#include <fs/fsutil.h>
+#include <hw/timer.h>
+#include <arm/arm.h>
+
+volatile uint32_t DTCM __frame_cnt;
+volatile bool DTCM __playback;
+static uint32_t DTCM *__read_ptr, DTCM *__write_ptr;
+/*
+ __frame_cnt = available frames
+ __read_ptr  = data to copy to framebuffer
+ __write_ptr = data that's being read from disk
+
+ data_ptr[0] = frame size (doesnt include this "header")
+ data_ptr[1] = destination framebuffer
+ data_ptr[2...] = data
+
+ should be faster cause no malloc/free
+ but this is just disgusting to look at
+*/
+
+void ITCM bax_timer_handler(UNUSED uint32_t xrq_id)
+{
+    if (__frame_cnt > 0 && __playback) {
+        if ((uint32_t)__read_ptr > BUF_END) {
+            __read_ptr = (uint32_t*)BUF_START;
+        }
+
+        fastcpy((void*)__read_ptr[BUFFER_DESTINATION], &__read_ptr[BUFFER_DATA], __read_ptr[BUFFER_FRAME_SIZE]);
+        __read_ptr = (uint32_t*)((uint32_t)__read_ptr + __read_ptr[BUFFER_FRAME_SIZE] + 8);
+        __frame_cnt--;
+    }
+    return;
+}
+
+void ITCM bax_loop(anim_header *anim_hdr, FIL *anim_fil)
+{
+    uint32_t top_fb, bot_fb;
+    size_t fr_sz, br;
+
+    top_fb = (uint32_t)get_framebuffer(GFX_TOP);
+    bot_fb = (uint32_t)get_framebuffer(GFX_BOTTOM);
+
+    __playback  = false;
+    __frame_cnt = 0;
+    __read_ptr  = (uint32_t*)BUF_START;
+    __write_ptr = (uint32_t*)BUF_START;
+
+    f_lseek(anim_fil, sizeof(anim_header));
+    timer_init(NANOSECOND / anim_hdr->rate, -1, bax_timer_handler);
+    while(max(anim_hdr->topcnt, anim_hdr->botcnt)) {
+        if (__frame_cnt <= THRESHOLD) {
+            __playback = false;
+        }
+
+        if ((uint32_t)__write_ptr > BUF_END) {
+            __write_ptr = (uint32_t*)BUF_START;
+        }
+
+        fr_sz = 0;
+
+        if (anim_hdr->topcnt > 0) {
+            f_read(anim_fil, &__write_ptr[2], TOP_FRAME_SIZE, &br);
+            fr_sz += br;
+            __write_ptr[BUFFER_DESTINATION] = top_fb;
+            anim_hdr->topcnt--;
+        } else {
+            __write_ptr[BUFFER_DESTINATION] = bot_fb;
+        }
+
+        if (anim_hdr->botcnt > 0) {
+            f_read(anim_fil, &__write_ptr[BUFFER_DATA + (fr_sz/4)], BOTTOM_FRAME_SIZE, &br);
+            fr_sz += br;
+            anim_hdr->botcnt--;
+        }
+
+        __write_ptr[BUFFER_FRAME_SIZE] = fr_sz;
+        __frame_cnt++;
+
+        __write_ptr = (uint32_t*)((uint32_t)__write_ptr + fr_sz + 8);
+
+        if (__frame_cnt > THRESHOLD) {
+            __playback = true;
+        }
+    }
+
+    while(__frame_cnt > 0);
+    timer_stop();
+    return;
+}
+
+void play_bax(void)
+{
+    FIL bax_fp;
+    FRESULT res;
+    size_t bax_sz, br;
+    anim_header anim_hdr;
+    char *bax_f;
+
+    bax_f = get_random_file(BASE_PATH, "*.bax", MAX_ANIMATIONS);
+    if (f_open(&bax_fp, bax_f, FA_READ) != FR_OK)
+        return;
+
+    bax_sz = f_size(&bax_fp);
+    if (bax_sz <= sizeof(anim_header)) {
+        f_close(&bax_fp);
+        return;
+    }
+
+    res = f_read(&bax_fp, &anim_hdr, sizeof(anim_header), &br);
+    if (res != FR_OK || br != sizeof(anim_header)) {
+        f_close(&bax_fp);
+        return;
+    }
+
+    bax_loop(&anim_hdr, &bax_fp);
+
+    f_close(&bax_fp);
+    return;
+}

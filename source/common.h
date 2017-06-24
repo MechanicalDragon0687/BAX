@@ -6,29 +6,34 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef int8_t   s8;
-typedef int16_t  s16;
-typedef int32_t  s32;
-typedef int64_t  s64;
+#define DTCM   __attribute__((section(".dtcm")))
+#define ITCM   __attribute__((section(".itcm")))
+#define UNUSED __attribute__((unused))
 
-typedef uint8_t  u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
+#define asm          __asm__ volatile
+#define abort()      asm("bkpt 0xFACC\n\t")
+/* breakpoint instruction, triggers a prefetch abort */
 
-typedef volatile s8  vs8;
-typedef volatile s16 vs16;
-typedef volatile s32 vs32;
-typedef volatile s64 vs64;
+#define BIT(x)       (1 << (x))
+#define SWAP(a,b)    do {typeof (a) __c; __c = (a); (a) = (b); (b) = __c;} while(0)
 
-typedef volatile u8  vu8;
-typedef volatile u16 vu16;
-typedef volatile u32 vu32;
-typedef volatile u64 vu64;
+static inline int read_rand(void)
+{
+    return *(volatile int*)(0x10011000);
+}
 
-#define MAX_ANIMATIONS    10
-#define MAX_PAYLOAD_SIZE  0xFFE00
+static inline uint8_t read_bootenv(void)
+{
+    return *(volatile uint8_t*)(0x10010000);
+}
+
+#define MAX_ANIMATIONS (32)
+
+#define min(a,b)     ((a)<(b)?(a):(b))
+#define max(a,b)     ((a)>(b)?(a):(b))
 
 #define BASE_PATH         "0:/bax"
+#define CHAINLOAD_PATH    BASE_PATH "/boot.bin"
 
-#define ARM9_PAYLOAD_PATH BASE_PATH "/arm9payload.bin"
+char *msprintf(char *out, const char *fmt, ...);
+void fastcpy(void *dest, void *source, size_t n);

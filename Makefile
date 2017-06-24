@@ -6,47 +6,51 @@ endif
 
 include $(DEVKITARM)/base_tools
 
-dir_source  := source
-dir_build   := build
+TARGET  := $(notdir $(CURDIR))
 
-ARCH := -march=armv5te -mcpu=arm946e-s
+SOURCE  := source
+BUILD   := build
+
+ARCH    := -march=armv5te -mcpu=arm946e-s
 
 ASFLAGS := $(ARCH) -gxcoff++
 
-CFLAGS   := $(ARCH) -ggdb -ffreestanding -Os -flto \
-			-mthumb -mno-thumb-interwork -fomit-frame-pointer \
-			-Wall -Wextra -Wno-unused-parameter -ffast-math \
-			$(ARCH) -mtune=arm946e-s -I$(dir_source) -ffunction-sections
+# NOTE TO SELF: NEVER EVER USE LTO AGAIN UNTIL THE GNU PEOPLE FIX IT.
+# NOTE TO SELF NUMBER TWO: DONT USE THUMB. ITS EVIL.
+CFLAGS  := $(ARCH) -ggdb -O2 -marm \
+			-fomit-frame-pointer -pipe \
+			-Wall -Wextra -ffast-math \
+			-mtune=arm946e-s -I$(SOURCE) \
+			-std=gnu99 -ffunction-sections
 
-LDFLAGS  := $(ARCH) -Wl,--gc-section,--use-blx,-Map,$(dir_build)/linker.map -nostartfiles -ffreestanding -T linker.ld
+LDFLAGS := $(ARCH) -nostartfiles -Wl,--gc-sections,-Map,$(BUILD)/$(TARGET).map -ffreestanding -T linker.ld
 
-objects = $(patsubst $(dir_source)/%.s, $(dir_build)/%.s.o, \
-		  $(patsubst $(dir_source)/%.c, $(dir_build)/%.c.o, \
-		  $(call rwildcard, $(dir_source), *.s *.c)))
+OBJECTS = $(patsubst $(SOURCE)/%.s, $(BUILD)/%.s.o, \
+		  $(patsubst $(SOURCE)/%.c, $(BUILD)/%.c.o, \
+		  $(call rwildcard, $(SOURCE), *.s *.c)))
 
 .PHONY: all
-all: external $(dir_build)/main.bin
+all: $(BUILD)/$(TARGET).bin
 
 .PHONY: clean
 clean:
-	make -C ARM11 -f Makefile clean
-	@rm -rf $(dir_build) $(dir_out)
+	@rm -rf $(BUILD) $(RELEASE) profile.svg
 
-external:
-	make -C ARM11 -f Makefile
+profile: $(BUILD)/$(TARGET).elf
+	sh profile.sh $<
 
-$(dir_build)/main.bin: $(dir_build)/main.elf
+$(BUILD)/$(TARGET).bin: $(BUILD)/$(TARGET).elf
 	$(OBJCOPY) -S -O binary $< $@
 
-$(dir_build)/main.elf: $(objects)
+$(BUILD)/$(TARGET).elf: $(OBJECTS)
 	$(CC) $^ $(LDFLAGS) $(OUTPUT_OPTION)
 
-$(dir_build)/%.c.o: $(dir_source)/%.c
+$(BUILD)/%.c.o: $(SOURCE)/%.c
 	@mkdir -p "$(@D)"
-	$(COMPILE.c) $(OUTPUT_OPTION) $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-$(dir_build)/%.s.o: $(dir_source)/%.s
+$(BUILD)/%.s.o: $(SOURCE)/%.s
 	@mkdir -p "$(@D)"
-	$(COMPILE.s) $(OUTPUT_OPTION) $<
+	$(AS) $(ASFLAGS) -c -o $@ $<
 
-include $(call rwildcard, $(dir_build), *.d)
+include $(call rwildcard, $(BUILD), *.d)
