@@ -1,0 +1,4 @@
+TODO:
+
+ - stress test EVERYTHING (timer race conditions, out of memory)
+ - better critical section handling

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Hacked together from the Poor Man's Profiler and FlameGraph's GDB Stack Trace
-# Requires GDB and Perl
+# Requires qemu-ctr, GDB and Perl
 
 SAMPLES=250
 PERIOD=0

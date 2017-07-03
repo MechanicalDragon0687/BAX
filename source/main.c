@@ -1,34 +1,24 @@
 #include <common.h>
 
-#include <gfx/text.h>
 #include <anim/bax.h>
-#include <hw/timer.h>
 #include <fs/ff/ff.h>
-
-#include <gfx/gfx.h>
-
-static FATFS DTCM  fs_main;
-volatile bool DTCM *playing;
 
 int main(UNUSED int argc, UNUSED char *argv[])
 {
-    clear_screen(GFX_TOP, ~0);
+    FATFS fs_main;
+    FRESULT res;
 
-    if (f_mount(&fs_main, "", 1) != FR_OK) {
-        abort();
+    res = f_mount(&fs_main, "", 1);
+    if (res != FR_OK) {
+        abort_code(res);
     }
 
-    clear_screen(GFX_BOTTOM, ~0);
+    if (!abort_anim()) {
+        bax_start();
+    }
 
-    playing = bax_start();
-
-    /* load payload into memory */
-
-    /* loop until it stops playing */
-    while(*playing);
-
+    /* load binary into memory */
     /* chainload */
-    abort();
 
-    while(1);
+    abort();
 }

@@ -1,18 +1,33 @@
 #include <common.h>
 #include <gfx/gfx.h>
 
-const int fb_width[] = {400, 400, 320};
+uint32_t fb_width[2] = {400, 320};
+void *framebuffers[2] = {NULL};
 
-void clear_screen(const int screen, const uint16_t rgb)
+void gfx_init(void)
+{
+    framebuffers[0] = (void*)(((uint32_t*)0x23FFFE00)[0]);
+    framebuffers[1] = (void*)(((uint32_t*)0x23FFFE00)[2]);
+    return;
+}
+
+void clear_screen(const unsigned int screen, const uint16_t rgb)
 {
     uint32_t *fb, fill;
     int sz;
 
-    fb = (uint32_t*)get_framebuffer(screen);
-    sz = fb_width[screen]*GFX_HEIGHT/2;
+    if (screen >= GFX_INVALID) {
+        return;
+    }
+
+    fb = (uint32_t*)framebuffers[screen];
+    sz = (fb_width[screen]*GFX_HEIGHT*2)/4;
 
     fill = (rgb << 16) | rgb;
-    while(sz --) {
+    while(sz-=4) {
+        *(fb++) = fill;
+        *(fb++) = fill;
+        *(fb++) = fill;
         *(fb++) = fill;
     }
 

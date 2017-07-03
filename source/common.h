@@ -6,25 +6,40 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+extern int _itcm_lma, _itcm_len, _dtcm_lma, _dtcm_len, _sbss, _ebss;
+extern int _itcm_loc, _dtcm_loc;
+
 #define DTCM   __attribute__((section(".dtcm")))
 #define ITCM   __attribute__((section(".itcm")))
 #define UNUSED __attribute__((unused))
 
 #define asm          __asm__ volatile
-#define abort()      asm("bkpt 0xFACC\n\t")
-/* breakpoint instruction, triggers a prefetch abort */
+#define abort()      asm("bkpt\n\t")
 
 #define BIT(x)       (1 << (x))
-#define SWAP(a,b)    do {typeof (a) __c; __c = (a); (a) = (b); (b) = __c;} while(0)
+#define SWAP(a,b)    do {typeof (a) __swp_tmp_var; __swp_tmp_var = (a); (a) = (b); (b) = __swp_tmp_var;} while(0)
+#define ARR_COUNT(x) (sizeof((x))/sizeof(*(x)))
+
+static inline __attribute__((noreturn)) void abort_code(uint32_t code)
+{
+    asm("mov r9, %0\n\t"
+        "bkpt\n\t"::"r"(code));
+    while(1);
+}
 
 static inline int read_rand(void)
 {
     return *(volatile int*)(0x10011000);
 }
 
-static inline uint8_t read_bootenv(void)
+static inline bool addr_is_cached(uint32_t addr)
 {
-    return *(volatile uint8_t*)(0x10010000);
+    if ((addr >= 0x20000000 && addr <= 0x30000000) ||
+        (addr >= 0x08000000 && addr <= 0x08100000)) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 #define MAX_ANIMATIONS (32)

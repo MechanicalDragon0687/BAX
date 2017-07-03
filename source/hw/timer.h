@@ -5,17 +5,25 @@
 
 #define TIMER_FREQ (67027964 / 1024)
 #define SECOND     (1000)
-
-/* arbitrarily picked, prevents overflows */
 #define MAX_PERIOD (10 * SECOND)
-
-enum {
-    DEFAULT_TIMER = 0,
-    EXTRA_TIMER   = 1,
-    NR_TIMERS
-};
+#define MIN_PERIOD (SECOND / 100)
 
 #define TIMER_IRQ_BASE  (8)
+
+#define DEFAULT_TIMER (0)
+#define EXTRA_TIMER   (1)
+
+#define TIMER_PERIODIC (-1)
+#define TIMER_ONESHOT  (1)
+
+#define REG_TIMER_VAL  (0)
+#define REG_TIMER_CNT  (1)
+
+typedef struct {
+    uint32_t ticks;
+    uint32_t loops;
+    irq_handler handler;
+} timer_state;
 
 enum {
     TIMER_PRESCALER_NONE = (0),

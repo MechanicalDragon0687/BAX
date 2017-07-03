@@ -78,43 +78,26 @@
 #define TMIO_MASK_READOP  (TMIO_STAT1_RXRDY | TMIO_STAT1_DATAEND)
 #define TMIO_MASK_WRITEOP (TMIO_STAT1_TXRQ | TMIO_STAT1_DATAEND)
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+typedef struct mmcdevice {
+	uint32_t* rData;
+	uint32_t* tData;
+	uint32_t size;
+	uint32_t error;
+	uint16_t stat0;
+	uint16_t stat1;
+	uint32_t ret[4];
+	uint32_t initarg;
+	uint32_t isSDHC;
+	uint32_t clk;
+	uint32_t SDOPT;
+	uint32_t devicenumber;
+	uint32_t total_size; //size in sectors of the device
+	uint32_t res;
+} mmcdevice;
 
-	typedef struct mmcdevice {
-		uint8_t* rData;
-		const uint8_t* tData;
-		uint32_t size;
-		uint32_t error;
-		uint16_t stat0;
-		uint16_t stat1;
-		uint32_t ret[4];
-		uint32_t initarg;
-		uint32_t isSDHC;
-		uint32_t clk;
-		uint32_t SDOPT;
-		uint32_t devicenumber;
-		uint32_t total_size; //size in sectors of the device
-		uint32_t res;
-	} mmcdevice;
-
-	int sdmmc_sdcard_init();
-	int sdmmc_sdcard_readsectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out);
-	int sdmmc_sdcard_writesectors(uint32_t sector_no, uint32_t numsectors, const uint8_t *in);
-
-	int sdmmc_nand_readsectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out);
-	int sdmmc_nand_writesectors(uint32_t sector_no, uint32_t numsectors, const uint8_t *in);
-
-	int sdmmc_get_cid(bool isNand, uint32_t *info);
-
-	void InitSD();
-	int Nand_Init();
-	int SD_Init();
-
-#ifdef __cplusplus
-};
-#endif
+int sdmmc_sdcard_init();
+int sdmmc_sdcard_readsectors(uint32_t sector_no, uint32_t numsectors, uint32_t *out);
+int sdmmc_sdcard_writesectors(uint32_t sector_no, uint32_t numsectors, uint32_t *in);
 
 //---------------------------------------------------------------------------------
 static inline uint16_t sdmmc_read16(uint16_t reg) {

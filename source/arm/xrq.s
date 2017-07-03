@@ -1,5 +1,7 @@
-.arm
 .section .itcm.start, "a"
+.arm
+
+#include <arm/arm.h>
 
 .align 4
 .global xrq_entry
@@ -15,19 +17,21 @@ xrq_entry:
     b xrq_fiq
 
 xrq_wfi:
-    msr cpsr, #0xD3
+    msr cpsr, #(SVC_MODE | IRQ_BIT | FIQ_BIT)
     mov r0, #0
     .xrq_wfi_loop:
         mcr p15, 0, r0, c7, c0, 4
         b .xrq_wfi_loop
 
-
 .macro XRQ_FATAL_HANDLER xrq_id=0
-    ldr sp, =(0x23F00000 - 18*4)
+    adr sp, __reg_stack
     stmia sp!, {r0-r12}
     mov r0, #\xrq_id
     b fatal_xrq_handler_common
 .endm
+
+__reg_stack:
+    .skip (18*4)
 
 xrq_reset:
     XRQ_FATAL_HANDLER 0
@@ -50,20 +54,21 @@ xrq_reserved:
 xrq_fiq:
     XRQ_FATAL_HANDLER 7
 
+@ note: r0 MUST be preserved
 fatal_xrq_handler_common:
     mrs r1, cpsr
-    orr r1, #0xC0
+    orr r1, #(IRQ_BIT | FIQ_BIT)
     msr cpsr, r1
 
     mrs r2, spsr
     mov r7, r1
     mov r6, r2
 
-    and r2, #0x1F
-    cmp r2, #0x10
-    orreq r2, r6, #0x1F
+    and r2, #(PMODE_MASK)
+    cmp r2, #(USR_MODE)
+    orreq r2, r6, #(SYS_MODE)
 
-    orr r2, #0xC0
+    orr r2, #(IRQ_BIT | FIQ_BIT)
 
     msr cpsr, r2
     mov r3, sp
@@ -74,13 +79,13 @@ fatal_xrq_handler_common:
 
     stmia sp!, {r3-r7}
 
-    sub sp, #(18*4)
-
-    ldr lr, =fatal_xrq
-    mov r1, sp
+    ldr sp, =_abt_stack
 
     @ preserved register order
     @ r0-r15, cpsr, xpsr
-    blx lr
+
+    ldr r3, =fatal_xrq
+    adr r1, __reg_stack
+    blx r3
 
     bl xrq_wfi

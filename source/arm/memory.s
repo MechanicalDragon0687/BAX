@@ -1,18 +1,14 @@
-.arm
-
 .section .itcm.text, "a"
+.arm
 
 .set FASTCPY_REPS, 16
 
 .global fastcpy
 .type fastcpy, %function
 @ void fastcpy(void *dest, void *source, size_t n)
-@ fast unrolled memcpy, intended to run on ITCM
-@ assumes addresses are word-aligned and memory is RW
+@ fast unrolled CPU memory copy
 fastcpy:
     push {r4-r9,lr}
-
-    @ TODO: use FIQ banked registers, maybe it could provide a speed boost?
 
     .fastcpy_inloop:
 

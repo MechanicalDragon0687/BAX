@@ -1,5 +1,4 @@
 #include <common.h>
-#include <arm/irq.h>
 #include <anim/frame_queue.h>
 
 frame_queue frame_queue_init(void)
@@ -11,25 +10,35 @@ frame_queue frame_queue_init(void)
     return ret;
 }
 
-void frame_queue_add(frame_queue queue, size_t frame_length, void *frame_fb, void *frame_data)
+void frame_queue_kill(frame_queue queue)
+{
+    void *data;
+
+    while(frame_queue_count(queue)) {
+        data = frame_queue_extract(queue);
+        free(frame_data(data));
+        free(data);
+    }
+    free(queue);
+    return;
+}
+
+void frame_queue_add(frame_queue queue, size_t frame_length, void *dest_fb, void *frame_data)
 {
     struct frame_s *n = malloc(sizeof(struct frame_s));
 
     n->length = frame_length;
-    n->dest_fb = frame_fb;
+    n->dest_fb = dest_fb;
     n->frame_data = frame_data;
     n->next = NULL;
 
     if (queue->first == NULL) {
-        /* no nodes in the queue yet */
         queue->first = n;
     } else {
-        /* there's at least one node */
         queue->last->next = n;
     }
 
     queue->last = n;
-
     queue->frame_cnt++;
     return;
 }

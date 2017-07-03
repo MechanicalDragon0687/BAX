@@ -8,7 +8,7 @@
 /*-----------------------------------------------------------------------*/
 
 #include "diskio.h"		/* FatFs lower layer API */
-#include <fs/sdmmc/sdmmc.h>
+#include <hw/sdmmc.h>
 #include <common.h>
 
 
@@ -17,7 +17,7 @@
 /*-----------------------------------------------------------------------*/
 
 DSTATUS disk_status (
-	BYTE pdrv __attribute((unused))		/* Physical drive number to identify the drive */
+	BYTE pdrv UNUSED		/* Physical drive number to identify the drive */
 )
 {
 	return RES_OK;
@@ -30,7 +30,7 @@ DSTATUS disk_status (
 /*-----------------------------------------------------------------------*/
 
 DSTATUS disk_initialize (
-	BYTE pdrv __attribute((unused))		/* Physical drive number to identify the drive */
+	BYTE pdrv UNUSED		/* Physical drive number to identify the drive */
 )
 {
 	return sdmmc_sdcard_init();
@@ -43,13 +43,13 @@ DSTATUS disk_initialize (
 /*-----------------------------------------------------------------------*/
 
 DRESULT disk_read (
-	BYTE pdrv __attribute((unused)), /* Physical drive number to identify the drive */
+	BYTE pdrv UNUSED, /* Physical drive number to identify the drive */
 	BYTE *buff,		/* Data buffer to store read data */
 	DWORD sector,	/* Start sector in LBA */
 	UINT count		/* Number of sectors to read */
 )
 {
-	return sdmmc_sdcard_readsectors(sector, count, (uint8_t*)buff);
+	return sdmmc_sdcard_readsectors(sector, count, (uint32_t*)buff);
 }
 
 
@@ -59,13 +59,13 @@ DRESULT disk_read (
 /*-----------------------------------------------------------------------*/
 
 DRESULT disk_write (
-	BYTE pdrv __attribute((unused)), /* Physical drive number to identify the drive */
-	const BYTE *buff,	/* Data to be written */
-	DWORD sector,		/* Start sector in LBA */
-	UINT count			/* Number of sectors to write */
+	BYTE pdrv UNUSED, /* Physical drive number to identify the drive */
+	const BYTE *buff UNUSED,	/* Data to be written */
+	DWORD sector UNUSED,		/* Start sector in LBA */
+	UINT count UNUSED			/* Number of sectors to write */
 )
 {
-	return sdmmc_sdcard_writesectors(sector, count, (uint8_t*)buff);
+	return RES_PARERR;
 }
 #endif
 
@@ -75,9 +75,9 @@ DRESULT disk_write (
 /*-----------------------------------------------------------------------*/
 
 DRESULT disk_ioctl (
-	BYTE pdrv __attribute((unused)),		/* Physical drive number (0..) */
-	BYTE cmd __attribute((unused)),	     	/* Control code */
-	void *buff __attribute((unused))		/* Buffer to send/receive control data */
+	BYTE pdrv UNUSED,		/* Physical drive number (0..) */
+	BYTE cmd UNUSED,	     	/* Control code */
+	void *buff UNUSED		/* Buffer to send/receive control data */
 )
 {
 	return RES_PARERR;

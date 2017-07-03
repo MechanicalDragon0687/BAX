@@ -11,17 +11,14 @@ TARGET  := $(notdir $(CURDIR))
 SOURCE  := source
 BUILD   := build
 
-ARCH    := -march=armv5te -mcpu=arm946e-s
+ARCH    := -mlittle-endian -march=armv5te -mcpu=arm946e-s
 
-ASFLAGS := $(ARCH) -gxcoff++
+ASFLAGS := $(ARCH) -ggdb -x assembler-with-cpp -I$(SOURCE)
 
-# NOTE TO SELF: NEVER EVER USE LTO AGAIN UNTIL THE GNU PEOPLE FIX IT.
-# NOTE TO SELF NUMBER TWO: DONT USE THUMB. ITS EVIL.
 CFLAGS  := $(ARCH) -ggdb -O2 -marm \
 			-fomit-frame-pointer -pipe \
 			-Wall -Wextra -ffast-math \
-			-mtune=arm946e-s -I$(SOURCE) \
-			-std=gnu99 -ffunction-sections
+			-I$(SOURCE) -std=gnu99 -ffunction-sections
 
 LDFLAGS := $(ARCH) -nostartfiles -Wl,--gc-sections,-Map,$(BUILD)/$(TARGET).map -ffreestanding -T linker.ld
 
@@ -51,6 +48,6 @@ $(BUILD)/%.c.o: $(SOURCE)/%.c
 
 $(BUILD)/%.s.o: $(SOURCE)/%.s
 	@mkdir -p "$(@D)"
-	$(AS) $(ASFLAGS) -c -o $@ $<
+	$(CC) $(ASFLAGS) -c -o $@ $<
 
 include $(call rwildcard, $(BUILD), *.d)

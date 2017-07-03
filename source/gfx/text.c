@@ -1,3 +1,4 @@
+#include <common.h>
 #include <gfx/text.h>
 
 static uint16_t *txtfb = NULL;
@@ -11,8 +12,9 @@ void draw_char(const unsigned char c, const int x, const int y)
         mask = 0x80;
         row = text_font[c][_y];
         for (_x = 8; _x >= 0; _x--, mask>>=1) {
-            if ((row & mask) == 0)
+            if ((row & mask) == 0) {
                 continue;
+            }
 
             plot_pixel(txtfb, x + _x, y + _y, COLOR_FG);
         }
