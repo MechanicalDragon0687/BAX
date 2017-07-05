@@ -1,6 +1,9 @@
 #include <common.h>
 #include <anim/frame_queue.h>
 
+/* Simple FIFO Queue implementation */
+/* TODO: Replace malloc with objects from a static memory pool */
+
 frame_queue frame_queue_init(void)
 {
     frame_queue ret = malloc(sizeof(frame_queue_s));

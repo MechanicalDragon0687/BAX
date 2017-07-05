@@ -2,8 +2,8 @@
 #include <gfx/text.h>
 
 const char *xrq_names[] = {
-    "RESET", "UNDEFINED", "SWI",
-    "PREFETCH", "DATA", "RESERVED", "IRQ", "FIQ"
+    "RESET", "UNDEFINED", "SOFTWARE INTERRUPT",
+    "PREFETCH ABORT", "DATA ABORT", "RESERVED", "IRQ", "FIQ"
 };
 
 void fatal_xrq(int xrq_n, uint32_t *regs)

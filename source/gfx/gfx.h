@@ -1,5 +1,4 @@
 #pragma once
-
 #include <common.h>
 
 #define GFX_HEIGHT (240)
@@ -27,15 +26,6 @@ static inline void *get_framebuffer(const unsigned int screen)
 static inline void plot_pixel(uint16_t *fb, int x, int y, uint16_t c)
 {
     fb[(x*GFX_HEIGHT) - y + GFX_HEIGHT - 1] = c;
-/*
-    uint8_t *a = (uint8_t*)fb;
-
-    a += ((x*GFX_HEIGHT) - y + GFX_HEIGHT - 1) * 3;
-
-    *(a++) = (c?0xFF:0x00);
-    *(a++) = (c?0xFF:0x00);
-    *(a++) = (c?0xFF:0x00);*/
-
     return;
 }
 

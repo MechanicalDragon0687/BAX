@@ -13,11 +13,10 @@ int main(UNUSED int argc, UNUSED char *argv[])
         abort_code(res);
     }
 
-    if (!abort_anim()) {
+    if (!bax_abort()) {
         bax_start();
     }
 
-    /* load binary into memory */
     /* chainload */
 
     abort();

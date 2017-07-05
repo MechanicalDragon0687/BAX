@@ -4,6 +4,7 @@
 uint32_t fb_width[2] = {400, 320};
 void *framebuffers[2] = {NULL};
 
+/* Initialize framebuffer pointers */
 void gfx_init(void)
 {
     framebuffers[0] = (void*)(((uint32_t*)0x23FFFE00)[0]);
@@ -24,10 +25,7 @@ void clear_screen(const unsigned int screen, const uint16_t rgb)
     sz = (fb_width[screen]*GFX_HEIGHT*2)/4;
 
     fill = (rgb << 16) | rgb;
-    while(sz-=4) {
-        *(fb++) = fill;
-        *(fb++) = fill;
-        *(fb++) = fill;
+    while(sz--) {
         *(fb++) = fill;
     }
 

@@ -1,4 +1,6 @@
 TODO:
 
+ - NDMA + EMMC = <3
  - stress test EVERYTHING (timer race conditions, out of memory)
- - better critical section handling
+ - define some sort of standard for stuff like chainloading, memory detection, ARM11 communications, etc
+ - improve FIFO queue performance (allocation and removal)

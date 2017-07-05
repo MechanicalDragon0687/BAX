@@ -10,4 +10,4 @@
 
 extern char text_font[128][8];
 
-void show_text(const char txt[TEXT_HEIGHT][TEXT_WIDTH], int height);
+void show_text(const char txt[TEXT_HEIGHT][TEXT_WIDTH], int lines);

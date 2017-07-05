@@ -16,13 +16,6 @@ xrq_entry:
     b xrq_irq
     b xrq_fiq
 
-xrq_wfi:
-    msr cpsr, #(SVC_MODE | IRQ_BIT | FIQ_BIT)
-    mov r0, #0
-    .xrq_wfi_loop:
-        mcr p15, 0, r0, c7, c0, 4
-        b .xrq_wfi_loop
-
 .macro XRQ_FATAL_HANDLER xrq_id=0
     adr sp, __reg_stack
     stmia sp!, {r0-r12}
@@ -56,36 +49,45 @@ xrq_fiq:
 
 @ note: r0 MUST be preserved
 fatal_xrq_handler_common:
-    mrs r1, cpsr
-    orr r1, #(IRQ_BIT | FIQ_BIT)
-    msr cpsr, r1
 
+    @ Disable interrupts
+    mrs r1, cpsr
+    orr r2, r1, #(SR_IRQ_BIT | SR_FIQ_BIT)
+    msr cpsr, r2
+
+    @ Keep copies of CPSR and SPSR
     mrs r2, spsr
     mov r7, r1
     mov r6, r2
 
-    and r2, #(PMODE_MASK)
-    cmp r2, #(USR_MODE)
-    orreq r2, r6, #(SYS_MODE)
+    @ Fix previous mode
+    and r2, #(SR_PMODE_MASK)
+    cmp r2, #(SR_USR_MODE)
+    orreq r2, r6, #(SR_SYS_MODE)       @ if User mode, select System mode
+    orr r2, #(SR_IRQ_BIT | SR_FIQ_BIT) @ disable IRQs
 
-    orr r2, #(IRQ_BIT | FIQ_BIT)
-
+    @ Recover previous SP and LR
     msr cpsr, r2
     mov r3, sp
     mov r4, lr
     msr cpsr, r1
 
+    @ Fix XPC
     sub r5, lr, #4
 
     stmia sp!, {r3-r7}
 
     ldr sp, =_abt_stack
 
-    @ preserved register order
-    @ r0-r15, cpsr, xpsr
-
+    @ Preserved register order
+    @ r0-r12, sp, lr, cpsr, xpsr
     ldr r3, =fatal_xrq
     adr r1, __reg_stack
     blx r3
 
-    bl xrq_wfi
+    @ Wait For Interrupt infinite loop
+    msr cpsr_c, #(SR_SVC_MODE | SR_IRQ_BIT | SR_FIQ_BIT)
+    mov r0, #0
+    .xrq_wfi_loop:
+        mcr p15, 0, r0, c7, c0, 4
+        b .xrq_wfi_loop

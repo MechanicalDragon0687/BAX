@@ -40,3 +40,9 @@ static inline void *frame_data(void *frame)
 {
     return ((struct frame_s*)frame)->frame_data;
 }
+
+static inline void frame_free(void *frame)
+{
+    free(frame);
+    return;
+}

@@ -3,6 +3,10 @@
 #include <common.h>
 #include <arm/arm.h>
 
+#define ENTER_CRITICAL(x) do { (x) = irq_kill(); } while(0)
+#define LEAVE_CRITICAL(x) do { irq_restore((x)); } while(0)
+
+/* Read Control Register */
 static inline uint32_t read_cr1(void)
 {
     uint32_t cr;
@@ -10,6 +14,7 @@ static inline uint32_t read_cr1(void)
     return cr;
 }
 
+/* Write Control Register back */
 static inline void write_cr1(uint32_t cr)
 {
     asm("mcr p15, 0, %0, c1, c0, 0\n\t"::"r"(cr));
@@ -29,13 +34,15 @@ static inline void write_cpsr(uint32_t cpsr)
     return;
 }
 
-static inline void invalidate_icache(void)
+/* Invalidate the entire Instruction Cache */
+static inline void invalidate_icache_all(void)
 {
     asm("mcr p15, 0, %0, c7, c5, 0\n\t"::"r"(0));
     return;
 }
 
-static inline void invalidate_dcache(void)
+/* Invalidate the entire Data Cache */
+static inline void invalidate_dcache_all(void)
 {
     asm("mcr p15, 0, %0, c7, c6, 0\n\t"::"r"(0));
     return;
@@ -51,6 +58,16 @@ static inline void writeback_dcache_range(uint32_t start, uint32_t end)
     return;
 }
 
+static inline void invalidate_icache_range(uint32_t start, uint32_t end)
+{
+    start &= ~0x20;
+    while(start < end) {
+        asm("mcr p15, 0, %0, c7, c5, 1"::"r"(start));
+        start += 0x20;
+    }
+    return;
+}
+
 static inline void invalidate_dcache_range(uint32_t start, uint32_t end)
 {
     start &= ~0x20;
@@ -61,17 +78,26 @@ static inline void invalidate_dcache_range(uint32_t start, uint32_t end)
     return;
 }
 
-static inline void dwb(void)
+static inline void writeback_invalidate_dcache_range(uint32_t start, uint32_t end)
+{
+    start &= ~0x20;
+    while(start < end) {
+        asm("mcr p15, 0, %0, c7, c14, 1"::"r"(start));
+        start += 0x20;
+    }
+    return;
+}
+
+static inline void drain_write_buffer(void)
 {
     asm("mcr p15, 0, %0, c7, c10, 4\n\t"::"r"(0));
     return;
 }
 
+/* Wait For Interrupt (or debug signal) */
 static inline void wfi(void)
 {
     asm("mcr p15, 0, %0, c7, c0, 4\n\t"
         ::"r"(0));
     return;
 }
-
-void chainload(void *payload, void *entry, size_t len);

@@ -1,8 +1,11 @@
 #pragma once
-
 #include <common.h>
 
-#define HID_PAD ((volatile uint16_t*)(0x10146000))
+/*
+ HID Register
+ When a key is NOT held, it's bit is set
+*/
+#define REG_HID_PAD ((volatile uint16_t*)(0x10146000))
 
 enum {
     HID_A       = BIT(0),
@@ -22,8 +25,17 @@ enum {
 #define HID_ANY_DPAD (HID_UP | HID_DOWN | HID_LEFT | HID_RIGHT)
 #define HID_ANY_FACE (HID_A  | HID_B | HID_X | HID_Y)
 #define HID_ANY_TRGR (HID_LT | HID_RT)
+#define HID_ANY_SPEC (HID_START | HID_SELECT)
+
+#define HID_ANY (HID_ANY_DPAD | HID_ANY_FACE | HID_ANY_TRGR | HID_ANY_SPEC)
 
 static inline uint32_t hid_key_pressed(void)
 {
-    return (~(*HID_PAD) & 0xFFF);
+    return (~(*REG_HID_PAD) & HID_ANY);
+}
+
+static inline void hid_wait_key(uint32_t mask)
+{
+    while((hid_key_pressed() & mask) == 0);
+    return;
 }

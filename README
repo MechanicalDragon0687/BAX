@@ -1,0 +1,30 @@
+BAX ALPHA:
+ 
+ if you're reading this, you've been carefully selected (not really) for an early peek
+ at the alpha BAX code.
+
+ it's mostly unfinished because I gotta deal with some shit from b9s, shit I tried to
+ fix with a9lh but oh well, at least the main subsystems work fine and the only real assumptions
+ I make about the system are that all memory is accessible as usual and that ITCM is mirrored
+ throughout the lower 128 megs of the address space. it also assumes cakehax framebuffers are
+ properly placed and that the screen is RGB565, it will work """fine""" otherwise but the image
+ will be completely screwed.
+
+ read makeanim.py and source/anim/bax.h for an overview of the system.
+
+ code written by me (which is like 90 percent of the thing tbh) is licensed under the glorious MIT
+ license, fatfs is licensed under a weird BSD-like license so it's fine, sdmmc is licensed under
+ the MPL license so it's okay to redistribute binaries *as long* as you also distribute hw/sdmmc.{c,h}.
+
+ compilation was only tested under debian buster x64 with dKA r46/gcc 6.3.0, so if it fucks out in
+ any other OS lemme know, especially if you got a fix that's not too invasive.
+
+ there's a kind of 'profiler' built in that runs the binary under qemu-ctr and grabs stack frames as fast
+ as possible, therefore giving the user an idea of how much time is spent in a specific function.
+ of course, this doesn't say *how long* the function takes, maybe another function takes very little time
+ but is executed so many times it makes it look like it takes the entire CPU time. only solution to that
+ would be to reserve a timer for a specific purpose and use gcc's instrumentation, but that'd consume a
+ bunch of memory, CPU time and is overall just not very useful
+
+ feel free to make issues/PRs if you feel *anything* can be improved upon that hasn't been suggested
+ yet
