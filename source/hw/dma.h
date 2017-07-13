@@ -22,7 +22,7 @@
 #define NDMA_SRC_INC (0 << 13)
 #define NDMA_SRC_DEC (1 << 13)
 #define NDMA_SRC_FIX (2 << 13)
-#define NDMA_SRC_NAN (3 << 13)
+#define NDMA_SRC_FIL (3 << 13)
 #define NDMA_SRC_MSK (BIT(13) | BIT(14))
 
 #define NDMA_IMM_MODE   (1 << 28)
@@ -30,4 +30,4 @@
 #define NDMA_IRQ_ENABLE (1 << 30)
 #define NDMA_START      (1 << 31)
 
-void dma_copy(void *destination, void *source, size_t length, int transfer_flags);
+void dma_op(uint32_t dst, uint32_t src, size_t len, int transfer_flags);

@@ -3,9 +3,6 @@
 #include <common.h>
 #include <arm/arm.h>
 
-#define ENTER_CRITICAL(x) do { (x) = irq_kill(); } while(0)
-#define LEAVE_CRITICAL(x) do { irq_restore((x)); } while(0)
-
 /* Read Control Register */
 static inline uint32_t read_cr1(void)
 {
@@ -50,7 +47,7 @@ static inline void invalidate_dcache_all(void)
 
 static inline void writeback_dcache_range(uint32_t start, uint32_t end)
 {
-    start &= ~0x20;
+    start &= ~0x1F;
     while(start < end) {
         asm("mcr p15, 0, %0, c7, c10, 1"::"r"(start));
         start += 0x20;
@@ -60,7 +57,7 @@ static inline void writeback_dcache_range(uint32_t start, uint32_t end)
 
 static inline void invalidate_icache_range(uint32_t start, uint32_t end)
 {
-    start &= ~0x20;
+    start &= ~0x1F;
     while(start < end) {
         asm("mcr p15, 0, %0, c7, c5, 1"::"r"(start));
         start += 0x20;
@@ -70,7 +67,7 @@ static inline void invalidate_icache_range(uint32_t start, uint32_t end)
 
 static inline void invalidate_dcache_range(uint32_t start, uint32_t end)
 {
-    start &= ~0x20;
+    start &= ~0x1F;
     while(start < end) {
         asm("mcr p15, 0, %0, c7, c6, 1"::"r"(start));
         start += 0x20;
@@ -80,7 +77,7 @@ static inline void invalidate_dcache_range(uint32_t start, uint32_t end)
 
 static inline void writeback_invalidate_dcache_range(uint32_t start, uint32_t end)
 {
-    start &= ~0x20;
+    start &= ~0x1F;
     while(start < end) {
         asm("mcr p15, 0, %0, c7, c14, 1"::"r"(start));
         start += 0x20;

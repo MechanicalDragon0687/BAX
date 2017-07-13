@@ -2,7 +2,6 @@
 #include <anim/frame_queue.h>
 
 /* Simple FIFO Queue implementation */
-/* TODO: Replace malloc with objects from a static memory pool */
 
 frame_queue frame_queue_init(void)
 {
@@ -16,11 +15,10 @@ frame_queue frame_queue_init(void)
 void frame_queue_kill(frame_queue queue)
 {
     void *data;
-
     while(frame_queue_count(queue)) {
         data = frame_queue_extract(queue);
         free(frame_data(data));
-        free(data);
+        frame_free(data);
     }
     free(queue);
     return;

@@ -17,14 +17,11 @@ xrq_entry:
     b xrq_fiq
 
 .macro XRQ_FATAL_HANDLER xrq_id=0
-    adr sp, __reg_stack
+    ldr sp, =__reg_stack
     stmia sp!, {r0-r12}
     mov r0, #\xrq_id
     b fatal_xrq_handler_common
 .endm
-
-__reg_stack:
-    .skip (18*4)
 
 xrq_reset:
     XRQ_FATAL_HANDLER 0
@@ -72,17 +69,16 @@ fatal_xrq_handler_common:
     mov r4, lr
     msr cpsr, r1
 
-    @ Fix XPC
+    @ Fix PC
     sub r5, lr, #4
 
     stmia sp!, {r3-r7}
 
-    ldr sp, =_abt_stack
-
     @ Preserved register order
     @ r0-r12, sp, lr, cpsr, xpsr
-    ldr r3, =fatal_xrq
-    adr r1, __reg_stack
+    ldr sp, =_abt_stack
+    ldr r3, =xrq_fatal
+    ldr r1, =__reg_stack
     blx r3
 
     @ Wait For Interrupt infinite loop
@@ -91,3 +87,7 @@ fatal_xrq_handler_common:
     .xrq_wfi_loop:
         mcr p15, 0, r0, c7, c0, 4
         b .xrq_wfi_loop
+
+.section .dtcm
+__reg_stack:
+    .skip (18*4)

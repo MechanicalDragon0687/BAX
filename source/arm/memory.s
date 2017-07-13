@@ -18,6 +18,6 @@ fastcpy:
     .endr
 
     subs r2, #(FASTCPY_REPS*32)
-    pople {r4-r9,pc}
+    bgt .fastcpy_inloop
 
-    b .fastcpy_inloop
+    pop {r4-r9,pc}

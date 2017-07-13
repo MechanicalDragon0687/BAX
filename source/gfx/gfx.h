@@ -4,8 +4,8 @@
 #define GFX_HEIGHT (240)
 
 enum {
-    GFX_TOP = 0,
-    GFX_BOTTOM = 1,
+    GFX_MAIN = 0,
+    GFX_SUB = 1,
     GFX_INVALID
 };
 

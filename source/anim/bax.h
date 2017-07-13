@@ -32,9 +32,13 @@ static inline bool bax_hdr_valid(bax_header *hdr)
             (hdr->topcnt <= MAX_FRAMES) && (hdr->botcnt <= MAX_FRAMES));
 }
 
+/* Situation(s) under which playback should not be performed */
 static inline bool bax_abort(void)
 {
-    return hid_key_pressed();
+    bool ret = false;
+    ret |= hid_key_pressed();
+    /* Other conditions go here */
+    return ret;
 }
 
 void bax_start(void);

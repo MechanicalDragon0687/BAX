@@ -8,8 +8,10 @@ typedef void (*irq_handler)(uint32_t);
 #define REG_IRQ_IE ((uint32_t*)(0x10001000))
 #define REG_IRQ_IF ((uint32_t*)(0x10001004))
 
-#define IRQ_DMAC(n)  (n)
 #define IRQ_TIMER(n) (8 + (n))
+
+#define ENTER_CRITICAL(x) do { (x) = irq_kill(); } while(0)
+#define LEAVE_CRITICAL(x) do { irq_restore((x)); } while(0)
 
 static inline uint32_t irq_kill(void)
 {

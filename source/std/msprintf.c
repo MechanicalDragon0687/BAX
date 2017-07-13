@@ -4,8 +4,8 @@
 
 static const char char_dict[] = "0123456789ABCDEF";
 
-/* padlen_log[i] = log(1<<32,i+2) */
-static const int padlen_log[] = {-1, -1, 32, 21, 16, 14, 13, 12, 11, 11, 10, 10, 9, 9, 9, 9, 8};
+/* padlen_log[i] = log(1<<32,i) */
+static const unsigned int padlen_log[] = {-1, -1, 32, 21, 16, 14, 13, 12, 11, 11, 10, 10, 9, 9, 9, 9, 8};
 
 static inline bool misnumber(char c)
 {
@@ -32,13 +32,11 @@ uint32_t matoi(const char *s)
 }
 
 /* only 32 bit ints pls */
-void mitos(uint32_t n, int base, const int padlen, char *buf)
+void mitos(uint32_t n, uint32_t base, const uint32_t padlen, char *buf)
 {
-    int length, i;
+    uint32_t length, i;
 
-    if (base < 2 || base > 16) {
-        base = 16;
-    }
+    base = CLAMP(base, 2, ARR_COUNT(padlen_log));
 
     for (i = 0; i < min(padlen_log[base], padlen); i++) {
         buf[i] = '0';

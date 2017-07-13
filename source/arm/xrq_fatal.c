@@ -2,11 +2,11 @@
 #include <gfx/text.h>
 
 const char *xrq_names[] = {
-    "RESET", "UNDEFINED", "SOFTWARE INTERRUPT",
-    "PREFETCH ABORT", "DATA ABORT", "RESERVED", "IRQ", "FIQ"
+    "Reset", "Undefined", "Software Interrupt",
+    "Prefetch abort", "Data abort", "Reserved", "IRQ", "FIQ"
 };
 
-void fatal_xrq(int xrq_n, uint32_t *regs)
+void xrq_fatal(int xrq_n, uint32_t *regs)
 {
     int i, ri;
     char regdump[11][TEXT_WIDTH];

@@ -11,6 +11,7 @@ MEMORY
 
 SECTIONS
 {
+    /* Main program sections */
     .text :
     {
         . = ALIGN(4);
@@ -24,9 +25,24 @@ SECTIONS
         . = ALIGN(4);
         *(.data*);
         *(.rodata*);
+        *(COMMON);
     } >program
 
-    _itcm_lma = _end;
+    .bss (NOLOAD) :
+    {
+        . = ALIGN(4);
+        _sbss = . ;
+        *(.bss)
+        *(.bss*)
+        . = ALIGN(4);
+        _ebss = . ;
+    } >program
+
+    . = ALIGN(16);
+
+
+    /* Extra sections to be copied around (LMA != VMA) */
+    _itcm_lma = .;
     .itcm :
     AT ( _itcm_lma )
     {
@@ -45,32 +61,19 @@ SECTIONS
         _dtcm_e = .;
     } >dtcm
 
-    .bss (NOLOAD) :
-    {
-        . = ALIGN(4);
-        _sbss = . ;
-        *(.bss)
-        *(.bss*)
-        *(COMMON)
-        . = ALIGN(4);
-        _ebss = . ;
-    } >program
+    . = ALIGN(16);
 
-    . = ALIGN(4);
 
+    /* Misc symbols */
     _itcm_len = _itcm_e - _itcm_s;
     _dtcm_len = _dtcm_e - _dtcm_s;
 
     _itcm_loc = ORIGIN(itcm);
     _dtcm_loc = ORIGIN(dtcm);
 
-    ASSERT (_itcm_len <= LENGTH(itcm), "ITCM binary is too large")
-    ASSERT (_dtcm_len <= LENGTH(dtcm), "DTCM binary is too large")
-
     _abt_stack = 0x23F00000;
     _irq_stack = 0x00008000;
     _prg_stack = 0x08100000;
 
-    _end = .;
     __end__ = .;
 }

@@ -18,19 +18,16 @@ void dma_wait(unsigned int channel)
     return;
 }
 
-void dma_copy(void *destination, void *source, size_t len, int transfer_flags)
+void dma_op(uint32_t dst, uint32_t src, size_t len, int transfer_flags)
 {
-    uint32_t dst, src, dst_e, src_e;
-
-    dst = (uint32_t)destination;
-    src = (uint32_t)source;
+    uint32_t dst_e, src_e;
 
     /* Alignment checks */
     if ((dst|src|len)&3 || len < 4) {
         abort();
     }
 
-    /* Calculate the end of destination and source */
+    /* Calculate transfer boundaries */
     switch(transfer_flags & NDMA_DST_MSK) {
     case NDMA_DST_INC:
         dst_e = dst + len;
@@ -59,7 +56,7 @@ void dma_copy(void *destination, void *source, size_t len, int transfer_flags)
      Source is cacheable
      - write back DCache and drain the write buffer
     */
-    if (addr_is_cached(src)) {
+    if ((!(transfer_flags & NDMA_SRC_FIL)) && addr_is_cached(src)) {
         writeback_dcache_range(src, src_e);
         drain_write_buffer();
     }
@@ -67,15 +64,16 @@ void dma_copy(void *destination, void *source, size_t len, int transfer_flags)
     /* Stop any possible transfer on this channel */
     dma_regs[NDMA_CHANNEL][REG_NDMA_CNT] = 0;
 
-    /*
-     TODO: Find a working example of this working with EMMC.
-     Hopefully Kernel9 uses it.
-    */
     dma_regs[NDMA_CHANNEL][REG_NDMA_SRC_ADDR] = src;
     dma_regs[NDMA_CHANNEL][REG_NDMA_DST_ADDR] = dst;
     dma_regs[NDMA_CHANNEL][REG_NDMA_TRANSFER_CNT] = 0;
     dma_regs[NDMA_CHANNEL][REG_NDMA_WRITE_CNT] = len/4;
     dma_regs[NDMA_CHANNEL][REG_NDMA_BLOCK_CNT] = 0;
+
+    if (transfer_flags & NDMA_SRC_FIL) {
+        dma_regs[NDMA_CHANNEL][REG_NDMA_FILL_DATA] = src;
+    }
+
     dma_regs[NDMA_CHANNEL][REG_NDMA_CNT] = transfer_flags | NDMA_IMM_MODE | NDMA_START;
     dma_wait(NDMA_CHANNEL);
 

@@ -31,7 +31,7 @@ struct mmcdevice handleSD;
 
 #define NO_INLINE __attribute__((noinline))
 
-static int geterror(struct mmcdevice *ctx)
+static inline int geterror(struct mmcdevice *ctx)
 {
 	return (int)((ctx->error << 29) >> 31);
 }
@@ -232,7 +232,7 @@ int SD_Init()
 
 	inittarget(&handleSD);
 
-	timer_init(EXTRA_TIMER, SECOND / 4, TIMER_ONESHOT, NULL);
+	timer_init(EXTRA_TIMER, TIMER_FREQ / 4, TIMER_ONESHOT, NULL);
 	while(timer_retrieve(EXTRA_TIMER) != 0xFFFFFFFF);
 
 	//If not inserted

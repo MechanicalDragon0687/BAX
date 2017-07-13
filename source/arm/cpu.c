@@ -1,6 +1,9 @@
 #include <common.h>
 #include <arm/cpu.h>
 
+extern int _itcm_lma, _itcm_len, _dtcm_lma, _dtcm_len, _sbss, _ebss;
+extern int _itcm_loc, _dtcm_loc;
+
 extern void *fake_heap_start, *fake_heap_end;
 
 /* Initialize ITCM, DTCM and clear BSS */

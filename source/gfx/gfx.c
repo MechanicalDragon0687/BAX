@@ -1,4 +1,5 @@
 #include <common.h>
+#include <arm/cpu.h>
 #include <gfx/gfx.h>
 
 uint32_t fb_width[2] = {400, 320};
@@ -7,6 +8,7 @@ void *framebuffers[2] = {NULL};
 /* Initialize framebuffer pointers */
 void gfx_init(void)
 {
+    invalidate_dcache_range(0x23FFFE00, 0x23FFFE20);
     framebuffers[0] = (void*)(((uint32_t*)0x23FFFE00)[0]);
     framebuffers[1] = (void*)(((uint32_t*)0x23FFFE00)[2]);
     return;

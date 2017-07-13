@@ -18,8 +18,6 @@
  * Fetched from: http://dimensionalrift.homelinux.net/combuster/mos3/?p=viewsource&file=/modules/gfx/font8_8.asm
  **/
 
-// Constant: text_font
-// Contains an 8x8 font map for unicode points U+0000 - U+007F (basic latin)
 const char text_font[128][8] = {
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},   // U+0000 (nul)
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},   // U+0001

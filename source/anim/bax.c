@@ -23,7 +23,7 @@ volatile DTCM uint32_t missed;
 */
 volatile DTCM int buffered;
 
-void ITCM bax_timer_handler(UNUSED uint32_t xrq_id)
+void ITCM bax_timer_handler(void)
 {
     void *frame;
 
@@ -43,8 +43,7 @@ void ITCM bax_timer_handler(UNUSED uint32_t xrq_id)
         timer_stop(BAX_TIMER);
         buffered = -1;
     } else {
-        /* There's frames in disk but not in memory */
-        /* Increase missed frames counter */
+        /* Missed frame */
         missed++;
     }
     return;
@@ -52,19 +51,19 @@ void ITCM bax_timer_handler(UNUSED uint32_t xrq_id)
 
 void bax_loop(bax_header *anim_hdr, FIL *anim_fil)
 {
-    void *f_buf, *top_fb, *bot_fb;
+    void *f_buf, *main_fb, *sub_fb;
     uint32_t ss;
     size_t f_sz;
 
     /* Initialize state */
-    top_fb = get_framebuffer(GFX_TOP);
-    bot_fb = get_framebuffer(GFX_BOTTOM);
+    main_fb = get_framebuffer(GFX_MAIN);
+    sub_fb = get_framebuffer(GFX_SUB);
     f_queue = frame_queue_init();
     buffered = 0;
     missed = 0;
 
     f_lseek(anim_fil, sizeof(bax_header));
-    timer_init(BAX_TIMER, SECOND / anim_hdr->rate, TIMER_PERIODIC, bax_timer_handler);
+    timer_init(BAX_TIMER, anim_hdr->rate, TIMER_PERIODIC, bax_timer_handler);
 
     /*
      For each screen:
@@ -75,8 +74,8 @@ void bax_loop(bax_header *anim_hdr, FIL *anim_fil)
         - otherwise, add to frame queue
         - repeat
 
-     Allocator and frame queue ops are not thread-safe, as
-     such they must be handled inside critical sections.
+     Allocator and frame queue ops are not thread-safe
+     and must be handled inside critical sections.
     */
     while((anim_hdr->topcnt || anim_hdr->botcnt) && (buffered == 0)) {
         if (anim_hdr->topcnt > 0) {
@@ -89,12 +88,8 @@ void bax_loop(bax_header *anim_hdr, FIL *anim_fil)
 
             f_read(anim_fil, f_buf, TOP_FRAME_SIZE, &f_sz);
 
-            if (!f_sz) {
-                break;
-            }
-
             ENTER_CRITICAL(ss);
-            frame_queue_add(f_queue, f_sz, top_fb, f_buf);
+            frame_queue_add(f_queue, TOP_FRAME_SIZE, main_fb, f_buf);
             LEAVE_CRITICAL(ss);
 
             anim_hdr->topcnt--;
@@ -110,12 +105,8 @@ void bax_loop(bax_header *anim_hdr, FIL *anim_fil)
 
             f_read(anim_fil, f_buf, BOTTOM_FRAME_SIZE, &f_sz);
 
-            if (!f_sz) {
-                break;
-            }
-
             ENTER_CRITICAL(ss);
-            frame_queue_add(f_queue, f_sz, bot_fb, f_buf);
+            frame_queue_add(f_queue, BOTTOM_FRAME_SIZE, sub_fb, f_buf);
             LEAVE_CRITICAL(ss);
 
             anim_hdr->botcnt--;

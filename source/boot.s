@@ -1,5 +1,5 @@
-.arm
 .section .text.boot
+.arm
 
 #include <arm/arm.h>
 
@@ -8,6 +8,12 @@ __boot:
     nop
     nop
     nop
+
+    @ Invalidate caches, drain write buffer
+    mov r4, #0
+    mcr p15, 0, r4, c7, c5, 0
+    mcr p15, 0, r4, c7, c6, 0
+    mcr p15, 0, r4, c7, c10, 4
 
     @ Setup IRQ stack
     msr cpsr_c, #(SR_IRQ_MODE | SR_IRQ_BIT | SR_FIQ_BIT)
@@ -19,35 +25,38 @@ __boot:
 
     push {r0-r3}
 
-    @ Invalidate caches, drain write buffer
-    mov r0, #0
-    mcr p15, 0, r0, c7, c5, 0
-    mcr p15, 0, r0, c7, c6, 0
-    mcr p15, 0, r0, c7, c10, 4
-
     @ Disable MPU, Caches, select low exception vectors and enable TCMs
-    ldr r1, =(CR_ENABLE_MPU | CR_ENABLE_MPU | CR_ENABLE_MPU | CR_ENABLE_MPU | CR_DISABLE_TBIT)
+    ldr r1, =(CR_ENABLE_MPU | CR_ENABLE_ICACHE | CR_ENABLE_DCACHE | CR_ALT_VECTORS | CR_DISABLE_TBIT)
+    ldr r2, =(CR_ENABLE_DTCM | CR_ENABLE_ITCM)
     mrc p15, 0, r0, c1, c0, 0
     bic r0, r1
-    orr r0, #(CR_ENABLE_DTCM | CR_ENABLE_ITCM)
+    orr r0, r2
     mcr p15, 0, r0, c1, c0, 0
 
-    @ Setup access permissions (RW for all modes)
-    ldr r0, =0x33333333
+    @ Setup access permissions (RW for all)
+    ldr r0, = \
+    MPU_ACCESS(MPU_RW_RW, \
+               MPU_RW_RW, \
+               MPU_RW_RW, \
+               MPU_RW_RW, \
+               MPU_RW_RW, \
+               MPU_RW_RW, \
+               MPU_RW_RW, \
+               MPU_RW_RW)
     mcr p15, 0, r0, c5, c0, 2
     mcr p15, 0, r0, c5, c0, 3
 
     @ Setup MPU regions
-    adr r0, __mpu_regions
-    ldmia r0, {r1-r8}
-    mcr p15, 0, r1, c6, c0, 0
-    mcr p15, 0, r2, c6, c1, 0
-    mcr p15, 0, r3, c6, c2, 0
-    mcr p15, 0, r4, c6, c3, 0
-    mcr p15, 0, r5, c6, c4, 0
-    mcr p15, 0, r6, c6, c5, 0
-    mcr p15, 0, r7, c6, c6, 0
-    mcr p15, 0, r8, c6, c7, 0
+    adr r8, __mpu_regions
+    ldmia r8, {r0-r7}
+    mcr p15, 0, r0, c6, c0, 0
+    mcr p15, 0, r1, c6, c1, 0
+    mcr p15, 0, r2, c6, c2, 0
+    mcr p15, 0, r3, c6, c3, 0
+    mcr p15, 0, r4, c6, c4, 0
+    mcr p15, 0, r5, c6, c5, 0
+    mcr p15, 0, r6, c6, c6, 0
+    mcr p15, 0, r7, c6, c7, 0
 
     @ Setup Data TCM
     ldr r0, =_dtcm_loc
@@ -59,19 +68,12 @@ __boot:
 
     @ Enable caching for ITCM, ARM9 RAM, VRAM, FCRAM, DTCM and BootROM
     mov r0, #0b11101011
-    mcr p15, 0, r0, c3, c0, 0 @ Write buffer control register
-    mcr p15, 0, r0, c2, c0, 0 @ DCache control register
-    mcr p15, 0, r0, c2, c0, 1 @ ICache control register
-
-    @ Undocumented register 
-    ldr r0, =0x10000020
-    mov r1, #0
-    str r1, [r0]
-    mov r1, #0x340
-    str r1, [r0]
+    mcr p15, 0, r0, c3, c0, 0 @ Write buffer control
+    mcr p15, 0, r0, c2, c0, 0 @ DCache control
+    mcr p15, 0, r0, c2, c0, 1 @ ICache control
 
     @ Enable MPU and Caches
-    ldr r1, =(CR_ENABLE_MPU | CR_ENABLE_DCACHE | CR_ENABLE_ICACHE)
+    ldr r1, =(CR_ENABLE_MPU | CR_ENABLE_DCACHE | CR_ENABLE_ICACHE | CR_CACHE_RROBIN)
     mrc p15, 0, r0, c1, c0, 0
     orr r0, r1
     mcr p15, 0, r0, c1, c0, 0
@@ -80,22 +82,32 @@ __boot:
 
     @ Enable IRQs
     msr cpsr_c, #(SR_SVC_MODE | SR_FIQ_BIT)
-    nop
 
     @ Branch to C code
     bl main
 
-    @ If it ever returns, RESET
-    mov pc, #0
-
 boot_init:
     mov r4, lr
+
+    @ Undocumented register
+    ldr r0, =0x10000000
+    mov r1, #0
+    strh r1, [r0, #0x20]
+    mov r1, #0x340
+    strh r1, [r0, #0x20]
+
     bl init_mem
-    bl init_heap
     bl irq_reset
+    bl proxy_init
     bl gfx_init
     bl dma_init
+    bl init_heap
     bx r4
+
+.word 0x13161616, \
+      0x1C0F161D, \
+      0x4157415A, \
+      0x4F445552
 
 __mpu_regions:
     .word (0x00000000 | MPU_128M | 1) @ ITCM

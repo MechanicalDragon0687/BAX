@@ -46,3 +46,19 @@
 #define MPU_1G   (0x1D << 1)
 #define MPU_2G   (0x1E << 1)
 #define MPU_4G   (0x1F << 1)
+
+#define MPU_NA_NA (0b0000)
+#define MPU_RW_NA (0b0001)
+#define MPU_RW_RO (0b0010)
+#define MPU_RW_RW (0b0011)
+#define MPU_RO_NA (0b0101)
+#define MPU_RO_RO (0b0110)
+
+#define MPU_ACCESS(a,b,c,d,e,f,g,h)  ((h)<<28 | \
+                                      (g)<<24 | \
+                                      (f)<<20 | \
+                                      (e)<<16 | \
+                                      (d)<<12 | \
+                                      (c)<<8 | \
+                                      (b)<<4 | \
+                                      (a))

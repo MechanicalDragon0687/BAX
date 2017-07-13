@@ -24,14 +24,14 @@ void draw_char(const unsigned char c, const int x, const int y)
 }
 
 /* Draws a text buffer onto the screen */
-void show_text(const char txt[TEXT_HEIGHT][TEXT_WIDTH], int lines)
+void show_text(const char txt[TEXT_HEIGHT][TEXT_WIDTH], const int lines)
 {
     int x, y;
 
-    txtfb = get_framebuffer(GFX_TOP);
-    clear_screen(GFX_TOP, COLOR_BG);
+    txtfb = get_framebuffer(GFX_MAIN);
+    clear_screen(GFX_MAIN, COLOR_BG);
 
-    for (y = 0; y < lines; y++) {
+    for (y = 0; y < min(lines, TEXT_HEIGHT); y++) {
         for (x = 0; x < TEXT_WIDTH; x++) {
             draw_char(txt[y][x], x * 8, y * 8);
         }

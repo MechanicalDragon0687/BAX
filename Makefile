@@ -40,7 +40,7 @@ $(BUILD)/$(TARGET).bin: $(BUILD)/$(TARGET).elf
 	$(OBJCOPY) -S -O binary $< $@
 
 $(BUILD)/$(TARGET).elf: $(OBJECTS)
-	$(CC) $^ $(LDFLAGS) $(OUTPUT_OPTION)
+	$(CC) $^ $(LDFLAGS) -o $@
 
 $(BUILD)/%.c.o: $(SOURCE)/%.c
 	@mkdir -p "$(@D)"
