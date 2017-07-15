@@ -25,15 +25,5 @@ SECTIONS
         *(COMMON);
     } >AWRAM
 
-    .bss (NOLOAD) :
-    {
-        . = ALIGN(4);
-        _sbss = . ;
-        *(.bss)
-        *(.bss*)
-        . = ALIGN(4);
-        _ebss = . ;
-    } >AWRAM
-
     _stack_top = ORIGIN(AWRAM);
 }

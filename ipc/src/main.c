@@ -1,28 +1,45 @@
 #include <stdint.h>
 #include "regs.h"
 
-#define BRIGHTNESS (0x80)
+#define DEFBRIGHT (0x80)
 
 volatile uint32_t *entry = (volatile uint32_t*)(0x1FFFFFFC);
 volatile uint32_t *fbstr = (volatile uint32_t*)(0x23FFFE00);
-const int stride[] = {240*4, 240*3, 240*2, 240*2};
 
 void screen_set_mode(uint32_t m)
 {
+    uint32_t stride;
     m &= 3;
+
+    switch(m) {
+    case FB_CFG_RGBA32:
+        stride = 960;
+        break;
+    case FB_CFG_RGB24:
+        stride = 720;
+        break;
+    default:
+        stride = 480;
+        break;
+    }
+
+    /* Framebuffer configuration */
     REG_GPU_PCD0(0x70) = FB_CFG_MAIN_SCREEN | m;
     REG_GPU_PCD1(0x70) = m;
-    REG_GPU_PCD0(0x90) = stride[m];
-    REG_GPU_PCD1(0x90) = stride[m];
 
-    REG_GPU_PCS0(0x0C) = 0;
+    /* Framebuffer stride in bytes */
+    REG_GPU_PCD0(0x90) = stride;
+    REG_GPU_PCD1(0x90) = stride;
 
-    REG_GPU_PCS0(0x00) = VRAM_START >> 3;
-    REG_GPU_PCS0(0x04) = VRAM_END >> 3;
-    REG_GPU_PCS0(0x08) = ~0; /* TODO change to 0 on retail */
-    REG_GPU_PCS0(0x0C) = (2<<8) | 1;
+    /* Clear VRAM */
+    REG_GPU_PCS0(REG_PCS_CONTROL) = 0;
 
-    while(!(REG_GPU_PCS0(0x0C) & 2));
+    REG_GPU_PCS0(REG_PCS_BUFFER_START) = PCS_ADDR(VRAM_START);
+    REG_GPU_PCS0(REG_PCS_BUFFER_END)   = PCS_ADDR(VRAM_END);
+    REG_GPU_PCS0(REG_PCS_FILL_VALUE)   = ~0; /* TODO change to 0 on retail */
+    REG_GPU_PCS0(REG_PCS_CONTROL)      = PCS_CNT_RGB32 | PCS_CNT_START;
+    while(!(REG_GPU_PCS0(0x0C) & PCS_CNT_FINISHED));
+
     return;
 }
 
@@ -32,8 +49,8 @@ void screen_init(void)
     REG_LCD_CFG(0x014) = 0x00000001;
     REG_LCD_CFG(0x00C) &= 0xFFFEFFFE;
 
-    REG_LCD_CFG(0x240) = BRIGHTNESS;
-    REG_LCD_CFG(0xA40) = BRIGHTNESS;
+    REG_LCD_CFG(0x240) = DEFBRIGHT;
+    REG_LCD_CFG(0xA40) = DEFBRIGHT;
     REG_LCD_CFG(0x244) = 0x1023E;
     REG_LCD_CFG(0xA44) = 0x1023E;
 
@@ -95,7 +112,7 @@ void screen_init(void)
     REG_GPU_PCD1(0x78) = 0x00000000;
     REG_GPU_PCD1(0x9C) = 0x00000000;
 
-    for (uint32_t i = 0; i < 256; i++) {
+    for (int i = 0; i < 256; i++) {
         REG_GPU_PCD0(0x84) = 0x10101 * i;
         REG_GPU_PCD1(0x84) = 0x10101 * i;
     }

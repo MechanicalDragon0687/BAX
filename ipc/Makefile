@@ -1,34 +1,30 @@
 TARGET  := $(notdir $(CURDIR))
 
 TRIPLET := arm-none-eabi
-
 AS := $(TRIPLET)-as
 CC := $(TRIPLET)-gcc
 LD := $(TRIPLET)-ld
 OC := $(TRIPLET)-objcopy
-OD := $(TRIPLET)-objdump
 
-OBJS := source/boot.o source/main.o
-
-CFLAGS  := -Os -ffreestanding -ggdb -std=c99 \
-           -Wall -Wextra -march=armv6k -mtune=mpcore
-
+OBJS := src/boot.o src/main.o
+CFLAGS  := -Os -ggdb -std=c99 -Wextra -march=armv6k -mtune=mpcore -mno-thumb-interwork -marm
 LDFLAGS := -Tlink.ld -nostdlib
 
 .PHONY: all clean
 
-all: $(TARGET).h
+all: $(TARGET).o
 
 clean:
-	rm -rf $(OBJS) $(TARGET).h $(TARGET).bin $(TARGET).elf $(TARGET).asm
+	rm -rf $(OBJS) $(TARGET).*
 
-$(TARGET).h: $(TARGET).bin
-	xxd -i $< > $@
+$(TARGET).elf: $(OBJS)
+	$(LD) $(OBJS) $(LDFLAGS) -o $@
 
-$(TARGET).bin: $(OBJS)
-	$(CC) $(OBJS) $(LDFLAGS) -o $(TARGET).elf
-	$(OC) -O binary $(TARGET).elf $(TARGET).bin
-	$(OD) -D $(TARGET).elf > $(TARGET).asm
+$(TARGET).bin: $(TARGET).elf
+	$(OC) -O binary $< $@
+
+$(TARGET).o: $(TARGET).bin
+	$(OC) -I binary -O elf32-littlearm --binary-architecture armv5te $< $@
 
 %.o: %.c %.s
 	$(CC) $(CFLAGS) $% -c -o $@

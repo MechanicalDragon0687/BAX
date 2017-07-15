@@ -8,6 +8,20 @@
 #define REG_GPU_PCS0(n) (*(volatile uint32_t*)(0x10400010 + (n)))
 #define REG_GPU_PCS1(n) (*(volatile uint32_t*)(0x10400020))
 
+#define REG_PCS_BUFFER_START (0x00)
+#define REG_PCS_BUFFER_END   (0x04)
+#define REG_PCS_FILL_VALUE   (0x08)
+#define REG_PCS_CONTROL      (0x0C)
+
+#define PCS_ADDR(x)      ((x) >> 3)
+
+#define PCS_CNT_START    (1<<0)
+#define PCS_CNT_FINISHED (1<<1)
+
+#define PCS_CNT_RGB16    (0<<8)
+#define PCS_CNT_RGB24    (1<<8)
+#define PCS_CNT_RGB32    (2<<8)
+
 /* GPU LCD configuration registers */
 #define REG_GPU_PCD0(n) (*(volatile uint32_t*)(0x10400400 + (n)))
 #define REG_GPU_PCD1(n) (*(volatile uint32_t*)(0x10400500 + (n)))
@@ -32,7 +46,6 @@
 #define FB_SUB_LE (FB_SUB_SIZE * 2)
 
 #define VRAM_END  (VRAM_START + FB_TOP_LE + FB_SUB_LE)
-
 
 #define FB_CFG_RGBA32 (0)
 #define FB_CFG_RGB24  (1)

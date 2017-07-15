@@ -28,7 +28,9 @@ void ITCM __attribute__((interrupt("IRQ"))) xrq_irq(void)
     uint32_t xrq_id, ss;
     ENTER_CRITICAL(ss);
     xrq_id = __builtin_ctz(*REG_IRQ_IF);
-    (__irq_funcs[xrq_id])(xrq_id);
+    if (xrq_id <= 0x1F) {
+        (__irq_funcs[xrq_id])(xrq_id);
+    }
     LEAVE_CRITICAL(ss);
     return;
 }

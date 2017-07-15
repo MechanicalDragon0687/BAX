@@ -6,21 +6,21 @@ endif
 
 include $(DEVKITARM)/base_tools
 
-TARGET  := $(notdir $(CURDIR))
+TARGET := $(notdir $(CURDIR))
 
-SOURCE  := source
-BUILD   := build
+SOURCE := source
+BUILD  := build
 
-ARCH    := -mlittle-endian -march=armv5te -mcpu=arm946e-s
+IPC_DIR := ipc
+IPC_O   := $(IPC_DIR)/$(IPC_DIR).o
+
+ARCH   := -mlittle-endian -march=armv5te -mcpu=arm946e-s -nostartfiles
 
 ASFLAGS := $(ARCH) -ggdb -x assembler-with-cpp -I$(SOURCE)
+CFLAGS  := $(ARCH) -ggdb -O2 -fomit-frame-pointer -ffunction-sections \
+           -marm -pipe -Wall -Wextra -ffast-math -I$(SOURCE) -std=gnu99
 
-CFLAGS  := $(ARCH) -ggdb -O2 -marm \
-			-fomit-frame-pointer -pipe \
-			-Wall -Wextra -ffast-math \
-			-I$(SOURCE) -std=gnu99 -ffunction-sections
-
-LDFLAGS := $(ARCH) -nostartfiles -Wl,--gc-sections,-Map,$(BUILD)/$(TARGET).map -ffreestanding -T linker.ld
+LDFLAGS := $(ARCH) -Wl,--gc-sections -ffreestanding -Tlink.ld
 
 OBJECTS = $(patsubst $(SOURCE)/%.s, $(BUILD)/%.s.o, \
 		  $(patsubst $(SOURCE)/%.c, $(BUILD)/%.c.o, \
@@ -31,7 +31,8 @@ all: $(BUILD)/$(TARGET).bin
 
 .PHONY: clean
 clean:
-	@rm -rf $(BUILD) $(RELEASE) profile.svg
+	@$(MAKE) -C $(IPC_DIR) clean
+	@rm -rf $(BUILD) profile.svg
 
 profile: $(BUILD)/$(TARGET).elf
 	sh profile.sh $<
@@ -39,7 +40,10 @@ profile: $(BUILD)/$(TARGET).elf
 $(BUILD)/$(TARGET).bin: $(BUILD)/$(TARGET).elf
 	$(OBJCOPY) -S -O binary $< $@
 
-$(BUILD)/$(TARGET).elf: $(OBJECTS)
+$(IPC_O):
+	$(MAKE) -C $(IPC_DIR)
+
+$(BUILD)/$(TARGET).elf: $(OBJECTS) $(IPC_O)
 	$(CC) $^ $(LDFLAGS) -o $@
 
 $(BUILD)/%.c.o: $(SOURCE)/%.c

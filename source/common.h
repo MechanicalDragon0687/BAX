@@ -16,7 +16,6 @@
 
 #define min(a,b)     ((a)<(b)?(a):(b))
 #define max(a,b)     ((a)>(b)?(a):(b))
-
 #define BIT(x)       (1 << (x))
 #define SWAP(a,b)    do {typeof (a) __Swp; __Swp = (a); (a) = (b); (b) = __Swp;} while(0)
 #define ARR_COUNT(x) (sizeof((x))/sizeof(*(x)))
@@ -26,7 +25,7 @@ static inline __attribute__((noreturn)) void abort_code(uint32_t code)
 {
     asm("mov r0, %0\n\t" /* <- shouldn't really necessary but just in case... */
         "bkpt\n\t"::"r"(code));
-    while(1);
+    __builtin_unreachable();
 }
 
 static inline int read_rand(void)
@@ -45,7 +44,7 @@ static inline bool addr_is_cached(uint32_t addr)
     }
 }
 
-#define MAX_ANIMATIONS (32)
+#define MAX_ANIMATIONS    (20)
 
 #define BASE_PATH         "0:/bax"
 #define CHAINLOAD_PATH    BASE_PATH "/boot.bin"
