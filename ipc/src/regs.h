@@ -26,8 +26,8 @@
 #define REG_GPU_PCD0(n) (*(volatile uint32_t*)(0x10400400 + (n)))
 #define REG_GPU_PCD1(n) (*(volatile uint32_t*)(0x10400500 + (n)))
 
-#define FB_TOP_SIZE (0x0005DC00)
-#define FB_SUB_SIZE (0x0004B000)
+#define FB_TOP_SIZE (400*240*4)
+#define FB_SUB_SIZE (320*240*4)
 
 #define VRAM_START  (0x18300000)
 

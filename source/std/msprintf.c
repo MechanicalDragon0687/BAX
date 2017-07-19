@@ -2,10 +2,10 @@
 #include <limits.h>
 #include <stdarg.h>
 
-static const char char_dict[] = "0123456789ABCDEF";
+const char char_dict[] = "0123456789ABCDEF";
 
 /* padlen_log[i] = log(1<<32,i) */
-static const unsigned int padlen_log[] = {-1, -1, 32, 21, 16, 14, 13, 12, 11, 11, 10, 10, 9, 9, 9, 9, 8};
+const unsigned int padlen_log[] = {-1, -1, 32, 21, 16, 14, 13, 12, 11, 11, 10, 10, 9, 9, 9, 9, 8};
 
 static inline bool misnumber(char c)
 {
@@ -32,7 +32,7 @@ uint32_t matoi(const char *s)
 }
 
 /* only 32 bit ints pls */
-void mitos(uint32_t n, uint32_t base, const uint32_t padlen, char *buf)
+void mitos(uint32_t n, uint32_t base, uint32_t padlen, char *buf)
 {
     uint32_t length, i;
 

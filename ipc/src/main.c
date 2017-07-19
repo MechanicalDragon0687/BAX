@@ -23,12 +23,10 @@ void screen_set_mode(uint32_t m)
         break;
     }
 
-    /* Framebuffer configuration */
     REG_GPU_PCD0(0x70) = FB_CFG_MAIN_SCREEN | m;
-    REG_GPU_PCD1(0x70) = m;
-
-    /* Framebuffer stride in bytes */
     REG_GPU_PCD0(0x90) = stride;
+
+    REG_GPU_PCD1(0x70) = m;
     REG_GPU_PCD1(0x90) = stride;
 
     /* Clear VRAM */
@@ -112,11 +110,6 @@ void screen_init(void)
     REG_GPU_PCD1(0x78) = 0x00000000;
     REG_GPU_PCD1(0x9C) = 0x00000000;
 
-    for (int i = 0; i < 256; i++) {
-        REG_GPU_PCD0(0x84) = 0x10101 * i;
-        REG_GPU_PCD1(0x84) = 0x10101 * i;
-    }
-
     fbstr[0] = FB_TOPL_A;
     fbstr[1] = FB_TOPL_A;
     fbstr[2] = FB_SUB_A;
@@ -132,6 +125,6 @@ void main(void)
     while(*entry == 0);
 
     screen_set_mode(FB_CFG_RGB24);
-    ((void (*)())((uintptr_t)*entry))();
+    ((void (*)(void))(*entry))();
     return;
 }

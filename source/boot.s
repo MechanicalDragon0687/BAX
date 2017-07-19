@@ -2,18 +2,20 @@
 .arm
 
 #include <arm/arm.h>
+#include <arm/brfunc.h>
 
 .global __boot
 __boot:
-    nop
-    nop
-    nop
+    @ Disable IRQs
+    mrs r0, cpsr
+    orr r0, #(SR_IRQ_BIT | SR_FIQ_BIT)
+    msr cpsr, r0
 
-    @ Invalidate caches, drain write buffer
-    mov r4, #0
-    mcr p15, 0, r4, c7, c5, 0
-    mcr p15, 0, r4, c7, c6, 0
-    mcr p15, 0, r4, c7, c10, 4
+    @ Cache writeback/invalidation
+    ldr r4, =(BOOTROM_WRITEBACK_INVALIDATE_DCACHE)
+    ldr r5, =(BOOTROM_INVALIDATE_ICACHE)
+    blx r4
+    blx r5
 
     @ Setup IRQ stack
     msr cpsr_c, #(SR_IRQ_MODE | SR_IRQ_BIT | SR_FIQ_BIT)
@@ -23,10 +25,9 @@ __boot:
     msr cpsr_c, #(SR_SVC_MODE | SR_IRQ_BIT | SR_FIQ_BIT)
     ldr sp, =_prg_stack
 
-    push {r0-r3}
-
     @ Disable MPU, Caches, select low exception vectors and enable TCMs
-    ldr r1, =(CR_ENABLE_MPU | CR_ENABLE_ICACHE | CR_ENABLE_DCACHE | CR_ALT_VECTORS | CR_DISABLE_TBIT)
+    ldr r1, =(CR_ENABLE_MPU | CR_ENABLE_ICACHE | CR_ENABLE_DCACHE | CR_ALT_VECTORS | \
+              CR_DISABLE_TBIT | CR_DTCM_LMODE | CR_ITCM_LMODE)
     ldr r2, =(CR_ENABLE_DTCM | CR_ENABLE_ITCM)
     mrc p15, 0, r0, c1, c0, 0
     bic r0, r1
@@ -63,8 +64,20 @@ __boot:
     orr r0, #(0x5 << 1)
     mcr p15, 0, r0, c9, c1, 0
 
+    @ Undocumented register
+    ldr r0, =0x10000000
+    mov r1, #0
+    strh r1, [r0, #0x20]
+    mov r1, #0x340
+    strh r1, [r0, #0x20]
+
     @ Initialize subsystems
-    bl boot_init
+    bl init_mem
+    bl irq_reset
+    bl proxy_init
+    bl gfx_init
+    bl dma_init
+    bl init_heap
 
     @ Enable caching for ITCM, ARM9 RAM, VRAM, FCRAM, DTCM and BootROM
     mov r0, #0b11101011
@@ -74,11 +87,11 @@ __boot:
 
     @ Enable MPU and Caches
     ldr r1, =(CR_ENABLE_MPU | CR_ENABLE_DCACHE | CR_ENABLE_ICACHE | CR_CACHE_RROBIN)
+    ldr r2, =(CR_DTCM_LMODE | CR_ITCM_LMODE)
     mrc p15, 0, r0, c1, c0, 0
     orr r0, r1
+    bic r0, r2
     mcr p15, 0, r0, c1, c0, 0
-
-    pop {r0-r3}
 
     @ Enable IRQs
     msr cpsr_c, #(SR_SVC_MODE | SR_FIQ_BIT)
@@ -86,23 +99,7 @@ __boot:
     @ Branch to C code
     bl main
 
-boot_init:
-    mov r4, lr
-
-    @ Undocumented register
-    ldr r0, =0x10000000
-    mov r1, #0
-    strh r1, [r0, #0x20]
-    mov r1, #0x340
-    strh r1, [r0, #0x20]
-
-    bl init_mem
-    bl irq_reset
-    bl proxy_init
-    bl gfx_init
-    bl dma_init
-    bl init_heap
-    bx r4
+.pool
 
 .word 0x13161616, \
       0x1C0F161D, \

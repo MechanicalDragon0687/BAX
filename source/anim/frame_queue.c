@@ -1,7 +1,7 @@
 #include <common.h>
 #include <anim/frame_queue.h>
 
-/* Simple FIFO Queue implementation */
+/* Simple FIFO Queue */
 
 frame_queue frame_queue_init(void)
 {

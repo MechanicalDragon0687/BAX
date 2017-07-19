@@ -14,7 +14,7 @@ void gfx_init(void)
     return;
 }
 
-void clear_screen(const unsigned int screen, const uint16_t rgb)
+void clear_screen(unsigned int screen, uint16_t rgb)
 {
     uint32_t *fb, fill;
     int sz;

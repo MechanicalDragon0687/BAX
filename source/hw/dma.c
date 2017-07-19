@@ -79,7 +79,7 @@ void dma_op(uint32_t dst, uint32_t src, size_t len, int transfer_flags)
 
     /*
      Destination is cacheable
-     - invalidate I and DCache
+     - invalidate caches
     */
     if (addr_is_cached(dst)) {
         invalidate_icache_range(dst, dst_e);

@@ -132,7 +132,7 @@ void bax_start(void)
 
     if (f_open(&bax_fp, get_random_file(BASE_PATH, "*.bax", MAX_ANIMATIONS), FA_READ) == FR_OK) {
         f_read(&bax_fp, &anim_hdr, sizeof(bax_header), &br);
-        if (br == sizeof(bax_header) && bax_hdr_valid(&anim_hdr)) {
+        if (br == sizeof(bax_header) && bax_hdr_valid(&anim_hdr) && !bax_abort()) {
             bax_loop(&anim_hdr, &bax_fp);
         }
         f_close(&bax_fp);

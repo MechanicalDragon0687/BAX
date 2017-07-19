@@ -3,21 +3,6 @@
 #include <common.h>
 #include <arm/arm.h>
 
-/* Read Control Register */
-static inline uint32_t read_cr1(void)
-{
-    uint32_t cr;
-    asm("mrc p15, 0, %0, c1, c0, 0\n\t":"=r"(cr));
-    return cr;
-}
-
-/* Write Control Register back */
-static inline void write_cr1(uint32_t cr)
-{
-    asm("mcr p15, 0, %0, c1, c0, 0\n\t"::"r"(cr));
-    return;
-}
-
 static inline uint32_t read_cpsr(void)
 {
     uint32_t cpsr;

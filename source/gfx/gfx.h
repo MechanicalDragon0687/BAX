@@ -18,7 +18,7 @@ enum {
 };
 
 extern void *framebuffers[2];
-static inline void *get_framebuffer(const unsigned int screen)
+static inline void *get_framebuffer(unsigned int screen)
 {
     return framebuffers[screen];
 }
@@ -29,4 +29,4 @@ static inline void plot_pixel(uint16_t *fb, int x, int y, uint16_t c)
     return;
 }
 
-void clear_screen(const unsigned int screen, const uint16_t rgb);
+void clear_screen(unsigned int screen, uint16_t rgb);

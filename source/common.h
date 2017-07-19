@@ -47,7 +47,7 @@ static inline bool addr_is_cached(uint32_t addr)
 #define MAX_ANIMATIONS    (20)
 
 #define BASE_PATH         "0:/bax"
-#define CHAINLOAD_PATH    BASE_PATH "/boot.bin"
+#define CHAINLOAD_PATH    BASE_PATH "/boot.firm"
 
 char *msprintf(char *out, const char *fmt, ...);
 void fastcpy(void *dest, void *source, size_t n);

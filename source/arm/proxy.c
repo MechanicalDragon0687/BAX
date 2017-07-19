@@ -2,7 +2,7 @@
 #include <arm/cpu.h>
 #include <arm/proxy.h>
 
-void *proxy_tgt = (void*)(0x1FFFFC00);
+void *proxy_tgt = (void*)(0x1FFFF800);
 volatile uint32_t *proxy_entry = (volatile uint32_t*)(0x1FFFFFF8);
 
 void proxy_boot(uint32_t addr)

@@ -24,7 +24,7 @@ void draw_char(const unsigned char c, const int x, const int y)
 }
 
 /* Draws a text buffer onto the screen */
-void show_text(const char txt[TEXT_HEIGHT][TEXT_WIDTH], const int lines)
+void show_text(const char txt[TEXT_HEIGHT][TEXT_WIDTH], int lines)
 {
     int x, y;
 

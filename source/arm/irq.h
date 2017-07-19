@@ -5,9 +5,10 @@
 
 typedef void (*irq_handler)(uint32_t);
 
-#define REG_IRQ_IE ((uint32_t*)(0x10001000))
-#define REG_IRQ_IF ((uint32_t*)(0x10001004))
+#define REG_IRQ_IE ((volatile uint32_t*)(0x10001000))
+#define REG_IRQ_IF ((volatile uint32_t*)(0x10001004))
 
+#define IRQ_COUNT    (29)
 #define IRQ_TIMER(n) (8 + (n))
 
 #define ENTER_CRITICAL(x) do { (x) = irq_kill(); } while(0)
@@ -29,12 +30,12 @@ static inline void irq_restore(uint32_t ss)
     return;
 }
 
-static inline void irq_ack(const unsigned int id)
+static inline void irq_ack(unsigned int id)
 {
     *REG_IRQ_IF = BIT(id);
     return;
 }
 
-void irq_register(const unsigned int id, irq_handler func);
-void irq_deregister(const unsigned int id);
+void irq_register(unsigned int id, irq_handler func);
+void irq_deregister(unsigned int id);
 void irq_reset(void);

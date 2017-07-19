@@ -13,9 +13,7 @@ int main(UNUSED int argc, UNUSED char *argv[])
         abort_code(res);
     }
 
-    if (!bax_abort()) {
-        bax_start();
-    }
+    bax_start();
 
     /* chainload */
 

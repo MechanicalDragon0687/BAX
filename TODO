@@ -2,4 +2,4 @@ TODO:
 
  - NDMA + EMMC = <3
  - stress test EVERYTHING (timer race conditions, out of memory)
- - sane-ify IPC
+ - chainloader stuff

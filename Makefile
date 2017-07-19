@@ -32,10 +32,7 @@ all: $(BUILD)/$(TARGET).bin
 .PHONY: clean
 clean:
 	@$(MAKE) -C $(IPC_DIR) clean
-	@rm -rf $(BUILD) profile.svg
-
-profile: $(BUILD)/$(TARGET).elf
-	sh profile.sh $<
+	@rm -rf $(BUILD)
 
 $(BUILD)/$(TARGET).bin: $(BUILD)/$(TARGET).elf
 	$(OBJCOPY) -S -O binary $< $@

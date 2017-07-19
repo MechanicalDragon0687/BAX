@@ -11,7 +11,7 @@ void xrq_fatal(int xrq_n, uint32_t *regs)
     int i, ri;
     char regdump[11][TEXT_WIDTH];
 
-    memset(regdump, 0, 11*TEXT_WIDTH);
+    memset(regdump, 0, sizeof(regdump));
     strcpy(regdump[0], xrq_names[xrq_n]);
 
     for (i = 0; i < 8; i++) {

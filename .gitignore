@@ -4,3 +4,6 @@ Thumbs.db
 build
 profile.svg
 gitstats
+
+ipc/ipc.*
+ipc/src/*.o
