@@ -31,7 +31,7 @@ void show_text(const char txt[TEXT_HEIGHT][TEXT_WIDTH], int lines)
     txtfb = get_framebuffer(GFX_MAIN);
     clear_screen(GFX_MAIN, COLOR_BG);
 
-    for (y = 0; y < min(lines, TEXT_HEIGHT); y++) {
+    for (y = 0; y < MIN(lines, TEXT_HEIGHT); y++) {
         for (x = 0; x < TEXT_WIDTH; x++) {
             draw_char(txt[y][x], x * 8, y * 8);
         }

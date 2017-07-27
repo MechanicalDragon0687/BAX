@@ -18,7 +18,7 @@ typedef frame_queue_s *frame_queue;
 
 frame_queue frame_queue_init(void);
 void frame_queue_kill(frame_queue queue);
-void frame_queue_add(frame_queue queue, size_t frame_length, void *dest_fb, void *frame_data);
+void frame_queue_add(frame_queue queue, size_t flen, void *dest, void *data);
 void *frame_queue_extract(frame_queue queue);
 
 static inline size_t frame_queue_count(frame_queue queue)

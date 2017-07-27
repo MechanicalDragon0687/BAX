@@ -1,6 +1,5 @@
 #pragma once
 #include <common.h>
-
 #include <hw/hid.h>
 
 #define TOP_FRAME_SIZE    (400*240*2)
@@ -8,14 +7,17 @@
 
 #define BAX_HEADER_MAGIC  ('B' | 'A' << 8 | 'X' << 16 | '0' << 24)
 
+#define MAX_ANIMATIONS    (20)
 #define MAX_RATE          (60)
 #define MAX_FRAMES        (1800)
 /*
- arbitrary, max anim size is ((TOP_FRAME_SIZE + BOTTOM_FRAME_SIZE)*MAX_FRAMES + sizeof(bax_header))
+ arbitrary, max anim size is
+ ((TOP_FRAME_SIZE + BOTTOM_FRAME_SIZE)*MAX_FRAMES + sizeof(bax_header))
  currently about 600MiB + 128 bytes
 */
 
 #define BAX_TIMER         (DEFAULT_TIMER)
+#define BAX_EXTENSION     "*.bax"
 
 typedef struct {
     uint32_t magic;
@@ -37,7 +39,14 @@ static inline bool bax_abort(void)
 {
     bool ret = false;
     ret |= hid_key_pressed();
-    /* Other conditions go here */
+    return ret;
+}
+
+static inline bool bax_playable(void)
+{
+    bool ret = true;
+    ret &= !bax_abort();
+    ret &= (bootenv() == 0);
     return ret;
 }
 

@@ -68,7 +68,7 @@ void irq_reset(void)
     ENTER_CRITICAL(ss);
     *REG_IRQ_IE = 0;
     *REG_IRQ_IF = ~0;
-    for (uint32_t i = 0; i < ARR_COUNT(__irq_funcs); i++) {
+    for (uint32_t i = 0; i < IRQ_COUNT; i++) {
         __irq_funcs[i] = irq_unhandled;
     }
     LEAVE_CRITICAL(ss);

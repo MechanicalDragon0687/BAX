@@ -90,4 +90,4 @@ fatal_xrq_handler_common:
 
 .section .dtcm
 __reg_stack:
-    .skip (18*4)
+    .space (18*4)

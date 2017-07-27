@@ -24,13 +24,13 @@ void frame_queue_kill(frame_queue queue)
     return;
 }
 
-void frame_queue_add(frame_queue queue, size_t frame_length, void *dest_fb, void *frame_data)
+void frame_queue_add(frame_queue queue, size_t flen, void *dest, void *data)
 {
     struct frame_s *n = malloc(sizeof(struct frame_s));
 
-    n->length = frame_length;
-    n->dest_fb = dest_fb;
-    n->frame_data = frame_data;
+    n->length = flen;
+    n->dest_fb = dest;
+    n->frame_data = data;
     n->next = NULL;
 
     if (queue->first == NULL) {

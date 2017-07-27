@@ -25,7 +25,7 @@ char *get_random_file(char *dir, char *pattern, int max)
     if (count != 0) {
         strcpy(_rnd_file_path, dir);
         strcpy(_rnd_file_path + strlen(_rnd_file_path), "/");
-        strcpy(_rnd_file_path + strlen(_rnd_file_path), paths[rand() % count]);        
+        strcpy(_rnd_file_path + strlen(_rnd_file_path), paths[rand() % count]);
     }
 
     return _rnd_file_path;

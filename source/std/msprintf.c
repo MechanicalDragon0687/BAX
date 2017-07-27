@@ -4,16 +4,12 @@
 
 const char char_dict[] = "0123456789ABCDEF";
 
-/* padlen_log[i] = log(1<<32,i) */
-const unsigned int padlen_log[] = {-1, -1, 32, 21, 16, 14, 13, 12, 11, 11, 10, 10, 9, 9, 9, 9, 8};
+/* padlen_lut[i] = log(1<<32,i) */
+const int padlen_lut[] = {-1,-1,32,21,16,14,13,12,11,11,10,10,9,9,9,9,8};
 
 static inline bool misnumber(char c)
 {
-    if (c < '0' || c > '9') {
-        return false;
-    } else {
-        return true;
-    }
+    return RANGE(c, '0', '9');
 }
 
 uint32_t matoi(const char *s)
@@ -32,13 +28,13 @@ uint32_t matoi(const char *s)
 }
 
 /* only 32 bit ints pls */
-void mitos(uint32_t n, uint32_t base, uint32_t padlen, char *buf)
+void mitos(uint32_t n, int base, int padlen, char *buf)
 {
-    uint32_t length, i;
+    int length, i;
 
-    base = CLAMP(base, 2, ARR_COUNT(padlen_log));
+    base = CLAMP(base, 2, 16);
 
-    for (i = 0; i < min(padlen_log[base], padlen); i++) {
+    for (i = 0; i < MIN(padlen_lut[base], padlen); i++) {
         buf[i] = '0';
     }
 
@@ -48,7 +44,7 @@ void mitos(uint32_t n, uint32_t base, uint32_t padlen, char *buf)
         n /= base;
     } while(n != 0);
 
-    length = max(padlen, i);
+    length = MAX(padlen, i);
     for (i = 0; i < length/2; i++) {
         SWAP(buf[i], buf[length - i - 1]);
     }

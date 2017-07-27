@@ -57,7 +57,7 @@ void dma_op(uint32_t dst, uint32_t src, size_t len, int transfer_flags)
      - write back DCache and drain the write buffer
     */
     if ((!(transfer_flags & NDMA_SRC_FIL)) && addr_is_cached(src)) {
-        writeback_dcache_range(src, src_e);
+        wb_dc_range(src, src_e);
         drain_write_buffer();
     }
 
@@ -74,7 +74,7 @@ void dma_op(uint32_t dst, uint32_t src, size_t len, int transfer_flags)
         dma_regs[NDMA_CHANNEL][REG_NDMA_FILL_DATA] = src;
     }
 
-    dma_regs[NDMA_CHANNEL][REG_NDMA_CNT] = transfer_flags | NDMA_IMM_MODE | NDMA_START;
+    dma_regs[NDMA_CHANNEL][REG_NDMA_CNT] = transfer_flags | NDMA_START;
     dma_wait(NDMA_CHANNEL);
 
     /*
@@ -82,8 +82,8 @@ void dma_op(uint32_t dst, uint32_t src, size_t len, int transfer_flags)
      - invalidate caches
     */
     if (addr_is_cached(dst)) {
-        invalidate_icache_range(dst, dst_e);
-        invalidate_dcache_range(dst, dst_e);
+        inv_ic_range(dst, dst_e);
+        inv_dc_range(dst, dst_e);
     }
 
     return;

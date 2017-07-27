@@ -15,7 +15,7 @@ void proxy_boot(uint32_t addr)
 void proxy_init(void)
 {
     memcpy(proxy_tgt, IPC_BIN_LOC, IPC_BIN_LEN);
-    writeback_invalidate_dcache_range((uint32_t)proxy_tgt, (uint32_t)proxy_tgt + IPC_BIN_LEN);
+    wb_inv_dc_range((uint32_t)proxy_tgt, (uint32_t)proxy_tgt + IPC_BIN_LEN);
     proxy_boot((uint32_t)proxy_tgt);
     return;
 }

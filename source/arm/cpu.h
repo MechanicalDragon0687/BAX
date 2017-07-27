@@ -17,20 +17,20 @@ static inline void write_cpsr(uint32_t cpsr)
 }
 
 /* Invalidate the entire Instruction Cache */
-static inline void invalidate_icache_all(void)
+static inline void inv_ic(void)
 {
     asm("mcr p15, 0, %0, c7, c5, 0\n\t"::"r"(0));
     return;
 }
 
 /* Invalidate the entire Data Cache */
-static inline void invalidate_dcache_all(void)
+static inline void inv_dc(void)
 {
     asm("mcr p15, 0, %0, c7, c6, 0\n\t"::"r"(0));
     return;
 }
 
-static inline void writeback_dcache_range(uint32_t start, uint32_t end)
+static inline void wb_dc_range(uint32_t start, uint32_t end)
 {
     start &= ~0x1F;
     while(start < end) {
@@ -40,7 +40,7 @@ static inline void writeback_dcache_range(uint32_t start, uint32_t end)
     return;
 }
 
-static inline void invalidate_icache_range(uint32_t start, uint32_t end)
+static inline void inv_ic_range(uint32_t start, uint32_t end)
 {
     start &= ~0x1F;
     while(start < end) {
@@ -50,7 +50,7 @@ static inline void invalidate_icache_range(uint32_t start, uint32_t end)
     return;
 }
 
-static inline void invalidate_dcache_range(uint32_t start, uint32_t end)
+static inline void inv_dc_range(uint32_t start, uint32_t end)
 {
     start &= ~0x1F;
     while(start < end) {
@@ -60,7 +60,7 @@ static inline void invalidate_dcache_range(uint32_t start, uint32_t end)
     return;
 }
 
-static inline void writeback_invalidate_dcache_range(uint32_t start, uint32_t end)
+static inline void wb_inv_dc_range(uint32_t start, uint32_t end)
 {
     start &= ~0x1F;
     while(start < end) {

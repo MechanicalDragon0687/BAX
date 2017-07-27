@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- None of these functions require a stack to be set up
+ None of these functions require a working stack
  Registers R0, R1, R2, R3 and R12 aren't guaranteed to be preserved
 */
 

@@ -10,7 +10,7 @@
 #include <arm/cpu.h>
 
 /* FIFO Queue containing frames to be displayed */
-volatile DTCM frame_queue f_queue;
+volatile DTCM frame_queue fq;
 
 /* Missed frame count */
 volatile DTCM uint32_t missed;
@@ -29,12 +29,13 @@ void ITCM bax_timer_handler(void)
 
     if (bax_abort()) {
         buffered = -1;
-    } else if (frame_queue_count(f_queue) > 0) {
+    } else if (frame_queue_count(fq) > 0) {
         /* Copy frames from memory to VRAM */
         /* Free the frame afterwards */
-        frame = frame_queue_extract(f_queue);
+        frame = frame_queue_extract(fq);
         fastcpy(frame_dest(frame), frame_data(frame), frame_length(frame));
-        writeback_dcache_range((uint32_t)frame_dest(frame), (uint32_t)(frame_dest(frame) + frame_length(frame)));
+        wb_dc_range((uint32_t)frame_dest(frame),
+                    (uint32_t)(frame_dest(frame) + frame_length(frame)));
         free(frame_data(frame));
         frame_free(frame);
     } else if (buffered) {
@@ -58,11 +59,16 @@ void bax_loop(bax_header *anim_hdr, FIL *anim_fil)
     /* Initialize state */
     main_fb = get_framebuffer(GFX_MAIN);
     sub_fb = get_framebuffer(GFX_SUB);
-    f_queue = frame_queue_init();
+    fq = frame_queue_init();
     buffered = 0;
     missed = 0;
 
     f_lseek(anim_fil, sizeof(bax_header));
+
+    /*
+     TODO delayed initialization
+     make sure at least N frames are in memory before starting
+    */
     timer_init(BAX_TIMER, anim_hdr->rate, TIMER_PERIODIC, bax_timer_handler);
 
     /*
@@ -89,7 +95,7 @@ void bax_loop(bax_header *anim_hdr, FIL *anim_fil)
             f_read(anim_fil, f_buf, TOP_FRAME_SIZE, &f_sz);
 
             ENTER_CRITICAL(ss);
-            frame_queue_add(f_queue, TOP_FRAME_SIZE, main_fb, f_buf);
+            frame_queue_add(fq, TOP_FRAME_SIZE, main_fb, f_buf);
             LEAVE_CRITICAL(ss);
 
             anim_hdr->topcnt--;
@@ -106,7 +112,7 @@ void bax_loop(bax_header *anim_hdr, FIL *anim_fil)
             f_read(anim_fil, f_buf, BOTTOM_FRAME_SIZE, &f_sz);
 
             ENTER_CRITICAL(ss);
-            frame_queue_add(f_queue, BOTTOM_FRAME_SIZE, sub_fb, f_buf);
+            frame_queue_add(fq, BOTTOM_FRAME_SIZE, sub_fb, f_buf);
             LEAVE_CRITICAL(ss);
 
             anim_hdr->botcnt--;
@@ -120,7 +126,7 @@ void bax_loop(bax_header *anim_hdr, FIL *anim_fil)
     LEAVE_CRITICAL(ss);
 
     while(buffered == 1);
-    frame_queue_kill(f_queue);
+    frame_queue_kill(fq);
     return;
 }
 
@@ -128,11 +134,13 @@ void bax_start(void)
 {
     FIL bax_fp;
     size_t br;
+    char *bax_fn;
     bax_header anim_hdr;
 
-    if (f_open(&bax_fp, get_random_file(BASE_PATH, "*.bax", MAX_ANIMATIONS), FA_READ) == FR_OK) {
+    bax_fn = get_random_file(BASE_PATH, BAX_EXTENSION, MAX_ANIMATIONS);
+    if (f_open(&bax_fp, bax_fn, FA_READ) == FR_OK) {
         f_read(&bax_fp, &anim_hdr, sizeof(bax_header), &br);
-        if (br == sizeof(bax_header) && bax_hdr_valid(&anim_hdr) && !bax_abort()) {
+        if (br == sizeof(bax_header) && bax_hdr_valid(&anim_hdr)) {
             bax_loop(&anim_hdr, &bax_fp);
         }
         f_close(&bax_fp);

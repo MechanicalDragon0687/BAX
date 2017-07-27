@@ -47,7 +47,9 @@ void ITCM timer_irq_handler(uint32_t xrq_id)
         }
 
         timer_set_val(timer, timer_data[timer].tfreq);
-        timer_set_cnt(timer, TIMER_START | TIMER_PRESCALER, TIMER_START | TIMER_IRQ | TIMER_COUNTUP | TIMER_PRESCALER);
+        timer_set_cnt(timer,
+                    TIMER_START | TIMER_PRESCALER,
+                    TIMER_START | TIMER_IRQ | TIMER_COUNTUP | TIMER_PRESCALER);
     } else {
         timer_stop(timer);
     }
@@ -64,7 +66,9 @@ void timer_init(uint32_t timer, uint32_t freq, int loops, void (*hndl)(void))
     timer_data[timer].loops = loops;
     timer_data[timer].handler = (hndl!=NULL) ? hndl : timer_irq_dummy;
 
-    timer_set_cnt(timer, TIMER_START | TIMER_PRESCALER, TIMER_START | TIMER_IRQ | TIMER_COUNTUP | TIMER_PRESCALER);
+    timer_set_cnt(timer,
+                TIMER_START | TIMER_PRESCALER,
+                TIMER_START | TIMER_IRQ | TIMER_COUNTUP | TIMER_PRESCALER);
     irq_register(IRQ_TIMER(timer*2 + 1), timer_irq_handler);
 
     timer_set_val(timer, timer_data[timer].tfreq);

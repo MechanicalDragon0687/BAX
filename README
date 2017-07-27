@@ -13,6 +13,3 @@ BAX ALPHA:
  code written by me is licensed under the MIT license, fatfs is licensed under a BSD-like license
  so it's fine, sdmmc is licensed under the MPL license so it's okay to redistribute binaries if
  you also distribute hw/sdmmc.{c,h} (I think).
-
- feel free to make issues/PRs if you feel *anything* can be improved upon that hasn't been suggested
- yet

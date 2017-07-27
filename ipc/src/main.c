@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include "regs.h"
 
-#define DEFBRIGHT (0x80)
+#define DEFBRIGHT (0xBF)
 
 volatile uint32_t *entry = (volatile uint32_t*)(0x1FFFFFFC);
 volatile uint32_t *fbstr = (volatile uint32_t*)(0x23FFFE00);
@@ -37,7 +37,6 @@ void screen_set_mode(uint32_t m)
     REG_GPU_PCS0(REG_PCS_FILL_VALUE)   = ~0; /* TODO change to 0 on retail */
     REG_GPU_PCS0(REG_PCS_CONTROL)      = PCS_CNT_RGB32 | PCS_CNT_START;
     while(!(REG_GPU_PCS0(0x0C) & PCS_CNT_FINISHED));
-
     return;
 }
 
@@ -118,13 +117,19 @@ void screen_init(void)
 
 void main(void)
 {
+    uint32_t ent;
     screen_init();
     screen_set_mode(FB_CFG_RGB565);
 
     *entry = 0;
-    while(*entry == 0);
+    while(1) {
+        ent = *entry;
+        if (ent != 0) {
+            break;
+        }
+    }
 
     screen_set_mode(FB_CFG_RGB24);
-    ((void (*)(void))(*entry))();
+    ((void (*)(void))(ent))();
     return;
 }

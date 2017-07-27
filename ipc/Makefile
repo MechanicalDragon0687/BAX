@@ -7,7 +7,8 @@ LD := $(TRIPLET)-ld
 OC := $(TRIPLET)-objcopy
 
 OBJS := src/boot.o src/main.o
-CFLAGS  := -Os -ggdb -std=c99 -Wextra -march=armv6k -mtune=mpcore -mno-thumb-interwork -marm
+CFLAGS  := -Os -ggdb -std=c99 -Wextra -march=armv6k -mtune=mpcore \
+           -mno-thumb-interwork -marm
 LDFLAGS := -Tlink.ld -nostdlib
 
 .PHONY: all clean
