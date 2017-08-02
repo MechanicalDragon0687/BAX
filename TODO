@@ -1,5 +1,0 @@
-TODO:
-
- - NDMA + EMMC = <3
- - stress test EVERYTHING (timer race conditions, out of memory)
- - chainloader stuff
