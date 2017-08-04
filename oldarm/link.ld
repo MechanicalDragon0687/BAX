@@ -38,7 +38,7 @@ SECTIONS
     } > RAM
 
     _irq_stack = 0x08080000;
-    _prg_stack = _irq_stack - 0x2000;
+    _prg_stack = _irq_stack - 0x400;
 
     __end__ = .;
 }

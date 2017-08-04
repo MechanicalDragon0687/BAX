@@ -16,6 +16,7 @@ void __attribute__((interrupt("IRQ"))) xrq_irq(void)
     if (xrq_id <= IRQ_COUNT) {
         (__irq_funcs[xrq_id])(xrq_id);
     }
+    irq_ack(xrq_id);
     LEAVE_CRITICAL(ss);
     return;
 }
@@ -53,9 +54,7 @@ void irq_reset(void)
     ENTER_CRITICAL(ss);
     *REG_IRQ_IE = 0;
     *REG_IRQ_IF = ~0;
-    for (u32 i = 0; i < IRQ_COUNT; i++) {
-        __irq_funcs[i] = NULL;
-    }
+    memset(__irq_funcs, 0, sizeof(__irq_funcs));
     IRQ_BASE[1] = (u32)xrq_irq;
     IRQ_BASE[0] = 0xE51FF004;
     LEAVE_CRITICAL(ss);

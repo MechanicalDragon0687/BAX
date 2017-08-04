@@ -25,5 +25,6 @@ SECTIONS
         *(COMMON);
     } >AWRAM
 
-    _stack_top = ORIGIN(AWRAM) + LENGTH(AWRAM);
+    _irq_stack = ORIGIN(AWRAM) + LENGTH(AWRAM);
+    _prg_stack = _irq_stack - 0x400;
 }

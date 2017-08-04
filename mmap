@@ -1,0 +1,29 @@
+
+--- BAX MEMORY MAP ---
+
+ARM9 RAM:
+0x08000000 - 0x08000008: irq vector
+0x08006000 - 0x080XXXXX: oldarm binary
+0x080XXXXX - 0x0807FC00: oldarm stack
+0x0807FC00 - 0x08080000: oldarm irq stack
+
+AXI WRAM:
+0x1FF80000 - 0x1FF8XXXX: mpcore binary
+0x1FF8XXXX - 0x1FFFFBFC: mpcore stack
+0x1FFFFBFC - 0x1FFFFFFC: mpcore irq stack
+0x1FFFFFFC - 0x20000000: mpcore entrypoint
+
+VRAM:
+0x18300000 - 0x1835DC00: top left framebuffer A
+0x1835DC00 - 0x183BB800: top left framebuffer B
+0x183BB800 - 0x18419400: top right framebuffer A
+0x18419400 - 0x18477000: top right framebuffer B
+0x18477000 - 0x184C2000: bottom framebuffer A
+0x184C2000 - 0x1850D000: bottom framebuffer B
+
+FCRAM:
+0x20000000 - 0x23000000: animation buffer
+0x23000000 - 0x23400000: FIRM buffer
+0x23400000 - 0x23FFFE00: unused
+0x23FFFE00 - 0x24000000: framebuffer pointers/FIRM argv
+0x24000000 - 0x28000000: mpcore heap

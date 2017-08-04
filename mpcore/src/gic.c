@@ -6,6 +6,8 @@
 #include <common.h>
 #include <gic.h>
 
+#define IRQ_BASE ((vu32*)0x1FFFFFA0)
+
 irq_handler handler_table[MAX_IRQ];
 
 void __attribute__((interrupt("IRQ"))) gic_irq_handler(void)
@@ -53,6 +55,9 @@ void gic_reset(void)
 
     *DIC_CONTROL = 1;
     *GIC_CONTROL = 1;
+
+    IRQ_BASE[1] = (u32)gic_irq_handler;
+    IRQ_BASE[0] = 0xE51FF004;
 
     LEAVE_CRITICAL(ss);
     return;

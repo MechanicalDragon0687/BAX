@@ -1,15 +1,14 @@
 TARGET  := $(notdir $(CURDIR))
 
-OBJS := src/boot.s.o src/main.c.o src/arm/irq.c.o src/fs/ff/diskio.c.o \
-        src/fs/ff/ff.c.o src/fs/ff/option/ccsbcs.c.o src/hw/sdmmc.c.o \
-        src/arm/bootfirm.s.o
+OBJS := src/boot.s.o src/main.c.o src/arm/irq.c.o src/ff/diskio.c.o \
+        src/ff/ff.c.o src/ff/option/ccsbcs.c.o src/hw/sdmmc.c.o \
+        src/arm/bootfirm.s.o src/hw/sha.c.o src/firm.c.o
 
 ARCH    += -march=armv5te -mtune=arm946e-s -DARM9
 
-ASFLAGS := $(ARCH) -x assembler-with-cpp $(INCLUDE)
-CFLAGS  := $(ARCH) -O2 -std=c99 -pipe -Wextra -fomit-frame-pointer \
-           -ffunction-sections -ffast-math $(INCLUDE)
-LDFLAGS := -Tlink.ld -Wl,--gc-sections,-z,max-page-size=4096 -nostartfiles
+INCLUDE += -Isrc
+ASFLAGS += $(ARCH) -x assembler-with-cpp $(INCLUDE)
+CFLAGS  += $(ARCH) $(INCLUDE)
 
 .PHONY: all clean
 
@@ -19,7 +18,7 @@ clean:
 	@rm -rf $(OBJS) $(TARGET).*
 
 $(TARGET).elf: $(OBJS)
-	$(LINK.o) $^ -o $@
+	$(CC) $^ $(LDFLAGS) -o $@
 
 %.c.o: %.c
 	$(CC) $(CFLAGS) $^ -c -o $@

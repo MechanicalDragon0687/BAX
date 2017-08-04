@@ -50,6 +50,13 @@ __boot:
     mcr p15, 0, r11, c6, c6, 0
     mcr p15, 0, r12, c6, c7, 0
 
+    @ Wait for MPCore
+    mov r4, #0x20000000
+    .Lwait_mpcore:
+        ldr r5, [r4, #-4]
+        cmp r5, #0
+        bne .Lwait_mpcore
+
     @ Setup DTCM
     ldr r4, =0xFFF0000A
     mcr p15, 0, r4, c9, c1, 0

@@ -8,15 +8,18 @@ export CC = $(TRIPLET)-gcc
 export LD = $(TRIPLET)-ld
 export OC = $(TRIPLET)-objcopy
 
-export INCLUDE := -I"$(shell pwd)/common" -Isrc
-export ARCH := -marm -mno-thumb-interwork $(INCLUDE)
+export INCLUDE := -I"$(shell pwd)/common"
+export ARCH := -marm -mno-thumb-interwork
+export CFLAGS := -O2 -std=c99 -pipe -Wextra -fomit-frame-pointer \
+                 -ffunction-sections -ffast-math -mno-unaligned-access
+export LDFLAGS := -Tlink.ld -Wl,--gc-sections,-z,max-page-size=512 -nostartfiles
 
 OLDARM  := oldarm/oldarm.elf
 MPCORE  := mpcore/mpcore.elf
 FIRM    := BAX.firm
 
-OLDARM_DIR := $(shell dirname "$(OLDARM)")
-MPCORE_DIR := $(shell dirname "$(MPCORE)")
+OLDARM_DIR := $(shell dirname $(OLDARM))
+MPCORE_DIR := $(shell dirname $(MPCORE))
 
 .PHONY: all firm clean
 all: $(OLDARM) $(MPCORE) firm

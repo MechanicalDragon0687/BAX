@@ -1,13 +1,12 @@
 TARGET  := $(notdir $(CURDIR))
 
-OBJS := src/boot.s.o src/main.c.o src/gic.c.o
+OBJS := src/boot.s.o src/main.c.o src/gic.c.o src/gpu.c.o src/lz4.c.o src/vq.c.o
 
 ARCH    += -march=armv6k -mtune=mpcore -DARM11
 
-ASFLAGS := $(ARCH) -x assembler-with-cpp $(INCLUDE)
-CFLAGS  := $(ARCH) -O2 -std=c99 -pipe -Wextra -fomit-frame-pointer \
-           -ffunction-sections -ffast-math $(INCLUDE) -mno-unaligned-access
-LDFLAGS := -Tlink.ld -Wl,--gc-sections,-z,max-page-size=4096 -nostartfiles
+INCLUDE += -Isrc
+ASFLAGS += $(ARCH) -x assembler-with-cpp $(INCLUDE)
+CFLAGS  += $(ARCH) $(INCLUDE)
 
 .PHONY: all clean
 

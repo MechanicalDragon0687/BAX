@@ -1,15 +1,10 @@
 BAX ALPHA:
 
- it's mostly unfinished because I gotta deal with some shit from b9s but at least the main
- subsystems work fine and the only real assumptions I make about the system are that all memory
- is accessible as usual and that ITCM is mirrored throughout the lower 128 megs of the address
- space. there's an ARM11 stub that does some GPU configuration, clears VRAM and sets up the
- cakehax framebuffers. it requires either 0x1FFFFFF8 or 0x1FFFFFFC to accept the ARM11 entrypoint
- thingy so it should be compatible with both a9lhsi and b9s as entrypoint (although once booted only
- 0x1FFFFFFC is usable).
+ w00t finally a stable way to run code on the MPCore... too bad there's barely any hw documentation
+ for it, at least any accessible by regular users (non-ARM-licensees $_$)
 
- read makeanim.py and source/anim/bax.h for an overview of the system.
-
+ requires dkA (only tested with r47) and firmtool
+ 
  code written by me is licensed under the MIT license, fatfs is licensed under a BSD-like license
  so it's fine, sdmmc is licensed under the MPL license so it's okay to redistribute binaries if
  you also distribute hw/sdmmc.{c,h} (I think).

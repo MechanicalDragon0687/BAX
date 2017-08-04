@@ -37,5 +37,16 @@ typedef volatile u8   vu8;
 #define ANIM_SUBPATH  "/test.bax"
 #define FIRM_SUBPATH  "/boot.firm"
 
-#define ANIM_MAXSIZE  (0x3FFFEE0)
+#define ANIM_BUFFER   ((void*)(0x20000000))
+#define FIRM_BUFFER   ((void*)(0x23000000))
+
+#define MPCORE_ENTRY  (0x1FFFFFFC)
+#define FRAMEBUFFERS  (0x23FFFE00)
+
+#define ANIM_MAXSIZE  (0x3000000)
 #define FIRM_MAXSIZE  (0x400000)
+
+#ifdef ARM9
+#define REG_PRNG    ((vu32*)(0x10011000))
+#define REG_BOOTENV ((vu32*)(0x10010000))
+#endif
