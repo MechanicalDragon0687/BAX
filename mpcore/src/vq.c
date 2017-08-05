@@ -12,19 +12,19 @@ void vq_init(vq *q)
 
 bool vq_add(vq *q, void *data)
 {
-    struct qn *node = malloc(sizeof(struct qn));
-    if (!node) {
+    struct qn *n = malloc(sizeof(struct qn));
+    if (!n) {
         return false;
     }
-    node->data = data;
-    node->next = NULL;
+    n->data = data;
+    n->next = NULL;
 
     if (q->first) {
-        q->last->next = node;
-        q->last = node;
+        q->last->next = n;
+        q->last = n;
     } else {
-        q->first = node;
-        q->last = node;
+        q->first = n;
+        q->last = n;
     }
     q->count++;
     return true;
@@ -32,19 +32,24 @@ bool vq_add(vq *q, void *data)
 
 void *vq_fetch(vq *q)
 {
-    void *ret = NULL;
-    if (q->count > 0) {
-        ret = q->first->data;
+    return q->first->data;
+}
+
+void vq_remove(vq *q)
+{
+    struct qn *n = NULL;
+    if (vq_count(q) > 0) {
+        n = q->first;
         q->first = q->first->next;
-        free(q->first);
+        q->count--;
+        free(n);
 
         if (q->count == 0) {
             q->first = NULL;
             q->last  = NULL;
         }
     }
-    q->count--;
-    return ret;
+    return;
 }
 
 u32 vq_count(vq *q)

@@ -22,8 +22,12 @@ VRAM:
 0x184C2000 - 0x1850D000: bottom framebuffer B
 
 FCRAM:
-0x20000000 - 0x23000000: animation buffer
-0x23000000 - 0x23400000: FIRM buffer
-0x23400000 - 0x23FFFE00: unused
-0x23FFFE00 - 0x24000000: framebuffer pointers/FIRM argv
-0x24000000 - 0x28000000: mpcore heap
+0x20000000 - 0x22000000: animation buffer
+0x22000000 - 0x22400000: FIRM buffer
+0x22400000 - 0x27FFFC00: mpcore heap
+
+0x27FFFC00 - 0x27FFFC20: framebuffer pointers
+0x27FFFC20 - 0x27FFFC28: FIRM argv
+0x27FFFC28 - 0x27FFFD30: FIRM path
+0x27FFFD30 - 0x27FFFF00: mpcore stub
+0x27FFFF00 - 0x28000000: oldarm stub

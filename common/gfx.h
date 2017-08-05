@@ -1,6 +1,8 @@
 #pragma once
 #include <common.h>
 
+#define BPP (2)
+
 #define VRAM_START (0x18300000)
 #define FBTLA (0x18300000)
 #define FBTLB (0x1835DC00)
@@ -18,6 +20,9 @@ static const u32 def_fbs[] = {
 #define GFX_SUB_WIDTH  (320)
 #define GFX_HEIGHT     (240)
 
+#define GFX_MAIN_LEN   (GFX_MAIN_WIDTH*GFX_HEIGHT*BPP)
+#define GFX_SUB_LEN    (GFX_SUB_WIDTH*GFX_HEIGHT*BPP)
+
 enum {
     GFX_MAIN  = 0,
     GFX_MAINR = 1,
@@ -34,12 +39,11 @@ enum {
 };
 
 static inline u16 *get_framebuffer(u32 screen)
-{
-    u32 *framebuffer_base = (u32*)0x23FFFE00;
+{;
     if (screen >= GFX_INVALID) {
         screen = GFX_MAIN;
     }
-    return (u16*)framebuffer_base[screen];
+    return (u16*)def_fbs[screen];
 }
 
 static inline void plot_pixel(u16 *fb, u32 x, u32 y, u16 color)

@@ -19,6 +19,8 @@ void pxi_sync_handler(u32 xrq)
     case PXI_CMD_FIRMBOOT:
         if (f_open(&firm, BASE_PATH FIRM_SUBPATH, FA_READ) == FR_OK) {
             f_read(&firm, FIRM_BUFFER, FIRM_MAXSIZE, &br);
+            pxi_send_rem(PXI_CMD_FIRMBOOT);
+            pxi_sync();
             if (firm_check(FIRM_BUFFER, FIRM_MAXSIZE)) {
                 BootFirm(FIRM_BUFFER, SDMC_PATH FIRM_SUBPATH);
             }

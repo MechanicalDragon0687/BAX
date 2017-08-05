@@ -6,9 +6,8 @@ u32 wlist[][2] = {
     {0x08000000, 0x08100000},
     {0x18000000, 0x18600000},
     {0x1FF00000, 0x1FFFFC00},
-    {0x20000000, 0x20000000},
-    {0x23400000, 0x23FFFE00},
-    {0x24000000, 0x27FFFD00}
+    {0x20000000, 0x22000000},
+    {0x22400000, 0x27FFFC00}
 };
 
 static inline bool range(u32 x, u32 a, u32 b)
@@ -77,4 +76,3 @@ bool firm_check(void *firm, u32 firm_size)
 
     return oldarm_avail;
 }
-

@@ -38,12 +38,12 @@ typedef volatile u8   vu8;
 #define FIRM_SUBPATH  "/boot.firm"
 
 #define ANIM_BUFFER   ((void*)(0x20000000))
-#define FIRM_BUFFER   ((void*)(0x23000000))
+#define FIRM_BUFFER   ((void*)(0x22000000))
 
 #define MPCORE_ENTRY  (0x1FFFFFFC)
-#define FRAMEBUFFERS  (0x23FFFE00)
+#define FRAMEBUFFERS  (0x27FFFC00)
 
-#define ANIM_MAXSIZE  (0x3000000)
+#define ANIM_MAXSIZE  (0x2000000)
 #define FIRM_MAXSIZE  (0x400000)
 
 #ifdef ARM9

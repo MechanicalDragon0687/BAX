@@ -1,6 +1,7 @@
 TARGET  := $(notdir $(CURDIR))
 
-OBJS := src/boot.s.o src/main.c.o src/gic.c.o src/gpu.c.o src/lz4.c.o src/vq.c.o
+OBJS := src/boot.s.o src/main.c.o src/gic.c.o src/gpu.c.o  \
+        src/vq.c.o src/bax.c.o src/lz4.c.o
 
 ARCH    += -march=armv6k -mtune=mpcore -DARM11
 

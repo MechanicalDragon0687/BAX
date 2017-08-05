@@ -33,8 +33,8 @@ __boot:
     @ Setup heap
     ldr r0, =fake_heap_start
     ldr r1, =fake_heap_end
-    ldr r2, =0x24000000
-    ldr r3, =0x28000000
+    ldr r2, =0x22400000
+    ldr r3, =0x27FFFC00
     str r2, [r0]
     str r3, [r1]
 

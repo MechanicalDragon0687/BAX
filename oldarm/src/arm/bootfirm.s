@@ -2,14 +2,28 @@
 .arm
 .align 4
 
+#include <arm.h>
+
+.equ MPCORE_STUB_LD, 0x27FFFD30
+.equ OLDARM_STUB_LD, 0x27FFFF00
+.equ FBPTR_LOC, 0x27FFFC00
+.equ ARGV_LOC,  0x27FFFC20
+.equ PATH_LOC,  0x27FFFC28
 .equ ARG_MAGIC, 0xBEEF
-.equ MPCORE_LD, 0x27FFFD00
-.equ STUB_LOC,  0x27FFFE00
-.equ FBPTR_LOC, 0x23FFFE00
-.equ ARGV_LOC,  0x23FFFE20
 
 .cpu mpcore
 MPCore_stub:
+    cpsid aif, #(SR_SVC_MODE)
+    mov r0, #0
+    mcr p15, 0, r0, c7, c7, 0
+    mcr p15, 0, r0, c7, c14, 0
+    mcr p15, 0, r0, c7, c10, 4
+    ldr r0, =0x00054078
+    ldr r1, =0x0000000F
+    ldr r2, =0x00000000
+    mcr p15, 0, r0, c1, c0, 0
+    mcr p15, 0, r1, c1, c0, 1
+    mcr p15, 0, r2, c1, c0, 2
     mov r0, #0x20000000
     mov r1, #0
     str r1, [r0, #-4]
@@ -112,12 +126,12 @@ BootFirm:
     mov r10, r0
 
     @ Copy the FIRM path somewhere safe
-    ldr r0, =(ARGV_LOC+8)
+    ldr r0, =PATH_LOC
     mov r11, r0
     blx strcpy
 
     @ Relocate the MPCore stub binary
-    ldr r4, =MPCORE_LD
+    ldr r4, =MPCORE_STUB_LD
     adr r1, MPCore_stub
     adr r2, MPCore_stub_end
     sub r2, r1
@@ -134,7 +148,7 @@ BootFirm:
         bne .Lwaitforsi
 
     @ Relocate BootFirm
-    ldr r4, =STUB_LOC
+    ldr r4, =OLDARM_STUB_LD
     adr r5, BootFirm_stub
     adr r6, BootFirm_stub_end
     sub r7, r6, r5

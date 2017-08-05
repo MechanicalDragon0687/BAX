@@ -1,3 +1,4 @@
+#pragma once
 #include <common.h>
 
 struct qn {
@@ -14,4 +15,5 @@ typedef volatile struct {
 void vq_init(vq *q);
 bool vq_add(vq *q, void *data);
 void *vq_fetch(vq *q);
+void vq_remove(vq *q);
 u32 vq_count(vq *q);

@@ -27,4 +27,5 @@ SECTIONS
 
     _irq_stack = ORIGIN(AWRAM) + LENGTH(AWRAM);
     _prg_stack = _irq_stack - 0x400;
+    __end__ = ABSOLUTE(.);
 }
