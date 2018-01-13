@@ -54,7 +54,7 @@ DRESULT disk_read (
 	int ret;
 	_writeback_invalidate_DC_range(buff, count * SECTOR_SIZE);
 	ret = pxicmd_send(PXICMD_ARM9_SD_READSECTORS, (u32[]){sector, count, (u32)buff}, 3);
-	_writeback_invalidate_DC_range(buff, count * SECTOR_SIZE);
+	_invalidate_DC_range(buff, count * SECTOR_SIZE);
 	return ret;
 }
 

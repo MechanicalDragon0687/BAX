@@ -3,13 +3,13 @@
 
 #include "console.h"
 
-static int x, y;
-#define SCREEN_BASE  ((u16*)0x18000000)
-#define SCREEN_SIZE  (400*240*2)
-#define SCREEN_WIDTH (400)
+static int _con_width, _conw, _con_x, _con_y;
+static u16 *_con_base;
 
-#define CONW (400/8)
 #define CONH (240/8)
+
+#define CON_FG (0xFFFF)
+#define CON_BG (0x0000)
 
 static const u8 console_font[];
 
@@ -23,11 +23,11 @@ void console_drawchar(int c, int x, int y)
     {
         mask = 0x80;
         row = console_font[_y + c];
-        px = SCREEN_BASE + (x*240 - (y + _y) + 239);
+        px = _con_base + (x*240 - (y + _y) + 239);
         for (int _x = 0; _x < 8; _x++, mask >>= 1)
         {
         	if (mask & row)
-        		*px = 0xFFFF;
+        		*px = (mask & row) ? CON_FG : CON_BG;
         	px += 240;
         }
     }
@@ -36,19 +36,22 @@ void console_drawchar(int c, int x, int y)
 
 void console_scroll(void)
 {
-	for (int x = 0; x < SCREEN_WIDTH; x++)
+	for (int x = 0; x < _con_width; x++)
 	{
-		memmove(SCREEN_BASE + x*240 + 8, SCREEN_BASE + x*240, 2*232);
-		memset(SCREEN_BASE + x*240, 0, 2*8);
+		memmove(_con_base + x*240 + 8, _con_base + x*240, 2*232);
+		memset(_con_base + x*240, CON_BG, 2*8);
 	}
 	return;
 }
 
-void console_reset(void)
+void console_reset(u16 *base, int width)
 {
-	x = 0;
-	y = 0;
-	memset(SCREEN_BASE, 0, SCREEN_SIZE);
+	_con_base = base;
+	_con_width = width;
+	_conw = width / 8;
+	_con_x = 0;
+	_con_y = 0;
+	memset(base, CON_BG, _con_width*240*2);
 	return;
 }
 
@@ -59,29 +62,29 @@ void console_putc(char c)
 	{
 		// newline
 		case '\n':
-			x = CONW;
+			_con_x = _conw;
 			break;
 
 		// carriage return
 		case '\r':
-			x = 0;
+			_con_x = 0;
 			break;
 
 		// regular char
 		default:
-			console_drawchar(c, x * 8, y * 8);
-			x++;
+			console_drawchar(c, _con_x * 8, _con_y * 8);
+			_con_x++;
 			break;
 	}
 
-	if (x >= CONW)
+	if (_con_x >= _conw)
 	{
-		x = 0;
-		y++;
+		_con_x = 0;
+		_con_y++;
 	}
-	if (y >= CONH)
+	if (_con_y >= CONH)
 	{
-		y = CONH-1;
+		_con_y = CONH-1;
 		console_scroll();
 	}
 	return;

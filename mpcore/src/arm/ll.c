@@ -28,14 +28,43 @@ const gx_framebuffers_t _default_framebuffers =
     {VRAM_START, VRAM_START}}
 };
 
-vu32 *const irqvector_base = (vu32*)0x1FFFFFA0;
+vu32 *const vectors_base[8] =
+{
+    (vu32*)0x00000000, // Reset, unhandleable with the current approach
+    (vu32*)0x1FFFFFB8, // Undefined
+    (vu32*)0x1FFFFFB0, // Software interrupt
+    (vu32*)0x1FFFFFC0, // Prefetch abort
+    (vu32*)0x1FFFFFC8, // Data abort
+    (vu32*)0x00000000, // Reserved, same as reset
+    (vu32*)0x1FFFFFA0, // IRQ
+    (vu32*)0x1FFFFFA8  // FIQ
+};
+
+extern void xrq_undefined(void);
+extern void xrq_softwareint(void);
+extern void xrq_prefetchabt(void);
+extern void xrq_dataabt(void);
+extern void xrq_irq(void);
+extern void xrq_fiq(void);
+
+void (*vector_handlers[8])(void) =
+{
+    NULL,
+    xrq_undefined,
+    xrq_softwareint,
+    xrq_prefetchabt,
+    xrq_dataabt,
+    NULL,
+    xrq_irq,
+    xrq_fiq
+};
+
 /*
- irqvector_base[0] is the instruction exectuted
+ (vectors_base[n])[0] is the instruction exectuted
  0xE51FF004 == 'ldr pc, [pc, #-4]'
 */
 
 void main(void);
-extern void XRQ_IRQ(void);
 
 /*
  Low level initialization
@@ -58,8 +87,14 @@ void ll_init(void)
     timer_reset();
 
     // Install interrupt handler
-    irqvector_base[0] = 0xE51FF004;
-    irqvector_base[1] = (u32)&XRQ_IRQ;
+    for (int i = 0; i < 8; i++)
+    {
+        if (vectors_base[i] == NULL || vector_handlers[i] == NULL)
+            continue;
+
+        vectors_base[i][0] = 0xE51FF004;
+        vectors_base[i][1] = (u32)vector_handlers[i];
+    }
 
     // MMU Translation Table Mapping
     // Boot ROM

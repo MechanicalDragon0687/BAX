@@ -8,11 +8,16 @@
 #include <pxicmd.h>
 
 #include "anim.h"
-#include "console.h"
 #include "hw/int.h"
 #include "hw/timer.h"
 
+#include "arm/bugcheck.h"
+
 #include "lib/ff/ff.h"
+
+#define BAX_PATH "sdmc:/bax"
+#define BAX_FIRM "/boot.firm"
+#define BAX_FILE "*.bax"
 
 void pxi_handler(u32 irqn)
 {
@@ -32,76 +37,70 @@ void pxi_handler(u32 irqn)
 	return;
 }
 
+void find_path(const char *path, const char *pattern, char *out)
+{
+    FRESULT fres;
+    DIR dir;
+    FILINFO fno;
+    int pos = 0;
+
+    fres = f_findfirst(&dir, &fno, path, pattern);
+
+    if (fres == FR_OK && fno.fname[0])
+    {
+    	strcpy(out, path);
+    	out[strlen(out)] = '/';
+    	strcat(out, fno.fname);
+    }
+    else
+    	memset(out, 0, FF_MAX_LFN);
+
+    f_closedir(&dir);
+    return;
+}
+
 void main(void)
 {
-	FATFS main_fs;
-	FIL main_bax;
-	FRESULT fres;
-	size_t br, timer;
-	void *dest;
+	FATFS fs;
+	int res;
+	FIL bax_file;
+	size_t bax_size, br;
+	anim_t *bax_data;
+	char bax_path[FF_MAX_LFN + 1] = {0};
 
-	console_reset();
-	console_puts("hello from ARM11\n");
 	irq_register(IRQ_PXI_SYNC, pxi_handler);
 	pxi_reset();
 
-	fres = f_mount(&main_fs, "sdmc:", 1);
-	console_puts("f_mount = ");
-	console_putd(fres);
-	console_putc('\n');
+	res = f_mount(&fs, "sdmc:", 1);
+	if (res != FR_OK)
+		_bugcheck("bad_mount");
 
-	fres = f_open(&main_bax, "sdmc:/main.bax", FA_READ);
-	console_puts("f_open = ");
-	console_putd(fres);
-	console_putc('\n');
+	find_path(BAX_PATH, BAX_FILE, bax_path);
 
-	// TODO: bugcheck
-	if (fres != FR_OK)
-		while(1) _wfi();
+	if (strlen(bax_path) == 0)
+		_bugcheck("bad_path");
 
-	console_puts("f_size = ");
-	console_putd(f_size(&main_bax));
-	console_putc('\n');
+	res = f_open(&bax_file, bax_path, FA_READ);
+	if (res != FR_OK)
+		_bugcheck("bad_open");
 
-	dest = malloc(f_size(&main_bax));
-	if (dest == NULL)
-		while(1) _wfi();
+	bax_size = f_size(&bax_file);
+	if (bax_size > ANIM_MAX_SIZE)
+		_bugcheck("bad_size");
 
-	timer_start(~0, false, false);
+	bax_data = malloc(bax_size);
+	if (bax_data == NULL)
+		_bugcheck("bad_data");
 
-	fres = f_read(&main_bax, dest, f_size(&main_bax), &br);
-	timer = timer_ticks();
-	timer_stop();
+	res = f_read(&bax_file, (void*)bax_data, bax_size, &br);
+	if (res != FR_OK || bax_size != br)
+		_bugcheck("bad_read");
 
-	console_puts("f_read = ");
-	console_putd(fres);
-	console_putc('\n');
-
-	console_puts("br = ");
-	console_putd(br);
-	console_putc('\n');
-
-	console_puts("ticks = ");
-	console_puth(timer);
-	console_putc('\n');
-
-	console_puts("ms = ");
-	console_putd((u32)timer_ticks_to_ms(0xFFFFFFFF - timer));
-	console_putc('\n');
-
-	f_close(&main_bax);
-
-	int res = anim_validate((anim_t*)dest, br);
-	console_puts("anim_validate = ");
-	console_putd(res);
-	console_putc('\n');
+	res = anim_validate(bax_data, bax_size);
 	if (res != ANIM_OK)
-	{
-		console_puts("Bad anim: ");
-		console_puts(anim_get_error(res));
-		while(1) _wfi();
-	}
+		_bugcheck("bad_anim");
 
-	anim_play((anim_t*)dest);
-	while(1) _wfi();
+	anim_play(bax_data);
+	_bugcheck("done");
+	while(1);
 }

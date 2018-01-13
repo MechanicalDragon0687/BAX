@@ -1,8 +1,26 @@
 #include <asm.h>
-
 .arm
 
-ASM_FUNCTION XRQ_IRQ
+ASM_FUNCTION xrq_undefined
+    XRQ_FATAL 1, xrq_fatal_handler
+
+ASM_FUNCTION xrq_softwareint
+    bkpt
+
+ASM_FUNCTION xrq_prefetchabt
+    XRQ_FATAL 3, xrq_fatal_handler
+
+ASM_FUNCTION xrq_dataabt
+    XRQ_FATAL 4, xrq_fatal_handler
+
+ASM_FUNCTION xrq_fiq
+    subs pc, lr, #4
+
+ASM_FUNCTION xrq_fatal_handler
+    XRQ_FATAL_HANDLER _bugcheck_xrq
+
+
+ASM_FUNCTION xrq_irq
     sub lr, lr, #4         @ Fix return address
     srsfd sp!, #SR_SVC     @ Store IRQ mode LR and SPSR on the SVC stack
     cps #SR_SVC            @ Switch to SVC mode

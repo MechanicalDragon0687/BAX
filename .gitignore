@@ -1,9 +1,19 @@
-qemu-ctr
-Thumbs.db
-3ds-data
-build
-profile.svg
-gitstats
+# Build stuff
+*.firm
+*.elf
+*.o
 
-ipc/ipc.*
-ipc/src/*.o
+# Leftover data
+*.mkv
+*.mp4
+*.webm
+*.rgb
+*.bax
+
+# Windows-isms
+Thumbs.db
+
+# Other stuff
+*.id*
+*.nam
+*.til

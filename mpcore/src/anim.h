@@ -9,6 +9,8 @@
 #define MAX_ALLOC_ATTEMPTS  (131072)
 
 // Animation definitions
+#define ANIM_MAX_SIZE (0x5000000) // 80MiB
+
 #define ANIM_MAGIC    ((u8[]){'B', 'A', 'X'})
 
 #define ANIM_MIN_VER  (0)

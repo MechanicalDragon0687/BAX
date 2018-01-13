@@ -49,7 +49,7 @@ SECTIONS
 
     __stack_top = ORIGIN(AXIRAM) + LENGTH(AXIRAM);
     __stack_abt = __stack_top;
-    __stack_svc = __stack_abt - 0x400;
+    __stack_svc = __stack_abt - 0x3000;
     __end__ = ABSOLUTE(.);
 
     ASSERT((__stack_svc - ORIGIN(AXIRAM)) > 0x18000, "Error: not enough stack available! (<96K)")

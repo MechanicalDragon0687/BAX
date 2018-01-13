@@ -48,18 +48,7 @@ ASM_FUNCTION boot
 	mcr p15, 0, r0, c1, c0, 0
 
 
-	@ Setup stacks
-	ldr sp, =__stack_abt @ Supervisor stack
-
-	msr cpsr_c, #(SR_IRQ | SR_I | SR_F)
-	ldr sp, =__stack_irq @ IRQ stack
-
-	msr cpsr_c, #(SR_UND | SR_I | SR_F)
-	ldr sp, =__stack_abt @ Undefined stack
-
-	msr cpsr_c, #(SR_ABT | SR_I | SR_F)
-	ldr sp, =__stack_abt @ Abort stack
-
+	@ Setup stack
 	msr cpsr_c, #(SR_SYS | SR_I | SR_F)
 	ldr sp, =__stack_sys @ System stack
 

@@ -249,7 +249,7 @@ int anim_play(const anim_t *hdr)
     }
 
     // Wait until it's done playing
-    while(frb_count(&frb) > 0) _wfe();
+    while(frb_count(&frb) > 0) _wfi();
 
     // Deallocate used memory
     // Disable VBlank and Timer interrupts

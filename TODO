@@ -1,11 +1,5 @@
 - testing, lots of it
 
-- settle on paths for animations and booted FIRM
-
-- add exception handlers (well, more like exception 'notifiers'...)
-
-- implement bugcheck()
-
 - move the ARM9 code to ITCM and data/bss to DTCM
 
 - add firmlaunch code to ARM9 (need more documentation...)

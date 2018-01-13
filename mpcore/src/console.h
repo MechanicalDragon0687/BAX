@@ -2,7 +2,7 @@
 
 #include <common.h>
 
-void console_reset(void);
+void console_reset(u16 *base, int width);
 void console_putc(char c);
 void console_puts(const char *s);
 
