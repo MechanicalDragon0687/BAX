@@ -1,26 +1,33 @@
-TARGET  := $(notdir $(CURDIR))
+TARGET  := $(shell basename $(CURDIR))
 
-OBJS := src/boot.s.o src/main.c.o src/gic.c.o src/gpu.c.o  \
-        src/vq.c.o src/bax.c.o src/lz4.c.o
-
-ARCH    += -march=armv6k -mtune=mpcore -DARM11
+SUBARCH := -DARM11 -mcpu=mpcore -mfloat-abi=hard -mfpu=vfpv2 $(ARCH)
+SOURCE  := src
+BUILD   := bin
 
 INCLUDE += -Isrc
-ASFLAGS += $(ARCH) -x assembler-with-cpp $(INCLUDE)
-CFLAGS  += $(ARCH) $(INCLUDE)
+ASFLAGS += $(SUBARCH) $(INCLUDE)
+CFLAGS  += $(SUBARCH) $(INCLUDE)
+LDFLAGS += $(SUBARCH)
 
-.PHONY: all clean
+SOURCE_OUTPUT := $(patsubst $(SOURCE)/%.c, $(BUILD)/%.c.o, \
+                 $(patsubst $(SOURCE)/%.s, $(BUILD)/%.s.o, \
+                 $(shell find "$(SOURCE)" -name '*.c' -o -name '*.s')))
 
+.PHONY: all
 all: $(TARGET).elf
 
+.PHONY: clean
 clean:
-	@rm -rf $(OBJS) $(TARGET).*
+	@rm -rf $(BUILD) $(TARGET).elf
 
-$(TARGET).elf: $(OBJS)
-	$(CC) $^ $(LDFLAGS) -o $@
+$(TARGET).elf: $(SOURCE_OUTPUT)
+	@mkdir -p "$(@D)"
+	$(CC) $(LDFLAGS) $^ -o $@
 
-%.c.o: %.c
-	$(CC) $(CFLAGS) $^ -c -o $@
+$(BUILD)/%.c.o: $(SOURCE)/%.c
+	@mkdir -p "$(@D)"
+	$(CC) -c $(CFLAGS) -o $@ $<
 
-%.s.o: %.s
-	$(CC) $(ASFLAGS) $^ -c -o $@
+$(BUILD)/%.s.o: $(SOURCE)/%.s
+	@mkdir -p "$(@D)"
+	$(CC) -c $(ASFLAGS) -o $@ $<

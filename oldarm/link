@@ -1,0 +1,60 @@
+OUTPUT_FORMAT("elf32-littlearm")
+OUTPUT_ARCH(arm)
+ENTRY(boot)
+
+MEMORY
+{
+  AHBRAM (RWX) : ORIGIN = 0x08006000, LENGTH = 0xFA000
+  ITCM   (RWX) : ORIGIN = 0x00000000, LENGTH = 0x3700
+  DTCM   (RWX) : ORIGIN = 0x30000000, LENGTH = 0x4000
+}
+
+SECTIONS
+{
+    .text :
+    {
+        . = ALIGN(4);
+        __text_s = .;
+        *(.text.boot)
+        *(.text*)
+        . = ALIGN(4);
+        __text_e = .;
+    } >AHBRAM
+
+    .data :
+    {
+        . = ALIGN(4);
+        __data_s = .;
+        *(.data*);
+        . = ALIGN(4);
+        __data_e = .;
+    } >AHBRAM
+
+    .rodata :
+    {
+        . = ALIGN(4);
+        __rodata_s = .;
+        *(.rodata*);
+        *(COMMON);
+        . = ALIGN(4);
+        __rodata_e = .;
+    } >AHBRAM
+
+    .bss (NOLOAD) :
+    {
+        . = ALIGN(4);
+        __bss_s = .;
+        *(.bss*);
+        . = ALIGN(4);
+        __bss_e = .;
+    } >AHBRAM
+
+    __stack_irq = ORIGIN(DTCM) + LENGTH(DTCM);
+    __stack_abt = __stack_irq - 0x1000;
+    __stack_sys = __stack_abt - 0x1000;
+
+    __end__ = ABSOLUTE(.);
+
+    __heap_end = ORIGIN(AHBRAM) + LENGTH(AHBRAM);
+    __heap_start = __end__;
+}

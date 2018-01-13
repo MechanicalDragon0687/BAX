@@ -1,161 +1,129 @@
 #pragma once
+
 #include <common.h>
-#include <arm.h>
+#include <asm.h>
 
-#define ENTER_CRITICAL(x) do { (x) = cpu_DisableIRQ(); } while(0)
-#define LEAVE_CRITICAL(x) do { cpu_EnableIRQ((x)); } while(0)
-
-static inline u32 cpu_ReadCPSR(void)
+static inline u32 _read_CPSR(void)
 {
     u32 cpsr;
-    asm("mrs %0, cpsr\n\t":"=r"(cpsr));
+    __asm__ __volatile__ (
+        "mrs %0, cpsr\n\t"
+        : "=r"(cpsr)
+    );
     return cpsr;
 }
 
-static inline void cpu_WriteCPSR(u32 cpsr)
+static inline void _write_CPSR_c(u32 cpsr)
 {
-    asm("msr cpsr_c, %0\n\t"::"r"(cpsr));
+    __asm__ __volatile__ (
+        "msr cpsr_c, %0\n\t"
+        : : "r"(cpsr)
+    );
     return;
 }
 
-static inline u32 cpu_ReadCR(void)
+static inline void _disable_irqs(void)
+{
+    u32 tmp;
+    __asm__ __volatile__ (
+        #ifdef ARM9
+        "mrs %0, cpsr\n\t"
+        "orr %0, #0xC0\n\t"
+        "msr cpsr_c, %0\n\t"
+        : "=r"(tmp) : : "memory"
+        #else
+        "cpsid if\n\t" : : : "memory"
+        #endif
+    );
+    return;
+}
+
+static inline void _enable_irqs(void)
+{
+    u32 tmp;
+    __asm__ __volatile__ (
+        #ifdef ARM9
+        "mrs %0, cpsr\n\t"
+        "bic %0, #0xC0\n\t"
+        "msr cpsr_c, %0\n\t"
+        : "=r"(tmp) : : "memory"
+        #else
+        "cpsie if\n\t" : : : "memory"
+        #endif
+    );
+    return;
+}
+
+static inline u32 _enter_critical(void)
+{
+    u32 stat = _read_CPSR();
+    _write_CPSR_c(stat | SR_I);
+    return stat & SR_I;
+}
+
+static inline void _leave_critical(u32 stat)
+{
+    _write_CPSR_c(stat | (_read_CPSR() & ~SR_I));
+    return;
+}
+
+static inline void _wfi(void)
+{
+    __asm__ __volatile__ (
+        #ifdef ARM9
+        "mcr p15, 0, %0, c7, c0, 4\n\t"
+        : : "r"(0)
+        #else
+        "wfi\n\t"
+        #endif
+    );
+    return;
+}
+
+static inline void _write_CR(u32 cr)
+{
+    __asm__ __volatile__ (
+        "mcr p15, 0, %0, c1, c0, 0\n\t"
+        : : "r"(cr) : "memory"
+    );
+    return;
+}
+
+static inline u32 _read_CR(void)
 {
     u32 cr;
-    asm("mrc p15, 0, %0, c1, c0, 0\n\t":"=r"(cr));
+    __asm__ __volatile__ (
+        "mrc p15, 0, %0, c1, c0, 0\n\t"
+        : "=r"(cr)
+    );
     return cr;
 }
 
-static inline void cpu_WriteCR(u32 cr)
-{
-    asm("mcr p15, 0, %0, c1, c0, 0\n\t"::"r"(cr));
-    return;
-}
-
-static inline u32 cpu_DisableIRQ(void)
-{
-    u32 cpsr = cpu_ReadCPSR();
-    #ifdef ARM9
-    cpu_WriteCPSR(cpsr | SR_IRQ_BIT | SR_FIQ_BIT);
-    #else
-    asm("cpsid if\n\t");
-    #endif
-    return cpsr & (SR_IRQ_BIT | SR_FIQ_BIT);
-}
-
-static inline void cpu_EnableIRQ(u32 ss)
-{
-    #ifdef ARM9
-    u32 cpsr = cpu_ReadCPSR() & ~(SR_IRQ_BIT | SR_FIQ_BIT);
-    cpu_WriteCPSR(cpsr | ss);
-    #else
-    if (!(ss & SR_IRQ_BIT)) {
-        asm("cpsie if\n\t");
-    }
-    #endif
-    return;
-}
-
-static inline void cpu_InvalidateIC(void)
-{
-    asm("mcr p15, 0, %0, c7, c5, 0\n\t"::"r"(0));
-    return;
-}
-
-static inline void cpu_InvalidateICRange(u32 start, u32 end)
-{
-    start &= ~0x1F;
-    while(start < end) {
-        asm("mcr p15, 0, %0, c7, c5, 1"::"r"(start));
-        start += 0x20;
-    }
-    return;
-}
-
-static inline void cpu_InvalidateDC(void)
-{
-    asm("mcr p15, 0, %0, c7, c6, 0\n\t"::"r"(0));
-    return;
-}
-
-static inline void cpu_InvalidateDCRange(u32 start, u32 end)
-{
-    start &= ~0x1F;
-    while(start < end) {
-        asm("mcr p15, 0, %0, c7, c6, 1"::"r"(start));
-        start += 0x20;
-    }
-    return;
-}
-
-static inline void cpu_WritebackDC(void)
-{
-    #ifdef ARM9
-    u32 seg=0,ind;
-    do {
-        ind=0;
-        do {
-            asm("mcr p15, 0, %0, c7, c10, 2\n\t"::"r"(seg|ind));
-            ind+=0x20;
-        } while(ind<0x400);
-        seg+=0x40000000;
-    } while(seg);
-    asm("mcr p15, 0, %0, c7, c10, 4\n\t"::"r"(0));
-    #else
-    asm("mcr p15, 0, %0, c7, c10, 0\n\t"::"r"(0));
-    #endif
-    return;
-}
-
-static inline void cpu_WritebackDCRange(u32 start, u32 end)
-{
-    start &= ~0x1F;
-    while(start < end) {
-        asm("mcr p15, 0, %0, c7, c10, 1"::"r"(start));
-        start += 0x20;
-    }
-    #ifdef ARM9
-    asm("mcr p15, 0, %0, c7, c10, 4\n\t"::"r"(0));
-    #endif
-    return;
-}
-
 #ifdef ARM11
-static inline void cpu_DSB(void)
+static inline void _wfe(void)
 {
-    asm("mcr p15, 0, %0, c7, c10, 4\n\t"::"r"(0));
+    __asm__ __volatile__ (
+        "wfe\n\t"
+    );
     return;
 }
 
-static inline void cpu_DMB(void)
+static inline void _write_ACR(u32 acr)
 {
-    asm("mcr p15, 0, %0, c7, c10, 5\n\t"::"r"(0));
+    __asm__ __volatile__ (
+        "mcr p15, 0, %0, c1, c0, 1\n\t"
+        : : "r"(acr) : "memory"
+    );
     return;
+}
+
+static inline u32 _read_ACR(void)
+{
+    u32 acr;
+    __asm__ __volatile__ (
+        "mrc p15, 0, %0, c1, c0, 1\n\t"
+        : "=r"(acr)
+    );
+    return acr;
 }
 #endif
-
-static inline void cpu_WBInvDCRange(u32 start, u32 end)
-{
-    cpu_WritebackDCRange(start,end);
-    cpu_InvalidateICRange(start,end);
-}
-
-static inline void cpu_InvalidateAll(void)
-{
-    #ifdef ARM9
-    cpu_InvalidateDC();
-    cpu_InvalidateIC();
-    #else
-    asm("mcr p15, 0, %0, c7, c7, 0\n\t"::"r"(0));
-    #endif
-    return;
-}
-
-static inline void wfi(void)
-{
-    #ifdef ARM9
-    asm("mcr p15, 0, %0, c7, c0, 4\n\t"::"r"(0));
-    #else
-    asm("wfi\n\t");
-    #endif
-    return;
-}

@@ -2,40 +2,36 @@ ifeq ($(strip $(DEVKITARM)),)
 $(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
 endif
 
-TRIPLET := arm-none-eabi
-export AS = $(TRIPLET)-as
-export CC = $(TRIPLET)-gcc
-export LD = $(TRIPLET)-ld
-export OC = $(TRIPLET)-objcopy
+include $(DEVKITARM)/base_tools
 
-export INCLUDE := -I"$(shell pwd)/common"
-export ARCH := -marm -mno-thumb-interwork
-export CFLAGS := -O2 -std=c99 -pipe -Wextra -fomit-frame-pointer \
-                 -ffunction-sections -ffast-math -mno-unaligned-access
-export LDFLAGS := -Tlink.ld -Wl,--gc-sections,-z,max-page-size=512 -nostartfiles
+export OUTDIR  := "$(shell pwd)/output"
+export COMMON  := "$(shell pwd)/common"
 
-OLDARM  := oldarm/oldarm.elf
-MPCORE  := mpcore/mpcore.elf
-FIRM    := BAX.firm
+export INCLUDE := -I$(COMMON)
+export ARCH    := -marm -mno-thumb-interwork
+export ASFLAGS := -x assembler-with-cpp -ggdb
+export CFLAGS  := -O2 -std=c99 -pipe -fomit-frame-pointer \
+                  -ffunction-sections -ffast-math -Wall -Wextra\
+                  -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-main -ggdb
+export LDFLAGS := -Tlink -Wl,--gc-sections,-z,max-page-size=512 -nostartfiles -ggdb
 
-OLDARM_DIR := $(shell dirname $(OLDARM))
-MPCORE_DIR := $(shell dirname $(MPCORE))
+ELF  := oldarm/oldarm.elf mpcore/mpcore.elf
+FIRM := BAX.firm
 
-.PHONY: all firm clean
-all: $(OLDARM) $(MPCORE) firm
+.PHONY: all firm elf clean
+all: firm
 
 clean:
-	@$(MAKE) --no-print-directory -C $(OLDARM_DIR) clean
-	@$(MAKE) --no-print-directory -C $(MPCORE_DIR) clean
-	@rm -rf $(FIRM)
+	@set -e; for elf in $(ELF); do \
+		$(MAKE) --no-print-directory -C $$(dirname $$elf) clean; \
+	done
+	@rm -rf $(FIRM) $(OUTDIR)
 
-$(OLDARM):
-	@echo "\e[92mBuilding $(OLDARM)\e[0m"
-	@$(MAKE) --no-print-directory -C $(OLDARM_DIR)
+elf:
+	@set -e; for elf in $(ELF); do \
+		echo "Building $$elf"; \
+		$(MAKE) --no-print-directory -C $$(dirname $$elf); \
+	done
 
-$(MPCORE):
-	@echo "\e[92mBuilding $(MPCORE)\e[0m"
-	@$(MAKE) --no-print-directory -C $(MPCORE_DIR)
-
-firm: $(OLDARM) $(MPCORE)
-	firmtool build $(FIRM) -D $^ -C NDMA XDMA
+firm: elf
+	firmtool build $(FIRM) -i -D $(ELF) -C NDMA XDMA

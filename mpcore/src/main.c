@@ -1,86 +1,107 @@
 #include <common.h>
-
-#include <anim.h>
-#include <bax.h>
-#include <cpu.h>
-#include <gic.h>
-#include <gpu.h>
-#include <gfx.h>
+#include <cache.h>
 #include <pxi.h>
-#include <vq.h>
+#include <cpu.h>
+#include <irq.h>
 
-volatile vq wq, fq[ANIM_TARGETS];
-vu32 count;
+#define PXICMD_CODE
+#include <pxicmd.h>
 
-void pxi_sync_handler(u32 xrq)
+#include "anim.h"
+#include "console.h"
+#include "hw/int.h"
+#include "hw/timer.h"
+
+#include "lib/ff/ff.h"
+
+void pxi_handler(u32 irqn)
 {
-    u8 msg = pxi_recv_rem();
+	u8 cmd;
+	u32 pxia[PXICMD_MAX_ARGC];
+	int resp = 0;
 
-    switch(msg) {
-    case PXI_CMD_FIRMBOOT:
-    {
-        u32 entry;
-        while((entry=(*(vu32*)(0x1FFFFFFC)))==0);
-        ((void (*)(void))(entry))();
-        while(1);
-    }
-    case PXI_CMD_PLAYANIM:
-    {
-        void *anim;
-        u32 anim_size;
+	cmd = pxicmd_recv(pxia);
+	switch(PXICMD_CMDID(cmd))
+	{
+		default:
+		// TODO: bugcheck
+			break;
+	}
 
-        anim = (void*)pxi_getw();
-        anim_size = pxi_getw();
-
-        cpu_InvalidateDCRange((u32)anim, (u32)anim + anim_size);
-        bax_cvt_wq(anim, anim_size, &wq);
-        break;
-    }
-    default:
-        break;
-    }
-    return;
-}
-
-void timer_handler(u32 xrq)
-{
-    for (int i = 0; i < ANIM_TARGETS; i++) {
-        bax_stream_fq(i, &(fq[i]));
-    }
-    return;
+	pxicmd_reply(resp);
+	return;
 }
 
 void main(void)
 {
-    u32 *framebuffers = (u32*)FRAMEBUFFERS;
-    memcpy(framebuffers, def_fbs, sizeof(def_fbs));
-    gpu_init();
+	FATFS main_fs;
+	FIL main_bax;
+	FRESULT fres;
+	size_t br, timer;
+	void *dest;
 
-    vq_init(&wq);
-    for (int i=0; i<ANIM_TARGETS; i++) {
-        vq_init(&(fq[i]));
-    }
+	console_reset();
+	console_puts("hello from ARM11\n");
+	irq_register(IRQ_PXI_SYNC, pxi_handler);
+	pxi_reset();
 
-    gic_configure(IRQ_PXI_SYNC, pxi_sync_handler);
-    pxi_enable_irq();
+	fres = f_mount(&main_fs, "sdmc:", 1);
+	console_puts("f_mount = ");
+	console_putd(fres);
+	console_putc('\n');
 
-    cpu_EnableIRQ(0);
-    while(vq_count(&wq) == 0);
+	fres = f_open(&main_bax, "sdmc:/main.bax", FA_READ);
+	console_puts("f_open = ");
+	console_putd(fres);
+	console_putc('\n');
 
-    /* timer_init(some_frequency, timer_handler); */
+	// TODO: bugcheck
+	if (fres != FR_OK)
+		while(1) _wfi();
 
-    /* start decompressing frames onto the queue */
-    bax_cvt_fq(&wq, &fq);
-    while(1) {
-        bool qe=false;
-        /* wait until all frame queues are empty */
-        for (int i=0; !qe&&i<ANIM_TARGETS; i++) {
-            qe |= (vq_count(&fq[i]) > 0);
-        }
-        if (!qe)
-            break;
-    }
-    pxi_send_rem(PXI_CMD_FIRMBOOT);
-    pxi_sync();
-    while(1);
+	console_puts("f_size = ");
+	console_putd(f_size(&main_bax));
+	console_putc('\n');
+
+	dest = malloc(f_size(&main_bax));
+	if (dest == NULL)
+		while(1) _wfi();
+
+	timer_start(~0, false, false);
+
+	fres = f_read(&main_bax, dest, f_size(&main_bax), &br);
+	timer = timer_ticks();
+	timer_stop();
+
+	console_puts("f_read = ");
+	console_putd(fres);
+	console_putc('\n');
+
+	console_puts("br = ");
+	console_putd(br);
+	console_putc('\n');
+
+	console_puts("ticks = ");
+	console_puth(timer);
+	console_putc('\n');
+
+	console_puts("ms = ");
+	console_putd((u32)timer_ticks_to_ms(0xFFFFFFFF - timer));
+	console_putc('\n');
+
+	f_close(&main_bax);
+
+	int res = anim_validate((anim_t*)dest, br);
+	console_puts("anim_validate = ");
+	console_putd(res);
+	console_putc('\n');
+	if (res != ANIM_OK)
+	{
+		console_puts("Bad anim: ");
+		console_puts(anim_get_error(res));
+		while(1) _wfi();
+	}
+
+	anim_play((anim_t*)dest);
+	while(1) _wfi();
 }

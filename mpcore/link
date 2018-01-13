@@ -1,0 +1,56 @@
+OUTPUT_FORMAT("elf32-littlearm")
+OUTPUT_ARCH(arm)
+ENTRY(boot)
+
+MEMORY
+{
+  AXIRAM (RWX) : ORIGIN = 0x1FF80000, LENGTH = 0x7E000
+}
+
+SECTIONS
+{
+    .text :
+    {
+        . = ALIGN(4);
+        __text_s = .;
+        *(.text.boot)
+        *(.text*)
+        . = ALIGN(4);
+        __text_e = .;
+    } >AXIRAM
+
+    .data :
+    {
+        . = ALIGN(4);
+        __data_s = .;
+        *(.data*);
+        . = ALIGN(4);
+        __data_e = .;
+    } >AXIRAM
+
+    .rodata :
+    {
+        . = ALIGN(4);
+        __rodata_s = .;
+        *(.rodata*);
+        *(COMMON);
+        . = ALIGN(4);
+        __rodata_e = .;
+    } >AXIRAM
+
+    .bss (NOLOAD) :
+    {
+        . = ALIGN(4);
+        __bss_s = .;
+        *(.bss*);
+        . = ALIGN(4);
+        __bss_e = .;
+    } >AXIRAM
+
+    __stack_top = ORIGIN(AXIRAM) + LENGTH(AXIRAM);
+    __stack_abt = __stack_top;
+    __stack_svc = __stack_abt - 0x400;
+    __end__ = ABSOLUTE(.);
+
+    ASSERT((__stack_svc - ORIGIN(AXIRAM)) > 0x18000, "Error: not enough stack available! (<96K)")
+}

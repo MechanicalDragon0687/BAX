@@ -1,0 +1,27 @@
+- testing, lots of it
+
+- settle on paths for animations and booted FIRM
+
+- add exception handlers (well, more like exception 'notifiers'...)
+
+- implement bugcheck()
+
+- move the ARM9 code to ITCM and data/bss to DTCM
+
+- add firmlaunch code to ARM9 (need more documentation...)
+
+- figure out EMMC + NDMA (dope af, maybe nocash knows?)
+
+- simplify the animation logic (vblank instead of timer, early cutout)
+
+- verify stereoscopic animations actually do work as intended
+
+- improve the build system (common source code, rebuilds, etc)
+
+- write a transcoder, best candidate so far is python3
+
+- enable N3DS extra cache and FCRAM and higher freq
+
+- try to play audio?
+
+- more testing

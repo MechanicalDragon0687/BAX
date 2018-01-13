@@ -23,18 +23,28 @@
  */
 
 #include <common.h>
-#include <hw/sdmmc.h>
+#include "hw/sdmmc.h"
+
+#define DATA32_SUPPORT
 
 struct mmcdevice handleSD;
 
-#define NO_INLINE __attribute__((noinline))
+inline void _waitcycles(u32 n)
+{
+	__asm__ __volatile__ (
+		"wf: subs %0, %0, #4\n\t"
+		"bpl wf\n\t"
+		: : "r" (n) : "cc"
+	);
+	return;
+}
 
-static inline int geterror(struct mmcdevice *ctx)
+static int get_error(struct mmcdevice *ctx)
 {
 	return (int)((ctx->error << 29) >> 31);
 }
 
-static void inittarget(struct mmcdevice *ctx)
+static void set_target(struct mmcdevice *ctx)
 {
 	sdmmc_mask16(REG_SDPORTSEL,0x3,(uint16_t)ctx->devicenumber);
 	setckl(ctx->clk);
@@ -48,19 +58,22 @@ static void inittarget(struct mmcdevice *ctx)
 	}
 }
 
-static void NO_INLINE sdmmc_send_command(struct mmcdevice *ctx, uint32_t cmd, uint32_t args)
+static void sdmmc_send_command(struct mmcdevice *ctx, uint32_t cmd, uint32_t args)
 {
-	uint32_t getSDRESP = (cmd << 15) >> 31;
+	const bool getSDRESP = (cmd << 15) >> 31;
 	uint16_t flags = (cmd << 15) >> 31;
-	const int readdata = cmd & 0x20000;
-	const int writedata = cmd & 0x40000;
+	const bool readdata = cmd & 0x20000;
+	const bool writedata = cmd & 0x40000;
 
-	if(readdata || writedata) {
+	if(readdata || writedata)
+	{
 		flags |= TMIO_STAT0_DATAEND;
 	}
 
 	ctx->error = 0;
 	while((sdmmc_read16(REG_SDSTATUS1) & TMIO_STAT1_CMD_BUSY)); //mmc working?
+	sdmmc_write16(REG_SDIRMASK0,0);
+	sdmmc_write16(REG_SDIRMASK1,0);
 	sdmmc_write16(REG_SDSTATUS0,0);
 	sdmmc_write16(REG_SDSTATUS1,0);
 	sdmmc_mask16(REG_DATACTL32,0x1800,0);
@@ -69,37 +82,89 @@ static void NO_INLINE sdmmc_send_command(struct mmcdevice *ctx, uint32_t cmd, ui
 	sdmmc_write16(REG_SDCMD,cmd &0xFFFF);
 
 	uint32_t size = ctx->size;
-	uint32_t *rDataPtr = ctx->rData, *tDataPtr = ctx->tData;
+	u32 *rDataPtr32 = (u32*)ctx->rData;
+	u8  *rDataPtr8  = ctx->rData;
+	const u32 *tDataPtr32 = (u32*)ctx->tData;
+	const u8  *tDataPtr8  = ctx->tData;
+
+	bool rUseBuf = ( NULL != rDataPtr32 );
+	bool tUseBuf = ( NULL != tDataPtr32 );
 
 	uint16_t status0 = 0;
 	while(1)
 	{
 		volatile uint16_t status1 = sdmmc_read16(REG_SDSTATUS1);
 		volatile uint16_t ctl32 = sdmmc_read16(REG_DATACTL32);
-
-		if((ctl32 & 0x100) && readdata && rDataPtr) {
-			sdmmc_mask16(REG_SDSTATUS1, TMIO_STAT1_RXRDY, 0);
-			if(size > 0x1FF) {
-				for (int i = 0; i < 0x200/4; i++) {
-					*(rDataPtr++) = sdmmc_read32(REG_SDFIFO32);
+		if((ctl32 & 0x100))
+		{
+			if(readdata)
+			{
+				if(rUseBuf)
+				{
+					sdmmc_mask16(REG_SDSTATUS1, TMIO_STAT1_RXRDY, 0);
+					if(size > 0x1FF)
+					{
+						if(!((u32)rDataPtr32 & 3))
+						{
+							for(int i = 0; i<0x200; i+=4)
+							{
+								*rDataPtr32++ = sdmmc_read32(REG_SDFIFO32);
+							}
+						}
+						else
+						{
+							for(int i = 0; i<0x200; i+=4)
+							{
+								u32 data = sdmmc_read32(REG_SDFIFO32);
+								*rDataPtr8++ = data;
+								*rDataPtr8++ = data >> 8;
+								*rDataPtr8++ = data >> 16;
+								*rDataPtr8++ = data >> 24;
+							}
+						}
+						size -= 0x200;
+					}
 				}
-				size -= 0x200;
-			}
-			sdmmc_mask16(REG_DATACTL32, 0x800, 0);
-		}
 
-		if(!(ctl32 & 0x200) && writedata && tDataPtr) {
-			sdmmc_mask16(REG_SDSTATUS1, TMIO_STAT1_TXRQ, 0);
-			if(size > 0x1FF) {
-				for(int i = 0; i<0x200/4; i++) {
-					sdmmc_write32(REG_SDFIFO32, *(tDataPtr++));
+				sdmmc_mask16(REG_DATACTL32, 0x800, 0);
+			}
+		}
+		if(!(ctl32 & 0x200))
+		{
+			if(writedata)
+			{
+				if(tUseBuf)
+				{
+					sdmmc_mask16(REG_SDSTATUS1, TMIO_STAT1_TXRQ, 0);
+					if(size > 0x1FF)
+					{
+						if(!((u32)tDataPtr32 & 3))
+						{
+							for(int i = 0; i<0x200; i+=4)
+							{
+								sdmmc_write32(REG_SDFIFO32, *tDataPtr32++);
+							}
+						}
+						else
+						{
+							for(int i = 0; i<0x200; i+=4)
+							{
+								uint32_t data = *tDataPtr8++;
+								data |= (uint32_t)*tDataPtr8++ << 8;
+								data |= (uint32_t)*tDataPtr8++ << 16;
+								data |= (uint32_t)*tDataPtr8++ << 24;
+								sdmmc_write32(REG_SDFIFO32, data);
+							}
+						}
+						size -= 0x200;
+					}
 				}
-				size -= 0x200;
-			}
-			sdmmc_mask16(REG_DATACTL32, 0x1000, 0);
-		}
 
-		if(status1 & TMIO_MASK_GW) {
+				sdmmc_mask16(REG_DATACTL32, 0x1000, 0);
+			}
+		}
+		if(status1 & TMIO_MASK_GW)
+		{
 			ctx->error |= 4;
 			break;
 		}
@@ -107,25 +172,25 @@ static void NO_INLINE sdmmc_send_command(struct mmcdevice *ctx, uint32_t cmd, ui
 		if(!(status1 & TMIO_STAT1_CMD_BUSY))
 		{
 			status0 = sdmmc_read16(REG_SDSTATUS0);
-			if(sdmmc_read16(REG_SDSTATUS0) & TMIO_STAT0_CMDRESPEND) {
+			if(sdmmc_read16(REG_SDSTATUS0) & TMIO_STAT0_CMDRESPEND)
+			{
 				ctx->error |= 0x1;
 			}
-			if(status0 & TMIO_STAT0_DATAEND) {
+			if(status0 & TMIO_STAT0_DATAEND)
+			{
 				ctx->error |= 0x2;
 			}
 
-			if((status0 & flags) == flags) {
+			if((status0 & flags) == flags)
 				break;
-			}
 		}
 	}
-
 	ctx->stat0 = sdmmc_read16(REG_SDSTATUS0);
 	ctx->stat1 = sdmmc_read16(REG_SDSTATUS1);
 	sdmmc_write16(REG_SDSTATUS0,0);
 	sdmmc_write16(REG_SDSTATUS1,0);
 
-	if(getSDRESP)
+	if(getSDRESP != 0)
 	{
 		ctx->ret[0] = (uint32_t)(sdmmc_read16(REG_SDRESP0) | (sdmmc_read16(REG_SDRESP1) << 16));
 		ctx->ret[1] = (uint32_t)(sdmmc_read16(REG_SDRESP2) | (sdmmc_read16(REG_SDRESP3) << 16));
@@ -134,35 +199,21 @@ static void NO_INLINE sdmmc_send_command(struct mmcdevice *ctx, uint32_t cmd, ui
 	}
 }
 
-int NO_INLINE sdmmc_sdcard_writesectors(uint32_t sector_no, uint32_t numsectors, uint32_t *in)
+int sdmmc_sdcard_readsectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out)
 {
 	if(handleSD.isSDHC == 0) sector_no <<= 9;
-	inittarget(&handleSD);
+	set_target(&handleSD);
 	sdmmc_write16(REG_SDSTOP,0x100);
-	sdmmc_write16(REG_SDBLKCOUNT32,numsectors);
-	sdmmc_write16(REG_SDBLKLEN32,0x200);
-	sdmmc_write16(REG_SDBLKCOUNT,numsectors);
-	handleSD.tData = in;
-	handleSD.size = numsectors << 9;
-	sdmmc_send_command(&handleSD,0x52C19,sector_no);
-	return geterror(&handleSD);
-}
-
-int NO_INLINE sdmmc_sdcard_readsectors(uint32_t sector_no, uint32_t numsectors, uint32_t *out)
-{
-	if(handleSD.isSDHC == 0) sector_no <<= 9;
-	inittarget(&handleSD);
-	sdmmc_write16(REG_SDSTOP,0x100);
-	sdmmc_write16(REG_SDBLKCOUNT32,numsectors);
+	sdmmc_write16(REG_SDBLKCOUNT32, numsectors);
 	sdmmc_write16(REG_SDBLKLEN32,0x200);
 	sdmmc_write16(REG_SDBLKCOUNT,numsectors);
 	handleSD.rData = out;
 	handleSD.size = numsectors << 9;
 	sdmmc_send_command(&handleSD,0x33C12,sector_no);
-	return geterror(&handleSD);
+	return get_error(&handleSD);
 }
 
-static uint32_t calcSDSize(uint8_t* csd, int type)
+static uint32_t sdmmc_calc_size(uint8_t* csd, int type)
 {
   uint32_t result = 0;
   if(type == -1) type = csd[14] >> 6;
@@ -192,8 +243,16 @@ static uint32_t calcSDSize(uint8_t* csd, int type)
   return result;
 }
 
-void InitSD()
+void sdmmc_init()
 {
+	//SD
+	handleSD.isSDHC = 0;
+	handleSD.SDOPT = 0;
+	handleSD.res = 0;
+	handleSD.initarg = 0;
+	handleSD.clk = 0x80;
+	handleSD.devicenumber = 0;
+
 	*(volatile uint16_t*)0x10006100 &= 0xF7FFu; //SDDATACTL32
 	*(volatile uint16_t*)0x10006100 &= 0xEFFFu; //SDDATACTL32
 	*(volatile uint16_t*)0x10006100 |= 0x402u; //SDDATACTL32
@@ -204,10 +263,8 @@ void InitSD()
 	*(volatile uint16_t*)0x10006108 = 1; //SDBLKCOUNT32
 	*(volatile uint16_t*)0x100060E0 &= 0xFFFEu; //SDRESET
 	*(volatile uint16_t*)0x100060E0 |= 1u; //SDRESET
-
-	*(volatile uint16_t*)0x10006020 = 0xFFFF; //SDIR_MASK0
-	*(volatile uint16_t*)0x10006022 = 0xFFFF; //SDIR_MASK1
-
+	*(volatile uint16_t*)0x10006020 |= TMIO_MASK_ALL; //SDIR_MASK0
+	*(volatile uint16_t*)0x10006022 |= TMIO_MASK_ALL>>16; //SDIR_MASK1
 	*(volatile uint16_t*)0x100060FC |= 0xDBu; //SDCTL_RESERVED7
 	*(volatile uint16_t*)0x100060FE |= 0xDBu; //SDCTL_RESERVED8
 	*(volatile uint16_t*)0x10006002 &= 0xFFFCu; //SDPORTSEL
@@ -220,23 +277,9 @@ void InitSD()
 
 int SD_Init()
 {
-	//SD
-	handleSD.isSDHC = 0;
-	handleSD.SDOPT = 0;
-	handleSD.res = 0;
-	handleSD.initarg = 0;
-	handleSD.clk = 0x80;
-	handleSD.devicenumber = 0;
+	set_target(&handleSD);
 
-	inittarget(&handleSD);
-
-	asm("mov r9, #0x60000\n\t"
-		".Lt:\n\t"
-		"subs r9, #1\n\t"
-		"bne .Lt\n\t":::"r9");
-
-	//If not inserted
-	if (!(*((volatile uint16_t*)(SDMMC_BASE + REG_SDSTATUS0)) & TMIO_STAT0_SIGSTATE)) return 5;
+	_waitcycles(0xF000);
 
 	sdmmc_send_command(&handleSD,0,0);
 	sdmmc_send_command(&handleSD,0x10408,0x1AA);
@@ -269,7 +312,7 @@ int SD_Init()
 	sdmmc_send_command(&handleSD,0x10609,handleSD.initarg << 0x10);
 	if((handleSD.error & 0x4)) return -3;
 
-	handleSD.total_size = calcSDSize((uint8_t*)&handleSD.ret[0],-1);
+	handleSD.total_size = sdmmc_calc_size((uint8_t*)&handleSD.ret[0],-1);
 	handleSD.clk = 1;
 	setckl(1);
 
@@ -293,8 +336,39 @@ int SD_Init()
 	return 0;
 }
 
-int sdmmc_sdcard_init()
+int sdmmc_get_cid(bool isNand, uint32_t *info)
 {
-	InitSD();
-	return SD_Init();
+	struct mmcdevice *device;
+	//if(isNand)
+		//device = &handleNAND;
+	//else
+		device = &handleSD;
+
+	set_target(device);
+	// use cmd7 to put sd card in standby mode
+	// CMD7
+	{
+		sdmmc_send_command(device,0x10507,0);
+		//if((device->error & 0x4)) return -1;
+	}
+
+	// get sd card info
+	// use cmd10 to read CID
+	{
+		sdmmc_send_command(device,0x1060A,device->initarg << 0x10);
+		//if((device->error & 0x4)) return -2;
+
+		for( int i = 0; i < 4; ++i ) {
+			info[i] = device->ret[i];
+		}
+	}
+
+	// put sd card back to transfer mode
+	// CMD7
+	{
+		sdmmc_send_command(device,0x10507,device->initarg << 0x10);
+		//if((device->error & 0x4)) return -3;
+	}
+
+	return 0;
 }
