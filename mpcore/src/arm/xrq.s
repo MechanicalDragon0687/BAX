@@ -22,8 +22,8 @@ ASM_FUNCTION xrq_fatal_handler
 
 ASM_FUNCTION xrq_irq
     sub lr, lr, #4         @ Fix return address
-    srsfd sp!, #SR_SVC     @ Store IRQ mode LR and SPSR on the SVC stack
-    cps #SR_SVC            @ Switch to SVC mode
+    srsfd sp!, #SR_SYS     @ Store IRQ mode LR and SPSR on the SYS stack
+    cps #SR_SYS            @ Switch to SVC mode
     push {r0-r5, r12, lr}  @ Preserve registers
 
     bl irq_pending         @ Get any pending interrupts

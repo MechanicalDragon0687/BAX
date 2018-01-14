@@ -26,9 +26,9 @@ void console_drawchar(int c, int x, int y)
         px = _con_base + (x*240 - (y + _y) + 239);
         for (int _x = 0; _x < 8; _x++, mask >>= 1)
         {
-        	if (mask & row)
-        		*px = (mask & row) ? CON_FG : CON_BG;
-        	px += 240;
+            if (mask & row)
+                *px = (mask & row) ? CON_FG : CON_BG;
+            px += 240;
         }
     }
     return;
@@ -36,100 +36,100 @@ void console_drawchar(int c, int x, int y)
 
 void console_scroll(void)
 {
-	for (int x = 0; x < _con_width; x++)
-	{
-		memmove(_con_base + x*240 + 8, _con_base + x*240, 2*232);
-		memset(_con_base + x*240, CON_BG, 2*8);
-	}
-	return;
+    for (int x = 0; x < _con_width; x++)
+    {
+        memmove(_con_base + x*240 + 8, _con_base + x*240, 2*232);
+        memset(_con_base + x*240, CON_BG, 2*8);
+    }
+    return;
 }
 
 void console_reset(u16 *base, int width)
 {
-	_con_base = base;
-	_con_width = width;
-	_conw = width / 8;
-	_con_x = 0;
-	_con_y = 0;
-	memset(base, CON_BG, _con_width*240*2);
-	return;
+    _con_base = base;
+    _con_width = width;
+    _conw = width / 8;
+    _con_x = 0;
+    _con_y = 0;
+    memset(base, CON_BG, _con_width*240*2);
+    return;
 }
 
 void console_putc(char c)
 {
-	c &= 0x7F;
-	switch(c)
-	{
-		// newline
-		case '\n':
-			_con_x = _conw;
-			break;
+    c &= 0x7F;
+    switch(c)
+    {
+        // newline
+        case '\n':
+            _con_x = _conw;
+            break;
 
-		// carriage return
-		case '\r':
-			_con_x = 0;
-			break;
+        // carriage return
+        case '\r':
+            _con_x = 0;
+            break;
 
-		// regular char
-		default:
-			console_drawchar(c, _con_x * 8, _con_y * 8);
-			_con_x++;
-			break;
-	}
+        // regular char
+        default:
+            console_drawchar(c, _con_x * 8, _con_y * 8);
+            _con_x++;
+            break;
+    }
 
-	if (_con_x >= _conw)
-	{
-		_con_x = 0;
-		_con_y++;
-	}
-	if (_con_y >= CONH)
-	{
-		_con_y = CONH-1;
-		console_scroll();
-	}
-	return;
+    if (_con_x >= _conw)
+    {
+        _con_x = 0;
+        _con_y++;
+    }
+    if (_con_y >= CONH)
+    {
+        _con_y = CONH-1;
+        console_scroll();
+    }
+    return;
 }
 
 static const char _con_nulls[] = "(null)",
                   _con_luth[]  = "0123456789ABCDEF";
 void console_puts(const char *s)
 {
-	if (s == NULL)
-		s = _con_nulls;
+    if (s == NULL)
+        s = _con_nulls;
 
-	while(*s)
-		console_putc(*(s++));
-	return;
+    while(*s)
+        console_putc(*(s++));
+    return;
 }
 
 void console_puth(u32 h)
 {
-	char str[12];
-	int p = 12;
-	str[--p] = '\0';
-	do
-	{
-		str[--p] = _con_luth[h % 16];
-		h /= 16;
-	} while(h > 0);
-	str[--p] = 'x';
-	str[--p] = '0';
-	console_puts(&str[p]);
-	return;
+    char str[12];
+    int p = 12;
+    str[--p] = '\0';
+    do
+    {
+        str[--p] = _con_luth[h % 16];
+        h /= 16;
+    } while(h > 0);
+    str[--p] = 'x';
+    str[--p] = '0';
+    console_puts(&str[p]);
+    return;
 }
 
 void console_putd(u32 d)
 {
-	char str[12];
-	int p = 12;
-	str[--p] = '\0';
-	do
-	{
-		str[--p] = (d % 10) + '0';
-		d /= 10;
-	} while(d > 0);
-	console_puts(&str[p]);
-	return;
+    char str[12];
+    int p = 12;
+    str[--p] = '\0';
+    do
+    {
+        str[--p] = (d % 10) + '0';
+        d /= 10;
+    } while(d > 0);
+    console_puts(&str[p]);
+    return;
 }
 
 static const u8 console_font[] = {

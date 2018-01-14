@@ -69,46 +69,46 @@ u32 mmu_get_dacr(void)
 /* Contains AP and APX fields */
 const u8 mmu_aps[MMU_AP_INVALID][2] =
 {
-	[MMU_AP_NA_NA] = {0, 0},
-	[MMU_AP_RO_NA] = {1, 1},
-	[MMU_AP_RW_NA] = {1, 0},
-	[MMU_AP_RO_RO] = {2, 1},
-	[MMU_AP_RW_RO] = {2, 0},
-	[MMU_AP_RW_RW] = {3, 0}
+    [MMU_AP_NA_NA] = {0, 0},
+    [MMU_AP_RO_NA] = {1, 1},
+    [MMU_AP_RW_NA] = {1, 0},
+    [MMU_AP_RO_RO] = {2, 1},
+    [MMU_AP_RW_RO] = {2, 0},
+    [MMU_AP_RW_RW] = {3, 0}
 };
 
 /* Contains B, C and TEX fields */
 const u8 mmu_mem_attrs[MMU_MEMATTR_INVALID][3] =
 {
-	[MMU_STRONGLY_ORDERED]    = {0, 0, 0},
-	[MMU_DEVICE_SHARED]       = {1, 0, 0},
-	[MMU_DEVICE_NONSHARED]    = {0, 0, 2},
-	[MMU_NONCACHABLE]         = {0, 0, 1},
-	[MMU_WRITETHRU_NOWRALLOC] = {0, 1, 0},
-	[MMU_WRITEBACK_NOWRALLOC] = {1, 1, 0},
-	[MMU_WRITEBACK_WRALLOC]   = {1, 1, 1}
+    [MMU_STRONGLY_ORDERED]    = {0, 0, 0},
+    [MMU_DEVICE_SHARED]       = {1, 0, 0},
+    [MMU_DEVICE_NONSHARED]    = {0, 0, 2},
+    [MMU_NONCACHABLE]         = {0, 0, 1},
+    [MMU_WRITETHRU_NOWRALLOC] = {0, 1, 0},
+    [MMU_WRITEBACK_NOWRALLOC] = {1, 1, 0},
+    [MMU_WRITEBACK_WRALLOC]   = {1, 1, 1}
 };
 
 mmu_sect_t mmu_make_desc(u32 pa, bool s, u8 d, mmu_mem_attr_t a, mmu_ap_t p, bool xn)
 {
     COMPILE_ASSERT(sizeof(mmu_sect_t) == 4);
 
-	mmu_sect_t ret = {0};
-	if (a >= MMU_MEMATTR_INVALID || p >= MMU_AP_INVALID)
-		return ret;
+    mmu_sect_t ret = {0};
+    if (a >= MMU_MEMATTR_INVALID || p >= MMU_AP_INVALID)
+        return ret;
 
-	ret.type = 2;
-	ret.bufferable = mmu_mem_attrs[a][0];
-	ret.cachable = mmu_mem_attrs[a][1];
-	ret.xn = (xn == true) ? 1 : 0;
-	ret.domain = d;
-	ret.ecc_enabled = 0;
-	ret.ap = mmu_aps[p][0];
-	ret.tex = mmu_mem_attrs[a][2];
-	ret.apx = mmu_aps[p][1];
-	ret.shared = (s == true) ? 1 : 0;
-	ret.notg = 0;
-	ret.address = pa >> 20;
+    ret.type = 2;
+    ret.bufferable = mmu_mem_attrs[a][0];
+    ret.cachable = mmu_mem_attrs[a][1];
+    ret.xn = (xn == true) ? 1 : 0;
+    ret.domain = d;
+    ret.ecc_enabled = 0;
+    ret.ap = mmu_aps[p][0];
+    ret.tex = mmu_mem_attrs[a][2];
+    ret.apx = mmu_aps[p][1];
+    ret.shared = (s == true) ? 1 : 0;
+    ret.notg = 0;
+    ret.address = pa >> 20;
 
-	return ret;
+    return ret;
 }

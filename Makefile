@@ -1,5 +1,5 @@
 ifeq ($(strip $(DEVKITARM)),)
-$(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
+$(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM>")
 endif
 
 include $(DEVKITARM)/base_tools
@@ -13,25 +13,24 @@ export ASFLAGS := -x assembler-with-cpp -ggdb
 export CFLAGS  := -O2 -std=c99 -pipe -fomit-frame-pointer \
                   -ffunction-sections -ffast-math -Wall -Wextra\
                   -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-main -ggdb
-export LDFLAGS := -Tlink -Wl,--gc-sections,-z,max-page-size=512 -nostartfiles -ggdb
+export LDFLAGS := -Tlink -Wl,--gc-sections,--nmagic,-z,max-page-size=4 -nostartfiles -ggdb
 
 ELF  := oldarm/oldarm.elf mpcore/mpcore.elf
 FIRM := BAX.firm
 
-.PHONY: all firm elf clean
+.PHONY: all firm clean
 all: firm
 
 clean:
-	@set -e; for elf in $(ELF); do \
-		$(MAKE) --no-print-directory -C $$(dirname $$elf) clean; \
-	done
+	@$(foreach elf, $(ELF), \
+		$(MAKE) --no-print-directory -C $$(dirname $(elf)) clean;)
 	@rm -rf $(FIRM) $(OUTDIR)
 
-elf:
-	@set -e; for elf in $(ELF); do \
-		echo "Building $$elf"; \
-		$(MAKE) --no-print-directory -C $$(dirname $$elf); \
-	done
+%.elf: .FORCE
+	@echo "Building $@"
+	@$(MAKE) --no-print-directory -C $(@D)
 
-firm: elf
+firm: $(ELF)
 	firmtool build $(FIRM) -i -D $(ELF) -C NDMA XDMA
+
+.FORCE:

@@ -1,9 +1,9 @@
 #include <asm.h>
 .arm
 
-ASM_FUNCTION boot
-    cpsid if @ Disable interrupts
-    clrex    @ Clear any exclusive locks
+ASM_FUNCTION start
+    cpsid aif @ Disable interrupts & imprecise abort
+    clrex     @ Clear any exclusive locks
 
     mov r0, #0
     mcr p15, 0, r0, c1, c0, 0  @ Clear Auxiliary Control register
@@ -13,7 +13,6 @@ ASM_FUNCTION boot
     mcr p15, 0, r0, c13, c0, 2 @ Clear Thread ID registers
     mcr p15, 0, r0, c13, c0, 3
     mcr p15, 0, r0, c13, c0, 4
-    mcr p15, 0, r0, c15, c12, 0 @ Disable Performance Monitors
 
     mcr p15, 0, r0, c7, c10, 0 @ Writeback Data Cache
     mcr p15, 0, r0, c7, c7, 0  @ Invalidate Data and Instruction Cache
@@ -25,7 +24,8 @@ ASM_FUNCTION boot
 
     ldr r0, =0x54078 @ Control Register reset value
     mcr p15, 0, r0, c1, c0, 0
-    @ At this point all caches and the MMU are guaranteed to be disabled
+    NOP_SLED 8
+
 
     @ Setup stacks
     cpsid if, #SR_ABT
@@ -34,8 +34,9 @@ ASM_FUNCTION boot
     cpsid if, #SR_UND
     ldr sp, =__stack_abt
 
-    cpsid if, #SR_SVC
+    cpsid if, #SR_SYS
     ldr sp, =__stack_svc
+
 
     @ Clear BSS section
     mov r0, #0
@@ -45,6 +46,7 @@ ASM_FUNCTION boot
         cmp r1, r2
         strlo r0, [r1], #4
         blo .LClearBSS
+
 
     @ VFPv2 init
     @ Thanks derrek & profi200 for saving me from becoming bald
@@ -56,6 +58,7 @@ ASM_FUNCTION boot
     mcr p15, 0, r0, c7, c5, 4   @ Flush Prefetch Buffer
     fmxr fpexc, r2              @ Write Floating-point exception register
     fmxr fpscr, r3              @ Write Floating-Point Status and Control Register
+
 
     @ Heap init
     ldr r0, =fake_heap_start

@@ -8,12 +8,12 @@
 *.mp4
 *.webm
 *.rgb
-*.bax
 
 # Windows-isms
 Thumbs.db
 
 # Other stuff
+*.i64
 *.id*
 *.nam
 *.til

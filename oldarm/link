@@ -1,60 +1,66 @@
 OUTPUT_FORMAT("elf32-littlearm")
 OUTPUT_ARCH(arm)
-ENTRY(boot)
+ENTRY(bootstrap)
 
 MEMORY
 {
-  AHBRAM (RWX) : ORIGIN = 0x08006000, LENGTH = 0xFA000
-  ITCM   (RWX) : ORIGIN = 0x00000000, LENGTH = 0x3700
-  DTCM   (RWX) : ORIGIN = 0x30000000, LENGTH = 0x4000
+  AHBRAM  (RWX) : ORIGIN = 0x08006000, LENGTH = 0xFA000
+  VECTORS (RWX) : ORIGIN = 0x00000000, LENGTH = 0x100
+  ITCM    (RWX) : ORIGIN = 0x00000100, LENGTH = 0x3600
+  DTCM    (RW)  : ORIGIN = 0x30000000, LENGTH = 0x4000
 }
 
 SECTIONS
 {
-    .text :
+    .bootstrap : ALIGN(4)
     {
+        KEEP(*(.bootstrap))
+    } >AHBRAM
+
+    .vectors : ALIGN(4)
+    {
+        __vectors_lma = LOADADDR(.vectors);
+        __vectors_s = ABSOLUTE(.);
+        KEEP(*(.vectors))
         . = ALIGN(4);
-        __text_s = .;
-        *(.text.boot)
+        __vectors_e = ABSOLUTE(.);
+    } >VECTORS AT>AHBRAM
+
+    .text : ALIGN(4)
+    {
+        __text_lma = LOADADDR(.text);
+        __text_s = ABSOLUTE(.);
+        *(.text.start)
         *(.text*)
         . = ALIGN(4);
-        __text_e = .;
-    } >AHBRAM
+        __text_e = ABSOLUTE(.);
+    } >ITCM AT>AHBRAM
 
-    .data :
+    .data : ALIGN(4)
     {
+        __data_lma = LOADADDR(.data);
+        __data_s = ABSOLUTE(.);
+        *(.data*)
+        *(.rodata*)
         . = ALIGN(4);
-        __data_s = .;
-        *(.data*);
-        . = ALIGN(4);
-        __data_e = .;
-    } >AHBRAM
+        __data_e = ABSOLUTE(.);
+    } >DTCM AT>AHBRAM
 
-    .rodata :
+    .bss (NOLOAD) : ALIGN(4)
     {
+        __bss_s = ABSOLUTE(.);
+        *(.bss*)
         . = ALIGN(4);
-        __rodata_s = .;
-        *(.rodata*);
-        *(COMMON);
-        . = ALIGN(4);
-        __rodata_e = .;
-    } >AHBRAM
-
-    .bss (NOLOAD) :
-    {
-        . = ALIGN(4);
-        __bss_s = .;
-        *(.bss*);
-        . = ALIGN(4);
-        __bss_e = .;
-    } >AHBRAM
-
-    __stack_irq = ORIGIN(DTCM) + LENGTH(DTCM);
-    __stack_abt = __stack_irq - 0x1000;
-    __stack_sys = __stack_abt - 0x1000;
+        __bss_e = ABSOLUTE(.);
+    } >DTCM
 
     __end__ = ABSOLUTE(.);
 
     __heap_end = ORIGIN(AHBRAM) + LENGTH(AHBRAM);
     __heap_start = __end__;
+
+    __stack_irq = ORIGIN(DTCM) + LENGTH(DTCM);
+    __stack_abt = __stack_irq - 0x2000;
+    __stack_sys = __stack_abt - 0x200;
+
 }

@@ -29,6 +29,12 @@
 \f:
 .endm
 
+.macro NOP_SLED c
+    .rept \c
+    mov r0, r0
+    .endr
+.endm
+
 .macro XRQ_FATAL n, h
 	#ifdef ARM11
 	cpsid aif

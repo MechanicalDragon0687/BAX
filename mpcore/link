@@ -1,6 +1,6 @@
 OUTPUT_FORMAT("elf32-littlearm")
 OUTPUT_ARCH(arm)
-ENTRY(boot)
+ENTRY(start)
 
 MEMORY
 {
@@ -9,48 +9,34 @@ MEMORY
 
 SECTIONS
 {
-    .text :
+    .text : ALIGN(4)
     {
-        . = ALIGN(4);
-        __text_s = .;
-        *(.text.boot)
+        __text_s = ABSOLUTE(.);
+        *(.text.start)
         *(.text*)
         . = ALIGN(4);
-        __text_e = .;
+        __text_e = ABSOLUTE(.);
     } >AXIRAM
 
-    .data :
+    .data : ALIGN(4)
     {
+        __data_s = ABSOLUTE(.);
+        *(.data*)
+        *(.rodata*)
         . = ALIGN(4);
-        __data_s = .;
-        *(.data*);
-        . = ALIGN(4);
-        __data_e = .;
+        __data_e = ABSOLUTE(.);
     } >AXIRAM
 
-    .rodata :
+    .bss : ALIGN(4)
     {
+        __bss_s = ABSOLUTE(.);
+        *(.bss*)
         . = ALIGN(4);
-        __rodata_s = .;
-        *(.rodata*);
-        *(COMMON);
-        . = ALIGN(4);
-        __rodata_e = .;
-    } >AXIRAM
-
-    .bss (NOLOAD) :
-    {
-        . = ALIGN(4);
-        __bss_s = .;
-        *(.bss*);
-        . = ALIGN(4);
-        __bss_e = .;
+        __bss_e = ABSOLUTE(.);
     } >AXIRAM
 
     __stack_top = ORIGIN(AXIRAM) + LENGTH(AXIRAM);
     __stack_abt = __stack_top;
     __stack_svc = __stack_abt - 0x3000;
     __end__ = ABSOLUTE(.);
-
-    ASSERT((__stack_svc - ORIGIN(AXIRAM)) > 0x18000, "Error: not enough stack available! (<96K)")
 }

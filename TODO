@@ -1,7 +1,5 @@
 - testing, lots of it
 
-- move the ARM9 code to ITCM and data/bss to DTCM
-
 - add firmlaunch code to ARM9 (need more documentation...)
 
 - figure out EMMC + NDMA (dope af, maybe nocash knows?)

@@ -11,7 +11,7 @@ void timer_reset(void)
 
 void timer_start(u32 ticks, bool arel, bool irq)
 {
-	u32 tcnt;
+    u32 tcnt;
     timer_reset();
     *TIMER_LOAD = ticks;
 
@@ -25,12 +25,12 @@ void timer_start(u32 ticks, bool arel, bool irq)
 
 void timer_stop(void)
 {
-	*TIMER_CONTROL = 0;
-	*TIMER_STICKY = 1;
-	return;
+    *TIMER_CONTROL = 0;
+    *TIMER_STICKY = 1;
+    return;
 }
 
 u32 timer_ticks(void)
 {
-	return *TIMER_COUNT;
+    return *TIMER_COUNT;
 }
