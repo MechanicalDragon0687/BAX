@@ -7,10 +7,10 @@ ASM_FUNCTION start
     mov r4, #0
     ldr r5, =__bss_s
     ldr r6, =__bss_e
-    .LClearBSS:
+    1:
         cmp r5, r6
         strlo r4, [r5], #4
-        blo .LClearBSS
+        blo 1b
 
     @ Preserve registers to be passed to low level boot code
     ldr r4, =bootregs
@@ -93,9 +93,9 @@ ASM_FUNCTION start
 
 
     @ Branch to C code
-    ldr r4, =main
+    ldr r12, =main
     ldr r0, =bootregs
-    bx r4
+    bx r12
 
 
 .section .rodata.mpu_regions

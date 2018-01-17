@@ -54,7 +54,7 @@ void _dsb(void)
     return;
 }
 
-NOINLINE void _invalidate_IC(void)
+void _invalidate_IC(void)
 {
     __asm__ __volatile__(
         "mcr p15, 0, %0, c7, c5, 0\n\t"
@@ -65,7 +65,7 @@ NOINLINE void _invalidate_IC(void)
     return;
 }
 
-NOINLINE void _invalidate_IC_range(const void *base, u32 len)
+void _invalidate_IC_range(const void *base, u32 len)
 {
     u32 addr = (u32)base & ~0x1F;
     len >>= 5;
@@ -83,7 +83,7 @@ NOINLINE void _invalidate_IC_range(const void *base, u32 len)
     return;
 }
 
-NOINLINE void _invalidate_DC(void)
+void _invalidate_DC(void)
 {
     __asm__ __volatile__(
         "mcr p15, 0, %0, c7, c6, 0\n\t"
@@ -93,7 +93,7 @@ NOINLINE void _invalidate_DC(void)
     return;
 }
 
-NOINLINE void _invalidate_DC_range(const void *base, u32 len)
+void _invalidate_DC_range(const void *base, u32 len)
 {
     u32 addr = (u32)base & ~0x1F;
     len >>= 5;
@@ -109,7 +109,7 @@ NOINLINE void _invalidate_DC_range(const void *base, u32 len)
     return;
 }
 
-NOINLINE void _writeback_DC(void)
+void _writeback_DC(void)
 {
     #ifdef ARM9
     u32 seg=0, ind;
@@ -136,7 +136,7 @@ NOINLINE void _writeback_DC(void)
     return;
 }
 
-NOINLINE void _writeback_DC_range(const void *base, u32 len)
+void _writeback_DC_range(const void *base, u32 len)
 {
     u32 addr = (u32)base & ~0x1F;
     len >>= 5;
@@ -152,7 +152,7 @@ NOINLINE void _writeback_DC_range(const void *base, u32 len)
     return;
 }
 
-NOINLINE void _writeback_invalidate_DC(void)
+void _writeback_invalidate_DC(void)
 {
     #ifdef ARM9
     u32 seg = 0, ind;
@@ -179,7 +179,7 @@ NOINLINE void _writeback_invalidate_DC(void)
     return;
 }
 
-NOINLINE void _writeback_invalidate_DC_range(const void *base, u32 len)
+void _writeback_invalidate_DC_range(const void *base, u32 len)
 {
     u32 addr = (u32)base & ~0x1F;
     len >>= 5;
@@ -195,7 +195,7 @@ NOINLINE void _writeback_invalidate_DC_range(const void *base, u32 len)
     return;
 }
 
-NOINLINE void _fuck_caches(void)
+void _fuck_caches(void)
 {
     #ifdef ARM9
     _invalidate_DC();

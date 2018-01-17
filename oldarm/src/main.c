@@ -17,24 +17,26 @@
 #include "hw/int.h"
 #include "hw/sdmmc.h"
 
+#include "lib/firm/firm.h"
+
+static u32 entrypoint;
 void fill_sysinfo(sysinfo_t *info)
 {
     info->sysprot = *(u8*)0x10000000;
     info->bootenv = *(u32*)0x10010000;
     info->rndseed = *(u32*)0x10011000;
+    info->entrypn = 0;
     return;
 }
 
 void pxi_handler(u32 irqn)
 {
-    //memset((void*)0x18000000, 0xFF, 6*1024*1024);
-    //while(1) _wfi();
     u8 cmd;
-    u32 pxia[PXICMD_MAX_ARGC];
+    u32 pxia[PXICMD_MAX_ARGC], pxic;
     int resp = 0;
 
-    cmd = pxicmd_recv(pxia);
-    switch(PXICMD_CMDID(cmd))
+    cmd = pxicmd_recv(pxia, &pxic);
+    switch(cmd)
     {
         case PXICMD_ARM9_SYSINFO:
         {
@@ -68,5 +70,6 @@ void main(u32 *args)
 {
     irq_register(IRQ_PXI_SYNC, pxi_handler);
     pxi_reset();
+
     while(1) _wfi();
 }

@@ -20,10 +20,10 @@ u64 timer_ticks(void);
 
 static inline u64 timer_ms_to_ticks(u64 ms)
 {
-	return (TIMER_FREQ * ms) / 1000;
+    return (TIMER_FREQ * ms) / 1000;
 }
 
 static inline u64 timer_ticks_to_ms(u64 ticks)
 {
-	return (ticks * 1000) / TIMER_FREQ;
+    return (ticks * 1000) / TIMER_FREQ;
 }

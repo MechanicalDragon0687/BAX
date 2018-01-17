@@ -1,6 +1,6 @@
 - testing, lots of it
 
-- add firmlaunch code to ARM9 (need more documentation...)
+- finish the firmlaunch stuff
 
 - figure out EMMC + NDMA (dope af, maybe nocash knows?)
 

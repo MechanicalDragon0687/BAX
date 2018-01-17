@@ -1,4 +1,6 @@
 #include <common.h>
+#include <vram.h>
+
 #include "hw/gx.h"
 
 static u32 selfb = 0;
@@ -14,6 +16,22 @@ const u32 gx_framebuffer_strides[GL_INVALID] = {
     [GL_RGB5_A1] = 480,
     [GL_RGBA4]   = 480
 };
+
+const gx_framebuffers_t _fallback_framebuffers = 
+{
+    {{VRAM_START, VRAM_START},
+    {VRAM_START, VRAM_START},
+    {VRAM_START, VRAM_START}}
+};
+
+
+void gx_reset(void)
+{
+    gx_psc_fill(VRAM_START, VRAM_SIZE, 0x00000000, PSC_FILL32);
+    gx_set_framebuffer_mode(GL_RGB565);
+    gx_set_framebuffers(&_fallback_framebuffers);
+    return;
+}
 
 void gx_psc_fill_async(u32 start, u32 len, u32 fv, gx_psc_mode mode)
 {

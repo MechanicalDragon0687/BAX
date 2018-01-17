@@ -11,7 +11,7 @@ NOINLINE int pxicmd_send(u32 cmd_id, const u32 *args, u32 argc)
     // TODO: bugcheck
     if ((u32)pxi_send_FIFO_data(args, argc) != argc) { ; }
 
-    pxi_set_remote(PXICMD_MAKE(cmd_id, argc));
+    pxi_set_remote(cmd_id);
     pxi_sync();
 
     // wait for reply, possibly add a timeout?
@@ -22,10 +22,12 @@ NOINLINE int pxicmd_send(u32 cmd_id, const u32 *args, u32 argc)
     return ret;
 }
 
-NOINLINE u8 pxicmd_recv(u32 *args)
+NOINLINE u8 pxicmd_recv(u32 *args, u32 *argc)
 {
+    u32 count;
     u8 cmd = pxi_get_remote();
-    pxi_recv_FIFO_data(args, PXICMD_ARGC(cmd));
+    count = pxi_recv_FIFO_data(args, PXICMD_MAX_ARGC);
+    if (argc) *argc = count;
     return cmd;
 }
 

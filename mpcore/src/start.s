@@ -1,4 +1,5 @@
 #include <asm.h>
+#include "arm/mmu.h"
 .arm
 
 ASM_FUNCTION start
@@ -38,14 +39,14 @@ ASM_FUNCTION start
     ldr sp, =__stack_svc
 
 
-    @ Clear BSS section
+    @ Clear BSS
     mov r0, #0
     ldr r1, =__bss_s
     ldr r2, =__bss_e
-    .LClearBSS:
+    1:
         cmp r1, r2
         strlo r0, [r1], #4
-        blo .LClearBSS
+        blo 1b
 
 
     @ VFPv2 init
@@ -60,6 +61,105 @@ ASM_FUNCTION start
     fmxr fpscr, r3              @ Write Floating-Point Status and Control Register
 
 
+    @ Device reset
+    bl gx_reset
+    bl irq_reset
+    bl mmu_reset
+    bl hid_reset
+    bl timer_reset
+
+
+    @ Install exception handlers
+    ldr r0, =0x1FFFFFA0
+    ldr r1, =vectors_s
+    ldr r2, =vectors_e
+    subs r2, r2, r1
+    1:
+        subs r2, r2, #4
+        ldrpl r3, [r1, r2]
+        strpl r3, [r0, r2]
+        bpl 1b
+
+
+    @ MMU Translation Table setup
+    @ BootROM
+    ldr r3, =(MMU_PAGE_DOMAIN(0) | MMU_MEM_NONCACHEABLE | MMU_AP_RO_NA | MMU_PAGE_SECTION)
+    mov r2, #1 
+    ldr r1, =0x00000000
+    mov r0, r1
+    bl mmu_map_section
+
+
+    @ IO Registers
+    ldr r3, =(MMU_PAGE_DOMAIN(0) | MMU_MEM_DEVICE_NONSHARED | MMU_AP_RW_NA | MMU_PAGE_XN | MMU_PAGE_SECTION)
+    mov r2, #4
+    ldr r1, =0x10100000
+    mov r0, r1
+    bl mmu_map_section
+
+
+    @ MPCore Private Memory Region
+    ldr r3, =(MMU_PAGE_DOMAIN(0) | MMU_MEM_DEVICE_NONSHARED | MMU_AP_RW_NA | MMU_PAGE_XN | MMU_PAGE_SECTION)
+    mov r2, #1
+    ldr r1, =0x17E00000
+    mov r0, r1
+    bl mmu_map_section
+
+
+    @ VRAM
+    ldr r3, =(MMU_PAGE_DOMAIN(0) | MMU_MEM_WRITETHRU_NOWRALLOC | MMU_AP_RW_NA | MMU_PAGE_XN | MMU_PAGE_SECTION)
+    mov r2, #6
+    ldr r1, =0x18000000
+    mov r0, r1
+    bl mmu_map_section
+
+
+    @ AXI BUS Work RAM
+    ldr r3, =(MMU_PAGE_DOMAIN(0) | MMU_MEM_WRITEBACK_WRALLOC | MMU_AP_RW_NA | MMU_PAGE_SECTION)
+    mov r2, #1
+    ldr r1, =0x1FF00000
+    mov r0, r1
+    bl mmu_map_section
+
+
+    @ FCRAM
+    ldr r3, =(MMU_PAGE_DOMAIN(0) | MMU_MEM_WRITEBACK_WRALLOC | MMU_AP_RW_NA | MMU_PAGE_XN | MMU_PAGE_SECTION)
+    mov r2, #128
+    ldr r1, =0x20000000
+    mov r0, r1
+    bl mmu_map_section
+
+
+    @ BootROM mirror
+    ldr r3, =(MMU_PAGE_DOMAIN(0) | MMU_MEM_NONCACHEABLE | MMU_AP_RO_NA | MMU_PAGE_SECTION)
+    mov r2, #1
+    ldr r1, =0xFFF00000
+    mov r0, r1
+    bl mmu_map_section
+
+
+    @ Set up the TTBR and invalidate the entire TLB
+    ldr r0, =mmu_tt
+    orr r0, r0, #0x12
+    bl mmu_set_ttbr
+    bl mmu_invalidate_tlb
+    NOP_SLED 4
+
+
+    @ Enable return stack, branch prediction and instruction folding
+    mov r0, #0xF
+    mcr p15, 0, r0, c1, c0, 1
+    NOP_SLED 4
+
+
+    @ Enable MMU, caches, enable program flow prediction, disable subpages, enable unaligned access
+    ldr r1, =0xC01805
+    mrc p15, 0, r0, c1, c0, 0
+    orr r0, r0, r1
+    mcr p15, 0, r0, c1, c0, 0
+    NOP_SLED 4
+
+
     @ Heap init
     ldr r0, =fake_heap_start
     ldr r1, =0x20000000
@@ -69,11 +169,8 @@ ASM_FUNCTION start
     ldr r1, =0x28000000
     str r1, [r0]
 
+    @ Enable interrupts
+    cpsie i
 
-    @ Device initialization (reset, setup, etc)
-    @ Branches to main code
-    bl ll_init
-
-    cpsid i
-    wfi
-    b .
+    ldr r12, =main
+    bx r12

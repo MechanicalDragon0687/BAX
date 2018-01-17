@@ -38,7 +38,9 @@ typedef volatile s64 vs64;
 
 #define ALIGNV(x)    __attribute__((aligned((x))))
 #define UNUSED       __attribute__((unused))
+#define NORETURN     __attribute__((noreturn))
 #define NOINLINE     __attribute__((noinline))
+#define PACKED       __attribute__((packed))
 
 // Extend char to integer
 #define EXTENDET(x)  ((x) << 24 | (x) << 16 | (x) << 8 | (x))

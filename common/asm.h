@@ -20,6 +20,7 @@
 #define SR_I   (1 << 7)
 
 #ifdef __ASSEMBLER__
+/* Function declaration macro */
 .macro ASM_FUNCTION f
     .section .text.\f, "ax", %progbits
 
@@ -29,17 +30,20 @@
 \f:
 .endm
 
+
 .macro NOP_SLED c
     .rept \c
     mov r0, r0
     .endr
 .endm
 
+
+/* Fatal exception initial handler (xrq-specific) */
 .macro XRQ_FATAL n, h
-	#ifdef ARM11
-	cpsid aif
-	clrex
-	#endif
+    #ifdef ARM11
+    cpsid aif
+    clrex
+    #endif
 
     ldr sp, =__stack_abt
     sub sp, sp, #(XRQ_REG_COUNT*4)
@@ -49,6 +53,8 @@
     b \h
 .endm
 
+
+/* Fatal exception secondary handler */
 .macro XRQ_FATAL_HANDLER h
     mrs r10, spsr
     mrs r11, cpsr
@@ -69,7 +75,7 @@
     subne r3, lr, #3
     subeq r3, lr, #4
 
-    stmia r9!, {r1, r2, r3, r10, r11}
+    stmia r9!, {r1-r3, r10, r11}
 
     #ifdef ARM11
     mrc p15, 0, r0, c2, c0, 0   @ TTBR
@@ -80,9 +86,10 @@
     stmia r9!, {r0-r4}
     #endif
 
+    ldr r4, =\h
     mov r0, r12
     mov r1, sp
     bic sp, sp, #7 @ Align stack to an 8 byte boundary
-    b \h
+    bx r4
 .endm
 #endif

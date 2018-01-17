@@ -4,6 +4,8 @@
 
 #define GX_DIM(w,h) ((u32)(((h) << 16) | (w)))
 
+void gx_reset(void);
+
 typedef enum gx_screen
 {
     GFX_TOPL = 0,

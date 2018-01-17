@@ -32,11 +32,11 @@ u32 timer_ticks(void);
 // Convert miliseconds to timer ticks
 static inline u32 timer_ms_to_ticks(float ms)
 {
-	return ms * TIMER_CONV_FACTOR;
+    return ms * TIMER_CONV_FACTOR;
 }
 
 // Convert timer ticks to miliseconds
 static inline float timer_ticks_to_ms(u32 ticks)
 {
-	return (float)ticks / TIMER_CONV_FACTOR;
+    return (float)ticks / TIMER_CONV_FACTOR;
 }

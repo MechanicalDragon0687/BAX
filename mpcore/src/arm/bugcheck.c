@@ -6,7 +6,7 @@
 #include "hw/lcd.h"
 #include "console.h"
 
-extern const gx_framebuffers_t _default_framebuffers;
+extern const gx_framebuffers_t _fallback_framebuffers;
 void _bugcheck(const char *str)
 {
     _disable_irqs();
@@ -14,10 +14,10 @@ void _bugcheck(const char *str)
     _invalidate_IC();
 
     gx_select_buffers(0);
-    gx_set_framebuffers(&_default_framebuffers);
+    gx_set_framebuffers(&_fallback_framebuffers);
     lcd_stop_fill();
 
-    console_reset((u16*)_default_framebuffers.addr[0][0], 400);
+    console_reset((u16*)_fallback_framebuffers.addr[0][0], 400);
     console_puts(str);
     while(1) _wfi();
 }
