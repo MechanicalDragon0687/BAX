@@ -2,7 +2,7 @@
 
 #include <common.h>
 
-#define FRB_MAX (2048)
+#define FRB_MAX (256)
 
 typedef struct {
     u32 *data[FRB_MAX]; // Pointers to framebuffers

@@ -1,19 +1,15 @@
 #include <common.h>
+#include <cache.h>
 #include <cpu.h>
 #include <sys.h>
-
-#define CACHE_CODE
-#include <cache.h>
 
 #define PXI_CODE
 #include <pxi.h>
 
-#define IRQ_CODE
-#include <irq.h>
-
 #define PXICMD_CODE
 #include <pxicmd.h>
 
+#include "arm/irq.h"
 #include "hw/int.h"
 #include "hw/sdmmc.h"
 

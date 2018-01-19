@@ -99,6 +99,21 @@ static inline u32 _read_CR(void)
     return cr;
 }
 
+static inline u32 _coreID(void)
+{
+    u32 id;
+    #ifdef ARM9
+    id = 0;
+    #else
+    __asm__ __volatile__ (
+        "mrc p15, 0, %0, c0, c0, 5\n\t"
+        : "=r"(id)
+    );
+    id &= 3;
+    #endif
+    return id;
+}
+
 #ifdef ARM11
 static inline void _wfe(void)
 {

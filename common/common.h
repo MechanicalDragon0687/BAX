@@ -6,6 +6,13 @@
 #endif
 #endif
 
+#undef CORE_COUNT
+#ifdef ARM9
+#define CORE_COUNT (1)
+#else
+#define CORE_COUNT (4)
+#endif
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

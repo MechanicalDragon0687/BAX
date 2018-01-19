@@ -12,45 +12,45 @@ MEMORY
 
 SECTIONS
 {
-    .bootstrap : ALIGN(4)
+    .bootstrap : ALIGN(16)
     {
         KEEP(*(.bootstrap))
     } >AHBRAM
 
-    .vectors : ALIGN(4)
+    .vectors : ALIGN(16)
     {
         __vectors_lma = LOADADDR(.vectors);
         __vectors_s = ABSOLUTE(.);
         KEEP(*(.vectors))
-        . = ALIGN(4);
+        . = ALIGN(16);
         __vectors_e = ABSOLUTE(.);
     } >VECTORS AT>AHBRAM
 
-    .text : ALIGN(4)
+    .text : ALIGN(16)
     {
         __text_lma = LOADADDR(.text);
         __text_s = ABSOLUTE(.);
         *(.text.start)
         *(.text*)
-        . = ALIGN(4);
+        . = ALIGN(16);
         __text_e = ABSOLUTE(.);
     } >ITCM AT>AHBRAM
 
-    .data : ALIGN(4)
+    .data : ALIGN(16)
     {
         __data_lma = LOADADDR(.data);
         __data_s = ABSOLUTE(.);
         *(.data*)
         *(.rodata*)
-        . = ALIGN(4);
+        . = ALIGN(16);
         __data_e = ABSOLUTE(.);
     } >DTCM AT>AHBRAM
 
-    .bss (NOLOAD) : ALIGN(4)
+    .bss (NOLOAD) : ALIGN(16)
     {
         __bss_s = ABSOLUTE(.);
         *(.bss*)
-        . = ALIGN(4);
+        . = ALIGN(16);
         __bss_e = ABSOLUTE(.);
     } >DTCM
 
@@ -60,7 +60,6 @@ SECTIONS
     __heap_start = __end__;
 
     __stack_irq = ORIGIN(DTCM) + LENGTH(DTCM);
-    __stack_abt = __stack_irq - 0x2000;
-    __stack_sys = __stack_abt - 0x200;
-
+    __stack_abt = __stack_irq - 0x1C00;
+    __stack_sys = __stack_abt - 0x400;
 }

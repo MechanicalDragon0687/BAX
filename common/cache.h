@@ -2,51 +2,213 @@
 
 #include <common.h>
 
-// Drain Branch Target Cache
-void _dbt(void);
+#ifdef ARM9
+static inline void _dbt(void)
+{
+    return;
+}
 
-// Drain Prefetch Buffer
-void _dpb(void);
+static inline void _dpb(void)
+{
+    return;
+}
 
-// Data Memory Barrier
-void _dmb(void);
+static inline void _dmb(void)
+{
+    return;
+}
+#else
+static inline void _dbt(void)
+{
+    __asm__ __volatile__(
+        "mcr p15, 0, %0, c7, c5, 6\n\t"
+        : : "r"(0) : "memory"
+    );
+    return;
+}
 
-// Data Sync Barrier / Drain Write Buffer
-void _dsb(void);
+static inline void _dpb(void)
+{
+    __asm__ __volatile__(
+        "mcr p15, 0, %0, c7, c5, 4"
+        : : "r"(0) : "memory"
+    );
+    return;
+}
 
-
-// Invalidate the entire Instruction Cache
-void _invalidate_IC(void);
-
-// Invalidate Instruction Cache in the range <base, base + len>
-void _invalidate_IC_range(const void *base, u32 len);
-
-
-// Invalidate the entire Data Cache
-void _invalidate_DC(void);
-
-// Invalidate Data Cache in the range <base, base + len>
-void _invalidate_DC_range(const void *base, u32 len);
-
-
-// Writeback the entire Data Cache
-void _writeback_DC(void);
-
-// Writeback the Data Cache in the range <base, base + len>
-void _writeback_DC_range(const void *base, u32 len);
-
-
-// Writeback and invalidate the entire Data Cache
-void _writeback_invalidate_DC(void);
-
-// Writeback and invalidate the Data Cache in the range <base, base + len>
-void _writeback_invalidate_DC_range(const void *base, u32 len);
-
-
-// TODO: Find a better function name
-// Magic voodoo, use only when absolutely necessary
-void _fuck_caches(void);
-
-#ifdef CACHE_CODE
-#include <cache.c>
+static inline void _dmb(void)
+{
+    __asm__ __volatile__(
+        "mcr p15, 0, %0, c7, c10, 5\n\t"
+        : : "r"(0) : "memory"
+    );
+    return;
+}
 #endif
+
+static inline void _dsb(void)
+{
+    __asm__ __volatile__(
+        "mcr p15, 0, %0, c7, c10, 4\n\t"
+        : : "r"(0) : "memory"
+    );
+    return;
+}
+
+static inline void _invalidate_IC(void)
+{
+    __asm__ __volatile__(
+        "mcr p15, 0, %0, c7, c5, 0\n\t"
+        : : "r"(0) : "memory"
+    );
+    _dsb();
+    _dpb();
+    return;
+}
+
+static inline void _invalidate_IC_range(const void *base, u32 len)
+{
+    u32 addr = (u32)base & ~0x1F;
+    len >>= 5;
+    do
+    {
+        __asm__ __volatile__(
+            "mcr p15, 0, %0, c7, c5, 1\n\t"
+            : : "r"(addr) : "memory"
+        );
+        addr += 0x20;
+    } while(len--);
+    _dbt();
+    _dsb();
+    _dpb();
+    return;
+}
+
+static inline void _invalidate_DC(void)
+{
+    __asm__ __volatile__(
+        "mcr p15, 0, %0, c7, c6, 0\n\t"
+        : : "r"(0) : "memory"
+    );
+    _dsb();
+    return;
+}
+
+static inline void _invalidate_DC_range(const void *base, u32 len)
+{
+    u32 addr = (u32)base & ~0x1F;
+    len >>= 5;
+    do
+    {
+        __asm__ __volatile__(
+            "mcr p15, 0, %0, c7, c6, 1"
+            : : "r"(addr) : "memory"
+        );
+        addr += 0x20;
+    } while(len--);
+    _dsb();
+    return;
+}
+
+static inline void _writeback_DC(void)
+{
+    #ifdef ARM9
+    u32 seg=0, ind;
+    do
+    {
+        ind=0;
+        do
+        {
+            __asm__ __volatile__(
+                "mcr p15, 0, %0, c7, c10, 2\n\t"
+                : : "r"(seg | ind) : "memory"
+            );
+            ind += 0x20;
+        } while(ind < 0x400);
+        seg += 0x40000000;
+    } while(seg);
+    #else
+    __asm__ __volatile__(
+        "mcr p15, 0, %0, c7, c10, 0\n\t"
+        : : "r"(0) : "memory"
+    );
+    #endif
+    _dsb();
+    return;
+}
+
+static inline void _writeback_DC_range(const void *base, u32 len)
+{
+    u32 addr = (u32)base & ~0x1F;
+    len >>= 5;
+    do
+    {
+        __asm__ __volatile__(
+            "mcr p15, 0, %0, c7, c10, 1"
+            : : "r"(addr) : "memory"
+        );
+        addr += 0x20;
+    } while(len--);
+    _dsb();
+    return;
+}
+
+static inline void _writeback_invalidate_DC(void)
+{
+    #ifdef ARM9
+    u32 seg = 0, ind;
+    do
+    {
+        ind = 0;
+        do
+        {
+            __asm__ __volatile__(
+                "mcr p15, 0, %0, c7, c14, 2\n\t"
+                : : "r"(seg|ind) : "memory"
+            );
+            ind += 0x20;
+        } while(ind < 0x400);
+        seg += 0x40000000;
+    } while(seg);
+    #else
+    __asm__ __volatile__(
+        "mcr p15, 0, %0, c7, c14, 0\n\t"
+        : : "r"(0) : "memory"
+    );
+    #endif
+    _dsb();
+    return;
+}
+
+static inline void _writeback_invalidate_DC_range(const void *base, u32 len)
+{
+    u32 addr = (u32)base & ~0x1F;
+    len >>= 5;
+    do
+    {
+        __asm__ __volatile__(
+            "mcr p15, 0, %0, c7, c14, 1"
+            : : "r"(addr) : "memory"
+        );
+        addr += 0x20;
+    } while(len--);
+    _dsb();
+    return;
+}
+
+static inline void _fuck_caches(void)
+{
+    #ifdef ARM9
+    _invalidate_DC();
+    _invalidate_IC();
+    _dsb();
+    #else
+    __asm__ __volatile__(
+        "mcr p15, 0, %0, c7, c7, 0\n\t"
+        : : "r"(0) : "memory"
+    );
+    _dsb();
+    _dmb();
+    #endif
+    return;
+}

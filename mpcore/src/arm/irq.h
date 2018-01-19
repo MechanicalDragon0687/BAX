@@ -1,11 +1,6 @@
 #pragma once
 
-#ifdef ARM9
-
-#define IRQ_BASE  ((vu32*)0x10001000)
-#define IRQ_COUNT (29)
-
-#else
+#define IRQ_COUNT (128)
 
 #define GIC_BASE  (0x17E00100) // MPCore PMR
 #define DIC_BASE  (0x17E01000)
@@ -27,32 +22,13 @@
 #define DIC_TARGETPROC ((vu8*) (DIC_BASE + 0x800))
 #define DIC_CFGREG     ((vu32*)(DIC_BASE + 0xC00))
 
-#define IRQ_COUNT (128)
-#endif
-
 typedef void (*isr_t)(u32 irqn);
-
-#ifdef IRQ_CODE
-#include <irq.c>
-#endif
 
 // Reinitialize the interrupt controller
 void irq_reset(void);
 
 // Enable the interrupt and register a handler in case it's triggered
-void irq_register(u32 irqn, isr_t handler);
+void irq_register(u32 irqn, isr_t handler, u32 core);
 
 // Disable interrupt
-void irq_deregister(u32 irqn);
-
-// Acknowledge interrupt
-void irq_ack(u32 irqn);
-
-// Get highest priority pending interrupt
-u32  irq_pending(void);
-
-// Get interrupt handler
-isr_t irq_handler(u32 irqn);
-
-// Check interrupt status
-bool irq_enabled(u32 irqn);
+void irq_deregister(u32 irqn, u32 core);

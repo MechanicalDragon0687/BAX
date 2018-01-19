@@ -21,41 +21,38 @@ ASM_FUNCTION xrq_fatal_handler
     XRQ_FATAL_HANDLER __xrq_dummy
 
 ASM_FUNCTION __xrq_dummy
-    mov r0, #0xFFFFFFFF
+    ldr r0, =0xF800001F
     mov r1, #0x18000000
     mov r2, #0x00600000
-    __xrq_dummy_clr:
+    1:
         subs r2, r2, #4
         strpl r0, [r1, r2]
-        bpl __xrq_dummy_clr
+        bpl 1b
     b .
 
 
 ASM_FUNCTION xrq_irq
     sub lr, lr, #4
-    push {lr}
-    mrs lr, spsr
-    push {lr}
+    stmfd sp!, {r0-r3, r12, lr}  @ Preserve registers
 
-    tst lr, #0xF
-    orreq lr, lr, #0xF         @ Came from user mode, go to system mode
-    orr lr, lr, #(SR_I | SR_F) @ Disable interrupts
-    bic lr, lr, #(SR_T)        @ Disable Thumb
-    msr cpsr_c, lr
-    push {r0-r5, r12, lr}
+    ldr lr, =0x10001000
+    ldr r12, [lr, #4]            @ Pending IRQ bitmask
 
-    bl irq_pending
-    mov r4, r0
-    bl irq_handler
-    movs r1, r0
-    movne r0, r4
-    blxne r1
-    mov r0, r4
-    bl irq_ack
+    clz r12, r12
+    mov r3, #1
+    rsb r0, r12, #31
 
-    pop {r0-r5, r12, lr}
-    msr cpsr_c, #(SR_IRQ | SR_I | SR_F)
+    cmp r0, #29
+    bhs 1f                       @ Invalid interrupt source
 
-    pop {lr}
-    msr spsr, lr
-    ldmfd sp!, {pc}^
+    lsl r3, r3, r0
+    str r3, [lr, #4]             @ Acknowledge interrupt
+
+    ldr lr, =_irq_handlers
+    ldr r12, [lr, r0, lsl #2]
+
+    cmp r12, #0
+    blxne r12                    @ Execute handler
+
+    1:
+    ldmfd sp!, {r0-r3, r12, pc}^ @ Return from exception

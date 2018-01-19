@@ -29,13 +29,19 @@ ASM_FUNCTION start
 
 
     @ Setup stacks
-    cpsid if, #SR_ABT
-    ldr sp, =__stack_abt
+    cps #SR_SVC
+    mov sp, #0
 
-    cpsid if, #SR_UND
-    ldr sp, =__stack_abt
+    cps #SR_ABT
+    mov sp, #0
 
-    cpsid if, #SR_SYS
+    cps #SR_UND
+    mov sp, #0
+
+    cps #SR_IRQ
+    mov sp, #0
+
+    cps #SR_SYS
     ldr sp, =__stack_svc
 
 
@@ -160,6 +166,12 @@ ASM_FUNCTION start
     NOP_SLED 4
 
 
+    @ Clear GPUPROT (GPU can access all FCRAM + AXIRAM)
+    ldr r0, =0x10140140
+    mov r1, #0
+    str r1, [r0]
+
+
     @ Heap init
     ldr r0, =fake_heap_start
     ldr r1, =0x20000000
@@ -174,3 +186,15 @@ ASM_FUNCTION start
 
     ldr r12, =main
     bx r12
+
+
+deb:
+    mov r0, #0x18000000
+    mov r1, #0x00600000
+    mov r2, #0x1F
+    orr r2, r2, r2, lsl #16
+    1:
+        subs r1, r1, #4
+        strpl r2, [r0, r1]
+        bpl 1b
+    b .

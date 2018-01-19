@@ -4,11 +4,7 @@
 
 - figure out EMMC + NDMA (dope af, maybe nocash knows?)
 
-- simplify the animation logic (vblank instead of timer, early cutout)
-
 - verify stereoscopic animations actually do work as intended
-
-- improve the build system (common source code, rebuilds, etc)
 
 - write a transcoder, best candidate so far is python3
 

@@ -3,7 +3,7 @@
 #include <common.h>
 
 // Multiply any x position by this to get the address offset
-#define ANIM_OFFSET_MULT    (480)
+#define ANIM_WIDTH_MULT     (480)
 
 // Arbitrary
 #define MAX_ALLOC_ATTEMPTS  (131072)
@@ -86,9 +86,9 @@ typedef struct
 
 
 // Get the location of a compressed frame
-static inline u32 *anim_get_frame_data(const anim_t *hdr, int frame)
+static inline const void *anim_frame_data(const anim_t *hdr, int frame)
 {
-    return (u32*)((u8*)hdr + hdr->frame_info[frame].offset);
+    return (void*)((u8*)hdr + hdr->frame_info[frame].offset);
 }
 
 // Validate BAX animation
@@ -96,6 +96,3 @@ int anim_validate(const anim_t *hdr, size_t hdr_sz);
 
 // Playback BAX animation
 int anim_play(const anim_t *hdr);
-
-// Get error string
-const char *anim_get_error(int err);

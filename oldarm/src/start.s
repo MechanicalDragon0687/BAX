@@ -46,8 +46,8 @@ ASM_FUNCTION start
     mov r1, #0b00000010 @ Data Cachable
     mov r2, #0b00000010 @ Data Bufferable
 
-    ldr r3, =0x33333333 @ Data Access Permissions
-    ldr r4, =0x33333333 @ Instruction Access Permissions
+    ldr r3, =0x51111111 @ Data Access Permissions
+    ldr r4, =0x50000055 @ Instruction Access Permissions
 
     mcr p15, 0, r0, c2, c0, 1
     mcr p15, 0, r1, c2, c0, 0

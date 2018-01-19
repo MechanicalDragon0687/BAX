@@ -1,7 +1,7 @@
 #include <common.h>
 #include <cpu.h>
-#include <irq.h>
 
+#include "arm/irq.h"
 #include "hw/ndma.h"
 
 void ndma_reset(void)
