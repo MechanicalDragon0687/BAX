@@ -16,7 +16,7 @@ enum
 
 enum
 {
-    PXICMD_ARM11_STUBOUT
+    PXICMD_ARM11_NONE_YET
 };
 
 // Send a PXI command and it's arguments

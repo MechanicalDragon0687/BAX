@@ -41,4 +41,4 @@ typedef struct
 } firm_t;
 
 int firm_validate(firm_t *firm, size_t firm_sz);
-void NORETURN firm_boot(firm_t *firm);
+void NORETURN firm_boot(firm_t *firm, const char *path);

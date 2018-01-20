@@ -2,6 +2,7 @@
 #include <cache.h>
 #include <cpu.h>
 #include <sys.h>
+#include <vram.h>
 
 #define PXI_CODE
 #include <pxi.h>
@@ -10,6 +11,7 @@
 #include <pxicmd.h>
 
 #include "anim.h"
+#include "hw/gx.h"
 #include "hw/int.h"
 #include "hw/timer.h"
 
@@ -22,6 +24,33 @@
 #define BAX_FIRM "/boot.firm"
 #define BAX_FILE "*.bax"
 
+#define FIRMSTUB_LOC (0x1FFFFC00)
+extern u32 firmstub, firmstub_len;
+void firmlaunch(void *firm, size_t firm_sz, const char *path)
+{
+    int res;
+    gx_reset();
+    gx_set_framebuffer_mode(GL_RGB8);
+
+    MPCORE_ENTRY = 0;
+    memcpy((void*)FIRMSTUB_LOC, &firmstub, firmstub_len);
+    _writeback_DC();
+    _invalidate_IC();
+
+    res = pxicmd_send(PXICMD_ARM9_BOOTFIRM, (u32[]){(u32)firm, firm_sz, (u32)path}, 3);
+    if (res != 0)
+    {
+        char tst[] = "  invalid FIRM";
+        tst[0] = res + 'A';
+        _bugcheck(tst);
+    }
+
+    __asm__ __volatile__ (
+        "bx %0\n\t"
+        : : "r"(FIRMSTUB_LOC) : "memory"
+    );
+}
+
 void pxi_handler(u32 irqn)
 {
     u8 cmd;
@@ -31,39 +60,11 @@ void pxi_handler(u32 irqn)
     cmd = pxicmd_recv(pxia, &pxic);
     switch(cmd)
     {
-        case PXICMD_ARM11_STUBOUT:
-        {
-            resp = ~0;
-            break;
-        }
         default:
-        // TODO: bugcheck
             break;
     }
 
     pxicmd_reply(resp);
-    return;
-}
-
-void find_path(const char *path, const char *pattern, char *out)
-{
-    FRESULT fres;
-    DIR dir;
-    FILINFO fno;
-    int pos = 0;
-
-    fres = f_findfirst(&dir, &fno, path, pattern);
-
-    if (fres == FR_OK && fno.fname[0])
-    {
-        strcpy(out, path);
-        out[strlen(out)] = '/';
-        strcat(out, fno.fname);
-    }
-    else
-        memset(out, 0, FF_MAX_LFN);
-
-    f_closedir(&dir);
     return;
 }
 
@@ -74,7 +75,7 @@ void main(void)
     FIL fil;
     size_t sz, br;
     void *data;
-    char bax_path[FF_MAX_LFN + 1] = {0};
+    char bax_path[] = "sdmc:/bax/gba.bax";
 
     irq_register(IRQ_PXI_SYNC, pxi_handler, 0);
     pxi_reset();
@@ -82,11 +83,6 @@ void main(void)
     res = f_mount(&fs, "sdmc:", 1);
     if (res != FR_OK)
         _bugcheck("bad_mount");
-
-    find_path(BAX_PATH, BAX_FILE, bax_path);
-
-    if (strlen(bax_path) == 0)
-        _bugcheck("bad_path");
 
     res = f_open(&fil, bax_path, FA_READ);
     if (res != FR_OK)

@@ -4,24 +4,22 @@
 #include "hw/gx.h"
 
 static u32 selfb = 0;
-static vu32 *const gx_framebuffer_regs[3] = {
-    &GX_PDC0[26],
-    &GX_PDC0[37],
-    &GX_PDC1[26]
+static vu32 *const gx_framebuffer_regs[3] =
+{
+    &GX_PDC0[26], &GX_PDC0[37], &GX_PDC1[26]
 };
-const u32 gx_framebuffer_strides[GL_INVALID] = {
-    [GL_RGBA8]   = 960,
-    [GL_RGB8]    = 720,
-    [GL_RGB565]  = 480,
-    [GL_RGB5_A1] = 480,
-    [GL_RGBA4]   = 480
+
+const u32 gx_framebuffer_strides[GL_INVALID] =
+{
+    [GL_RGBA8] = 960, [GL_RGB8] = 720,
+    [GL_RGB565] = 480, [GL_RGB5_A1] = 480, [GL_RGBA4] = 480
 };
 
 const gx_framebuffers_t _fallback_framebuffers = 
 {
-    {{VRAM_START, VRAM_START},
-    {VRAM_START, VRAM_START},
-    {VRAM_START, VRAM_START}}
+    {{VRAM_TOPLEFT, VRAM_TOPLEFT},
+    {VRAM_TOPRIGHT, VRAM_TOPRIGHT},
+    {VRAM_BOTTOM, VRAM_BOTTOM}}
 };
 
 
