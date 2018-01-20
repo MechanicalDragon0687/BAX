@@ -24,6 +24,7 @@ ASM_FUNCTION firmstub
         cmp r1, #0
         bxne r1
         b 1b
+    .pool
 firmstub_e:
 
 .global firmstub_len

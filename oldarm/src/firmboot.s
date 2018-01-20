@@ -5,9 +5,11 @@
 
 
 .equ ARG_MAGIC, 0x0003BEEF
+@ if the MPCore firmstub ever grows because reasons
+@ these will have to be increased as well
 .equ ARGV_LOC,  0x1FFFFC80
-.equ FBPTR_LOC, 0x1FFFFC88
-.equ PATH_LOC,  0x1FFFFD00
+.equ PATH_LOC,  0x1FFFFC88
+.equ FBPTR_LOC, 0x1FFFFD88
 
 
 @ void firm_boot(void *firm, char *path)

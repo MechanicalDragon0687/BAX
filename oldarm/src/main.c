@@ -15,9 +15,6 @@
 
 #include "lib/firm/firm.h"
 
-static u32 entrypoint;
-static firm_t *volatile firm = NULL;
-static char firm_path[256] = {0};
 void fill_sysinfo(sysinfo_t *info)
 {
     info->bootenv = *(u32*)0x10010000;
@@ -25,6 +22,8 @@ void fill_sysinfo(sysinfo_t *info)
     return;
 }
 
+static firm_t *volatile firm = NULL;
+static char firm_path[256] = {0};
 void pxi_handler(u32 irqn)
 {
     u8 cmd;
@@ -53,14 +52,16 @@ void pxi_handler(u32 irqn)
             break;
         }
 
-        case PXICMD_ARM9_BOOTFIRM:
+        case PXICMD_ARM9_FIRMVERIFY:
         {
             resp = firm_validate((firm_t*)pxia[0], pxia[1]);
-            if (resp == FIRM_OK)
-            {
-                firm = (firm_t*)pxia[0];
-                strcpy(firm_path, (const char*)pxia[2]);
-            }
+            break;
+        }
+
+        case PXICMD_ARM9_FIRMBOOT:
+        {
+            firm = (firm_t*)pxia[0];
+            strncpy(firm_path, (const char*)pxia[1], 255);
             break;
         }
 

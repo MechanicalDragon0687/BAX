@@ -26,29 +26,38 @@
 
 #define FIRMSTUB_LOC (0x1FFFFC00)
 extern u32 firmstub, firmstub_len;
-void firmlaunch(void *firm, size_t firm_sz, const char *path)
+int firmlaunch(void *firm, size_t firm_sz, const char *path)
 {
     int res;
+    void (*firmstub_reloc)(void) = (void (*)(void))FIRMSTUB_LOC;
+
+    res = pxicmd_send(PXICMD_ARM9_FIRMVERIFY,
+        (u32[]){(u32)firm, firm_sz}, 2);
+    if (res != 0) return res;
+    // ^ invalid FIRM
+
+    // good FIRM, begin the boot procedure
     gx_reset();
     gx_set_framebuffer_mode(GL_RGB8);
 
+    // Clear the entrypoint
     MPCORE_ENTRY = 0;
+
+    // Relocate the boot stub
     memcpy((void*)FIRMSTUB_LOC, &firmstub, firmstub_len);
     _writeback_DC();
     _invalidate_IC();
 
-    res = pxicmd_send(PXICMD_ARM9_BOOTFIRM, (u32[]){(u32)firm, firm_sz, (u32)path}, 3);
-    if (res != 0)
-    {
-        char tst[] = "  invalid FIRM";
-        tst[0] = res + 'A';
-        _bugcheck(tst);
-    }
+    pxicmd_send(PXICMD_ARM9_FIRMBOOT,
+        (u32[]){(u32)firm, (u32)path}, 2);
+    /*
+     There's a bit of a race here because the ARM9 could
+     potentially overwrite AXIRAM before the MPCore gets
+     to run the relocated firmstub.
+    */
 
-    __asm__ __volatile__ (
-        "bx %0\n\t"
-        : : "r"(FIRMSTUB_LOC) : "memory"
-    );
+    firmstub_reloc();
+    while(1) _wfi();
 }
 
 void pxi_handler(u32 irqn)
