@@ -3,6 +3,7 @@
 #include <cpu.h>
 #include <sys.h>
 #include <vram.h>
+#include <interrupt.h>
 
 #define PXI_CODE
 #include <pxi.h>
@@ -10,12 +11,11 @@
 #define PXICMD_CODE
 #include <pxicmd.h>
 
+#include "arm/irq.h"
 #include "anim.h"
 #include "hw/gx.h"
-#include "hw/int.h"
 #include "hw/timer.h"
 
-#include "arm/irq.h"
 #include "arm/bugcheck.h"
 
 #include "lib/ff/ff.h"
@@ -62,8 +62,8 @@ int firmlaunch(void *firm, size_t firm_sz, const char *path)
 
 void pxi_handler(u32 irqn)
 {
-    u8 cmd;
     u32 pxia[PXICMD_MAX_ARGC], pxic;
+    u8 cmd = pxicmd_recv(pxia, &pxic);
     int resp = 0;
 
     cmd = pxicmd_recv(pxia, &pxic);
@@ -91,31 +91,33 @@ void main(void)
 
     res = f_mount(&fs, "sdmc:", 1);
     if (res != FR_OK)
-        _bugcheck("bad_mount");
+        bugcheck("FS_MOUNT", (u32[]){res}, 1);
 
     res = f_open(&fil, bax_path, FA_READ);
-    if (res != FR_OK)
-        _bugcheck("bad_open");
 
-    sz = f_size(&fil);
-    if (sz > ANIM_MAX_SIZE)
-        _bugcheck("bad_size");
+    if (res == FR_OK)
+    {
+        sz = f_size(&fil);
+        if (sz > ANIM_MAX_SIZE)
+            bugcheck("ANIM_BIG_SIZE", (u32[]){sz}, 1);
 
-    data = malloc(sz);
-    if (data == NULL)
-        _bugcheck("bad_data");
+        data = malloc(sz);
+        if (data == NULL)
+            bugcheck("ANIM_ALLOC_ERR", NULL, 0);
 
-    res = f_read(&fil, data, sz, &br);
-    if (res != FR_OK || sz != br)
-        _bugcheck("bad_read");
+        res = f_read(&fil, data, sz, &br);
+        if (res != FR_OK || sz != br)
+            bugcheck("FS_READ_ERROR", (u32[]){br}, 1);
 
-    f_close(&fil);
+        f_close(&fil);
 
-    res = anim_validate((anim_t*)data, sz);
-    if (res != ANIM_OK)
-        _bugcheck("bad_anim");
+        res = anim_validate((anim_t*)data, sz);
+        if (res != ANIM_OK)
+            bugcheck("ANIM_INVALID", (u32[]){res}, 1);
 
-    anim_play((anim_t*)data);
-    free(data);
+        anim_play((anim_t*)data);
+        free(data);
+    }
+
     while(1) _wfi();
 }

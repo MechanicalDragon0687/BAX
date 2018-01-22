@@ -2,4 +2,4 @@
 
 #include <common.h>
 
-void _bugcheck(const char *str);
+void bugcheck(const char *msg, u32 *args, int count);

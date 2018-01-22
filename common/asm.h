@@ -38,8 +38,7 @@
 .endm
 
 
-/* Fatal exception initial handler (xrq-specific) */
-.macro XRQ_FATAL n, h
+.macro XRQ_PRIMARY_HANDLER n, h
     #ifdef ARM11
     cpsid aif
     clrex
@@ -54,15 +53,26 @@
 .endm
 
 
-/* Fatal exception secondary handler */
-.macro XRQ_FATAL_HANDLER h
+/*
+ Order of registers:
+ - R0-R15
+ - CPSR, XPSR
+
+ ** MPCore only **
+ - TTBR, DACR
+ - DFSR, IFSR, FAR
+
+ R0 = exception number
+ R1 = pointer to arguments
+*/
+.macro XRQ_SECONDARY_HANDLER
     mrs r10, spsr
     mrs r11, cpsr
 
     orr r0, r10, #(SR_I | SR_F)
     bic r0, r0, #(SR_T)
     tst r0, #0xF
-    orreq r0, r0, #(SR_SYS)     @ Came from User, change to System
+    orreq r0, r0, #(SR_SYS)
 
     @ Switch to previous mode with interrupts disabled and ARM mode
     msr cpsr_c, r0
@@ -70,7 +80,7 @@
     mov r2, lr
     msr cpsr_c, r11
 
-    tst r10, #(SR_T)            @ Thumb PC fixup
+    tst r10, #(SR_T)
     bicne r2, r2, #1
     subne r3, lr, #3
     subeq r3, lr, #4
@@ -78,18 +88,16 @@
     stmia r9!, {r1-r3, r10, r11}
 
     #ifdef ARM11
-    mrc p15, 0, r0, c2, c0, 0   @ TTBR
-    mrc p15, 0, r1, c3, c0, 0   @ DACR
-    mrc p15, 0, r2, c5, c0, 0   @ DFSR
-    mrc p15, 0, r3, c5, c0, 1   @ IFSR
-    mrc p15, 0, r4, c6, c0, 0   @ FAR
+    mrc p15, 0, r0, c2, c0, 0
+    mrc p15, 0, r1, c3, c0, 0
+    mrc p15, 0, r2, c5, c0, 0
+    mrc p15, 0, r3, c5, c0, 1
+    mrc p15, 0, r4, c6, c0, 0
     stmia r9!, {r0-r4}
     #endif
 
-    ldr r4, =\h
     mov r0, r12
     mov r1, sp
     bic sp, sp, #7 @ Align stack to an 8 byte boundary
-    bx r4
 .endm
 #endif

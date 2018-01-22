@@ -1,5 +1,8 @@
 #pragma once
 
+#include <common.h>
+#include <interrupt.h>
+
 #define IRQ_IE    ((vu32*)0x10001000)
 #define IRQ_IF    ((vu32*)0x10001004)
 #define IRQ_COUNT (29)

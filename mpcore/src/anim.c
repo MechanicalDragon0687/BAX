@@ -2,14 +2,14 @@
 #include <cache.h>
 #include <cpu.h>
 #include <vram.h>
+#include <interrupt.h>
 
-#include "arm/bugcheck.h"
-#include "arm/irq.h"
-#include "hw/timer.h"
-#include "hw/int.h"
-#include "hw/hid.h"
-#include "hw/gx.h"
 #include "anim.h"
+#include "hw/gx.h"
+#include "hw/hid.h"
+#include "hw/timer.h"
+#include "arm/irq.h"
+#include "arm/bugcheck.h"
 #include "lib/lz4/lz4.h"
 #include "lib/frb/frb.h"
 
@@ -160,7 +160,7 @@ int anim_play(const anim_t *hdr)
             if (alloc_attempts > MAX_ALLOC_ATTEMPTS)
             {
                 // last ditch measure
-                _bugcheck("anim_memalign");
+                bugcheck("ANIM_MEMALIGN", (u32[]){frame}, 1);
             }
 
             // in case it actually is out of memory
@@ -177,7 +177,7 @@ int anim_play(const anim_t *hdr)
             frb_size(&frb)) != frb_size(&frb))
         {
             // bad decompression
-            _bugcheck("LZ4_decompress_safe");
+            bugcheck("ANIM_DECOMPRESS", (u32[]){frame}, 1);
         }
 
         // Perform delta decoding

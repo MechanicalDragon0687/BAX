@@ -12,7 +12,8 @@ enum
     PXICMD_ARM9_SDMMC_INIT,
     PXICMD_ARM9_SD_READSECTORS,
     PXICMD_ARM9_FIRMVERIFY,
-    PXICMD_ARM9_FIRMBOOT
+    PXICMD_ARM9_FIRMBOOT,
+    PXICMD_ARM9_HALT
 };
 
 enum
@@ -20,10 +21,13 @@ enum
     PXICMD_ARM11_NONE_YET
 };
 
-// Send a PXI command and it's arguments
+void pxicmd_send_async(u32 cmd_id, const u32 *args, u32 argc);
+int pxicmd_send_finish(void);
+
+// Send a PXI command and its arguments
 int pxicmd_send(u32 cmd_id, const u32 *args, u32 argc);
 
-// Receive a PXI command and it's arguments
+// Receive a PXI command and its arguments
 u8  pxicmd_recv(u32 *args, u32 *argc);
 
 // Reply to a PXI command

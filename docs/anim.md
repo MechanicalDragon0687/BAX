@@ -34,7 +34,7 @@
 
 
 
-#### Tricks:
+### Tricks:
 
 Since both screens have the same height (240px), they can be treated as a single, contiguous 720px width screen,  this allows dual-screen animations within a single video stream.
 

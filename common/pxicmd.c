@@ -1,25 +1,32 @@
 #include <common.h>
 #include <pxi.h>
 
-NOINLINE int pxicmd_send(u32 cmd_id, const u32 *args, u32 argc)
+NOINLINE void pxicmd_send_async(u32 cmd_id, const u32 *args, u32 argc)
 {
-    int ret;
-
-    // TODO: bugcheck
-    if (argc > PXICMD_MAX_ARGC || cmd_id > PXICMD_MAX_CMD_ID) return -1;
-
-    // TODO: bugcheck
-    if ((u32)pxi_send_FIFO_data(args, argc) != argc) { ; }
+    while(!(*PXI_CNT & PXI_SEND_FIFO_EMPTY));
+    pxi_send_FIFO_data(args, argc);
 
     pxi_set_remote(cmd_id);
     pxi_sync();
+    return;
+}
 
-    // wait for reply, possibly add a timeout?
+NOINLINE int pxicmd_send_finish(void)
+{
+    int ret;
+
+    // wait for reply
     while(*PXI_CNT & PXI_RECV_FIFO_EMPTY);
     ret = pxi_recv_FIFO();
 
     pxi_set_remote(0);
     return ret;
+}
+
+NOINLINE int pxicmd_send(u32 cmd_id, const u32 *args, u32 argc)
+{
+    pxicmd_send_async(cmd_id, args, argc);
+    return pxicmd_send_finish();
 }
 
 NOINLINE u8 pxicmd_recv(u32 *args, u32 *argc)

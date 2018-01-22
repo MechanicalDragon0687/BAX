@@ -2,8 +2,6 @@
 
 - code cleanup
 
-- make a better error reporting thing
-
 - figure out EMMC + NDMA (dope af, maybe nocash knows?)
 
 - verify stereoscopic animations actually do work as intended

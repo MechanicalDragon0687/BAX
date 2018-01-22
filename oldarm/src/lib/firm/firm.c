@@ -15,20 +15,6 @@ const u32 _firm_wlist[][2] =
 };
 const u32 _firm_wlist_regions = 4;
 
-const char *_firm_err_str[] =
-{
-    [FIRM_OK]           = "No error",
-    [FIRM_MEM_ERR]      = "Null pointer",
-    [FIRM_BAD_MAGIC]    = "Not a FIRM",
-    [FIRM_BAD_SIZE]     = "Invalid size",
-    [FIRM_MPCORE_ENTRY] = "Invalid ARM11 entrypoint",
-    [FIRM_OLDARM_ENTRY] = "Invalid ARM9 entrypoint",
-    [FIRM_SECT_OFFSET]  = "Invalid section offset",
-    [FIRM_SECT_LDADDR]  = "Invalid section load address",
-    [FIRM_SECT_SIZE]    = "Invalid section size",
-    [FIRM_SECT_HASH]    = "Section SHA256 mismatch"
-};
-
 int firm_validate(firm_t *firm, size_t firm_sz)
 {
     firm_section_t *sect;

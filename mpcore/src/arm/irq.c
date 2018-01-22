@@ -69,7 +69,7 @@ void irq_reset(void)
 void irq_register(u32 irqn, isr_t handler, u32 core)
 {
     if (irqn >= 128 || core >= 2)
-        _bugcheck("irq_register");
+        bugcheck("IRQ_REGISTER", (u32[]){irqn, core}, 2);
 
     if (irqn < 32)
         _lirq_handlers[core][irqn] = handler;
@@ -85,7 +85,7 @@ void irq_register(u32 irqn, isr_t handler, u32 core)
 void irq_deregister(u32 irqn, u32 core)
 {
     if (irqn >= 128 || core >= 2)
-        _bugcheck("irq_deregister");
+        bugcheck("IRQ_DEREGISTER", (u32[]){irqn, core}, 2);
 
     if (irqn < 32)
         _lirq_handlers[core][irqn] = NULL;

@@ -2,6 +2,7 @@
 #include <cache.h>
 #include <cpu.h>
 #include <sys.h>
+#include <interrupt.h>
 
 #define PXI_CODE
 #include <pxi.h>
@@ -10,32 +11,25 @@
 #include <pxicmd.h>
 
 #include "arm/irq.h"
-#include "hw/int.h"
 #include "hw/sdmmc.h"
 
 #include "lib/firm/firm.h"
-
-void fill_sysinfo(sysinfo_t *info)
-{
-    info->bootenv = *(u32*)0x10010000;
-    info->rndseed = *(u32*)0x10011000;
-    return;
-}
 
 static firm_t *volatile firm = NULL;
 static char firm_path[256] = {0};
 void pxi_handler(u32 irqn)
 {
-    u8 cmd;
     u32 pxia[PXICMD_MAX_ARGC], pxic;
+    u8 cmd = pxicmd_recv(pxia, &pxic);
     int resp = 0;
 
-    cmd = pxicmd_recv(pxia, &pxic);
     switch(cmd)
     {
         case PXICMD_ARM9_SYSINFO:
         {
-            fill_sysinfo((sysinfo_t*)pxia[0]);
+            sysinfo_t *info = (sysinfo_t*)pxia[0];
+            info->bootenv = *(vu32*)0x10010000;
+            info->rndseed = *(vu32*)0x10011000;
             break;
         }
 
@@ -63,6 +57,11 @@ void pxi_handler(u32 irqn)
             firm = (firm_t*)pxia[0];
             strncpy(firm_path, (const char*)pxia[1], 255);
             break;
+        }
+
+        case PXICMD_ARM9_HALT:
+        {
+            while(1) _wfi();
         }
 
         default:

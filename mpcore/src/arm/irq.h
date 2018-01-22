@@ -1,6 +1,7 @@
 #pragma once
 
-#define IRQ_COUNT (128)
+#include <common.h>
+#include <interrupt.h>
 
 #define GIC_BASE  (0x17E00100) // MPCore PMR
 #define DIC_BASE  (0x17E01000)
