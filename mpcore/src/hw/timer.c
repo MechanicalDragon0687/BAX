@@ -1,4 +1,5 @@
 #include <common.h>
+
 #include "hw/timer.h"
 
 void timer_reset(void)

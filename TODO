@@ -1,10 +1,10 @@
 - testing, lots of it
 
-- code cleanup
+- more code cleanup
+
+- better documentation, with schematics and stuff (SVG should do nicely)
 
 - figure out EMMC + NDMA (dope af, maybe nocash knows?)
-
-- verify stereoscopic animations actually do work as intended
 
 - write a transcoder, best candidate so far is python3
 

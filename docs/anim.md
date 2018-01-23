@@ -30,13 +30,14 @@
 
 ### Animation special flags:
 
-  - bit0 set -> stereoscopic animation
+  - none so far
 
 
 
 ### Tricks:
 
-Since both screens have the same height (240px), they can be treated as a single, contiguous 720px width screen,  this allows dual-screen animations within a single video stream.
+Since both screens have the same height (240px), they can be treated as a single, contiguous 720px width screen.
+This allows dual-screen animations to be contained within a single video frame stream.
 
   - If both screens are to be used, the row offset should be set to 0 and the width to 720.
 

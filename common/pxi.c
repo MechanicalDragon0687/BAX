@@ -1,7 +1,7 @@
 #include <common.h>
 #include <pxi.h>
 
-NOINLINE void pxi_reset(void)
+void pxi_reset(void)
 {
     *PXI_SYNC = 0;
     *PXI_CNT = PXI_SEND_FIFO_CLEAR | PXI_FIFO_ENABLE;
@@ -29,20 +29,20 @@ void pxi_set_remote(u8 data)
     return;
 }
 
-NOINLINE u32 pxi_recv_FIFO(void)
+u32 pxi_recv_FIFO(void)
 {
     while(*PXI_CNT & PXI_RECV_FIFO_EMPTY);
     return *PXI_RECV;
 }
 
-NOINLINE void pxi_send_FIFO(u32 data)
+void pxi_send_FIFO(u32 data)
 {
     while(*PXI_CNT & PXI_SEND_FIFO_FULL);
     *PXI_SEND = data;
     return;
 }
 
-NOINLINE int pxi_recv_FIFO_data(u32 *data, u32 datac)
+int pxi_recv_FIFO_data(u32 *data, u32 datac)
 {
     u32 c;
 
@@ -54,7 +54,7 @@ NOINLINE int pxi_recv_FIFO_data(u32 *data, u32 datac)
     return c;
 }
 
-NOINLINE int pxi_send_FIFO_data(const u32 *data, u32 datac)
+int pxi_send_FIFO_data(const u32 *data, u32 datac)
 {
     u32 c;
 
@@ -67,13 +67,13 @@ NOINLINE int pxi_send_FIFO_data(const u32 *data, u32 datac)
     return c;
 }
 
-NOINLINE void pxi_sync(void)
+void pxi_sync(void)
 {
     *PXI_SYNC_CNT |= PXI_TRIGGER_IRQ;
     return;
 }
 
-NOINLINE void pxi_set_IRQ(bool enable) {
+void pxi_set_IRQ(bool enable) {
     if (enable)
         *PXI_SYNC_CNT |= PXI_SYNC_IRQ_ENABLE;
     else

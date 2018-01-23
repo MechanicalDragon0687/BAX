@@ -37,37 +37,14 @@
 
 #define PXI_FIFO_WIDTH           (16)
 
-// Reinitialize the PXI controller
+#ifndef __ASSEMBLER__
 void pxi_reset(void);
-
-
-// Get remote SYNC
 u8   pxi_get_remote(void);
-
-// Set remote SYNC
 void pxi_set_remote(u8 data);
-
-
-// Receive a word from the PXI FIFO
 u32  pxi_recv_FIFO(void);
-
-// Send a word to the PXI FIFO
 void pxi_send_FIFO(u32 data);
-
-
-// Receive multiple words from the PXI FIFO
-int pxi_recv_FIFO_data(u32 *data, u32 datac);
-
-// Send multiple words to the PXI FIFO
-int pxi_send_FIFO_data(const u32 *data, u32 datac);
-
-
-// Trigger an interrupt on the other end
+int  pxi_recv_FIFO_data(u32 *data, u32 datac);
+int  pxi_send_FIFO_data(const u32 *data, u32 datac);
 void pxi_sync(void);
-
-// Set PXI interrupt status
 void pxi_set_IRQ(bool enable);
-
-#ifdef PXI_CODE
-#include <pxi.c>
 #endif

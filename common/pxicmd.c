@@ -1,7 +1,9 @@
 #include <common.h>
-#include <pxi.h>
 
-NOINLINE void pxicmd_send_async(u32 cmd_id, const u32 *args, u32 argc)
+#include <pxi.h>
+#include <pxicmd.h>
+
+void pxicmd_send_async(u32 cmd_id, const u32 *args, u32 argc)
 {
     while(!(*PXI_CNT & PXI_SEND_FIFO_EMPTY));
     pxi_send_FIFO_data(args, argc);
@@ -11,7 +13,7 @@ NOINLINE void pxicmd_send_async(u32 cmd_id, const u32 *args, u32 argc)
     return;
 }
 
-NOINLINE int pxicmd_send_finish(void)
+int pxicmd_send_finish(void)
 {
     int ret;
 
@@ -23,13 +25,13 @@ NOINLINE int pxicmd_send_finish(void)
     return ret;
 }
 
-NOINLINE int pxicmd_send(u32 cmd_id, const u32 *args, u32 argc)
+int pxicmd_send(u32 cmd_id, const u32 *args, u32 argc)
 {
     pxicmd_send_async(cmd_id, args, argc);
     return pxicmd_send_finish();
 }
 
-NOINLINE u8 pxicmd_recv(u32 *args, u32 *argc)
+u8 pxicmd_recv(u32 *args, u32 *argc)
 {
     u32 count;
     u8 cmd = pxi_get_remote();
@@ -38,7 +40,7 @@ NOINLINE u8 pxicmd_recv(u32 *args, u32 *argc)
     return cmd;
 }
 
-NOINLINE void pxicmd_reply(int resp)
+void pxicmd_reply(int resp)
 {
     pxi_send_FIFO(resp);
     pxi_set_remote(0);

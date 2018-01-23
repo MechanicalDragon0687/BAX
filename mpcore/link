@@ -35,6 +35,9 @@ SECTIONS
         __bss_e = ABSOLUTE(.);
     } >AXIRAM
 
+    __heap_start = ORIGIN(FCRAM);
+    __heap_end   = ORIGIN(FCRAM) + LENGTH(FCRAM);
+
     __stack_top = ORIGIN(AXIRAM) + LENGTH(AXIRAM);
     __stack_abt = __stack_top;
     __stack_svc = __stack_abt - 0x3000;

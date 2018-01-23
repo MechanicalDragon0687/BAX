@@ -3,6 +3,7 @@
 #include <common.h>
 #include <asm.h>
 
+#ifndef __ASSEMBLER__
 static inline u32 _read_CPSR(void)
 {
     u32 cpsr;
@@ -141,4 +142,5 @@ static inline u32 _read_ACR(void)
     );
     return acr;
 }
+#endif
 #endif

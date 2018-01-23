@@ -1,13 +1,5 @@
 #include <common.h>
-#include <cache.h>
 #include <cpu.h>
-#include <sys.h>
-#include <interrupt.h>
-
-#define PXI_CODE
-#include <pxi.h>
-
-#define PXICMD_CODE
 #include <pxicmd.h>
 
 #include "arm/irq.h"
@@ -25,14 +17,6 @@ void pxi_handler(u32 irqn)
 
     switch(cmd)
     {
-        case PXICMD_ARM9_SYSINFO:
-        {
-            sysinfo_t *info = (sysinfo_t*)pxia[0];
-            info->bootenv = *(vu32*)0x10010000;
-            info->rndseed = *(vu32*)0x10011000;
-            break;
-        }
-
         case PXICMD_ARM9_SDMMC_INIT:
         {
             sdmmc_init();
@@ -64,6 +48,18 @@ void pxi_handler(u32 irqn)
             while(1) _wfi();
         }
 
+        case PXICMD_ARM9_BOOTENV:
+        {
+            resp = *(vu32*)0x10010000;
+            break;
+        }
+
+        case PXICMD_ARM9_RANDOM:
+        {
+            resp = *(vu32*)0x10011000;
+            break;
+        }
+
         default:
         // TODO: bugcheck
             break;
@@ -75,9 +71,6 @@ void pxi_handler(u32 irqn)
 
 void main(u32 *args)
 {
-    irq_register(IRQ_PXI_SYNC, pxi_handler);
-    pxi_reset();
-
     while(firm == NULL) _wfi();
     firm_boot(firm, firm_path);    
 }

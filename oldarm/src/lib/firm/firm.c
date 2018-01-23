@@ -1,8 +1,4 @@
 #include <common.h>
-#include <pxicmd.h>
-#include <cache.h>
-#include <sys.h>
-#include <vram.h>
 
 #include "lib/firm/firm.h"
 

@@ -1,4 +1,5 @@
 #include <asm.h>
+#include <interrupt.h>
 .align 2
 .arm
 
@@ -56,8 +57,8 @@ ASM_FUNCTION xrq_irq
     push {r0-r3, r12, lr}      @ Preserve registers
 
     ldr lr, =0x17E00000
-    ldr r0, [lr, #0x10C]       @ Get any pending interrupts
-    cmp r0, #128
+    ldr r0, [lr, #0x10C]       @ Get pending interrupt
+    cmp r0, #IRQ_COUNT
     bhs 1f                     @ Invalid interrupt ID
 
     cmp r0, #32

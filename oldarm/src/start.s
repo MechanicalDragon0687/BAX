@@ -1,4 +1,5 @@
 #include <asm.h>
+#include <interrupt.h>
 .align 2
 .arm
 
@@ -78,12 +79,29 @@ ASM_FUNCTION start
     NOP_SLED 4
 
 
+    @ Setup heap
+    ldr r0, =fake_heap_start
+    ldr r1, =__heap_start
+    str r1, [r0]
+
+    ldr r0, =fake_heap_end
+    ldr r1, =__heap_end
+    str r1, [r0]
+
+
     @ Fix SDMC?
     mov r0, #0x10000000
     ldrh r1, [r0, #0x20]
     bic r1, r1, #0x001
     orr r1, r1, #0x200
     strh r1, [r0, #0x20]
+
+
+    @ PXI Setup
+    mov r0, #IRQ_PXI_SYNC
+    ldr r1, =pxi_handler
+    bl irq_register
+    bl pxi_reset
 
 
     @ Enable interrupts

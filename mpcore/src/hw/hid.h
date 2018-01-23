@@ -2,9 +2,8 @@
 
 #include <common.h>
 
-#define HID_BASE ((vu32*)0x10146000)
-
-typedef enum {
+#define HID_BASE ((vu16*)0x10146000)
+enum {
     HID_A      = 0x000,
     HID_B      = 0x002,
     HID_X      = 0x400,
@@ -18,19 +17,10 @@ typedef enum {
     HID_START  = 0x008,
     HID_SELECT = 0x004,
     HID_ANY    = 0xFFF
-} hid_keys;
+};
 
-// Reinitialize the HID state
 void hid_reset(void);
-
-// Update the HID state
 void hid_scan(void);
-
-// Keys down (first state pressed)
 u32 hid_down(void);
-
-// Keys held (>1 state pressed)
 u32 hid_held(void);
-
-// Keys up (pressed in previous state and not in current)
 u32 hid_up(void);

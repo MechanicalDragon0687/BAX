@@ -11,7 +11,7 @@ export INCLUDE := -I$(COMMON)
 export ARCH    := -marm -mno-thumb-interwork
 export ASFLAGS := -x assembler-with-cpp -ggdb
 export CFLAGS  := -O2 -std=c99 -pipe -fomit-frame-pointer \
-                  -ffunction-sections -ffast-math -Wall -Wextra\
+                  -ffunction-sections -ffast-math -Wall -Wextra \
                   -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-main -ggdb
 export LDFLAGS := -Tlink -Wl,--gc-sections,--nmagic,-z,max-page-size=4 -nostartfiles -ggdb
 

@@ -62,6 +62,7 @@ void bugcheck(const char *msg, u32 *args, int count)
     pxicmd_send_async(PXICMD_ARM9_HALT, NULL, 0);
 
     gx_reset();
+    gx_set_framebuffer_mode(PDC_RGB565);
     lcd_stop_fill();
 
     fb = (u16*)gx_framebuffer(GFX_TOPL);

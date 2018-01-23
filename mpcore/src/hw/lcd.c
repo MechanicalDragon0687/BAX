@@ -1,4 +1,5 @@
 #include <common.h>
+
 #include "hw/lcd.h"
 
 void lcd_set_brightness(u8 brightness)

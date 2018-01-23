@@ -8,8 +8,8 @@
 // Arbitrary
 #define MAX_ALLOC_ATTEMPTS  (131072)
 
-// Animation definitions
-#define ANIM_MAX_SIZE (0x5000000) // 80MiB
+// Animation header limits/definitions
+#define ANIM_MAX_SIZE (0x2000000) // 32MB
 
 #define ANIM_MAGIC    ((u8[]){'B', 'A', 'X'})
 
@@ -23,13 +23,13 @@
 #define ANIM_MAX_RATE (60)
 
 #define ANIM_MIN_OFFSET (0)
-#define ANIM_MAX_OFFSET (720)
+#define ANIM_MAX_OFFSET (1120)
 
 #define ANIM_MIN_LENGTH (1)
-#define ANIM_MAX_LENGTH (720)
+#define ANIM_MAX_LENGTH (1120)
 
-#define ANIM_MIN_FSIZE  (480)
-#define ANIM_MAX_FSIZE  (345600)
+#define ANIM_MIN_FSIZE  (1 * ANIM_WIDTH_MULT)
+#define ANIM_MAX_FSIZE  (ANIM_MAX_LENGTH * ANIM_WIDTH_MULT)
 
 
 // Animation error codes
@@ -60,7 +60,7 @@ typedef struct
 {
     u32 offset;   // Offset to the compressed frame (from start of file)
     u32 compsz;   // Compressed frame size
-} anim_frame_info_t;
+} anim_finfo_t;
 
 typedef struct
 {
@@ -79,7 +79,7 @@ typedef struct
     char author[32];
     char description[192];
 
-    anim_frame_info_t frame_info[0];
+    anim_finfo_t frame_info[0];
     // Frame table comes after this
     // Compressed frames come after this
 } anim_t;

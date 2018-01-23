@@ -13,45 +13,46 @@
 #include "lib/lz4/lz4.h"
 #include "lib/frb/frb.h"
 
-const gx_framebuffers_t anim_framebuffer_layouts[2] =
+const gx_framebuffers_t anim_framebuffer_layout =
 {
-    // Non-stereoscopic layout
-    {{
-        { // top left screen
-            VRAM_START,
-            VRAM_START + VRAM_TOP_SIZE*2 + VRAM_BOT_SIZE
-        },
-        { // top right screen
-            VRAM_START + VRAM_TOP_SIZE + VRAM_BOT_SIZE,
-            VRAM_START + VRAM_TOP_SIZE*3 + VRAM_BOT_SIZE*2
-        },
-        { // bottom screen
-            VRAM_START + VRAM_TOP_SIZE,
-            VRAM_START + VRAM_TOP_SIZE*3 + VRAM_BOT_SIZE
-        }
-        // <top left, bottom, top right>
-    }},
-
-    // Stereoscopic layout
-    {{
-        { // top left screen
-            VRAM_START,
-            VRAM_START + VRAM_TOP_SIZE*2 + VRAM_BOT_SIZE
-        },
-        { // top right screen
-            VRAM_START + VRAM_TOP_SIZE,
-            VRAM_START + VRAM_TOP_SIZE*3 + VRAM_BOT_SIZE
-        },
-        { // bottom screen
-            VRAM_START + VRAM_TOP_SIZE*2,
-            VRAM_START + VRAM_TOP_SIZE*3 + VRAM_BOT_SIZE*2
-        }
-        // <top left, top right, bottom>
-    }}
+    { // top left screen
+        VRAM_START,
+        VRAM_START + VRAM_TOP_SIZE*4 + VRAM_BOT_SIZE*2
+    },
+    { // top right screen
+        VRAM_START + VRAM_TOP_SIZE*2 + VRAM_BOT_SIZE*2,
+        VRAM_START + VRAM_TOP_SIZE*6 + VRAM_BOT_SIZE*4
+    },
+    { // bottom screen
+        VRAM_START + VRAM_TOP_SIZE*2,
+        VRAM_START + VRAM_TOP_SIZE*6 + VRAM_BOT_SIZE*2
+    }
+    // <top left, bottom, top right>
 };
 
 static frb_t frb;
 static bool swap_on_vblank;
+
+int anim_validate(const anim_t *hdr, size_t hdr_sz)
+{
+    u32 frame = 0, info_end;
+    if (hdr == NULL || hdr_sz <= sizeof(anim_t)) return ANIM_ERR_MEM;
+    if (memcmp(hdr->magic, ANIM_MAGIC, sizeof(hdr->magic)) != 0) return ANIM_ERR_MAGIC;
+    if (hdr->version < ANIM_MIN_VER || hdr->version > ANIM_MAX_VER) return ANIM_ERR_VERSION;
+    if (hdr->frame_n < ANIM_MIN_FRAMES || hdr->frame_n > ANIM_MAX_FRAMES) return ANIM_ERR_FRAMECOUNT;
+    if (hdr->frame_r < ANIM_MIN_RATE || hdr->frame_r > ANIM_MAX_RATE) return ANIM_ERR_FRAMERATE;
+    if (hdr->x_offset < ANIM_MIN_OFFSET || hdr->x_offset > ANIM_MAX_OFFSET) return ANIM_ERR_OFFSET;
+    if (hdr->x_length < ANIM_MIN_LENGTH || hdr->x_length > ANIM_MAX_LENGTH) return ANIM_ERR_WIDTH;
+    if ((hdr->x_offset + hdr->x_length)*ANIM_WIDTH_MULT < ANIM_MIN_FSIZE ||
+        (hdr->x_offset + hdr->x_length)*ANIM_WIDTH_MULT > ANIM_MAX_FSIZE) return ANIM_ERR_SIZE;
+
+    for (frame = 0, info_end = sizeof(anim_t) + (sizeof(anim_finfo_t) * hdr->frame_n); frame < hdr->frame_n; frame++)
+    {
+        if (hdr->frame_info[frame].offset < info_end || hdr->frame_info[frame].offset > hdr_sz) return ANIM_ERR_INFO_OFF;
+        if (hdr->frame_info[frame].compsz > LZ4_COMPRESSBOUND(ANIM_MAX_FSIZE)) return ANIM_ERR_INFO_SIZE;
+    }
+    return ANIM_OK;
+}
 
 /*
  TODO:
@@ -84,27 +85,6 @@ static void anim_vblank_isr(u32 irqn)
     return;
 }
 
-int anim_validate(const anim_t *hdr, size_t hdr_sz)
-{
-    u32 frame = 0, info_end;
-    if (hdr == NULL || hdr_sz <= sizeof(anim_t)) return ANIM_ERR_MEM;
-    if (memcmp(hdr->magic, ANIM_MAGIC, sizeof(hdr->magic)) != 0) return ANIM_ERR_MAGIC;
-    if (hdr->version < ANIM_MIN_VER || hdr->version > ANIM_MAX_VER) return ANIM_ERR_VERSION;
-    if (hdr->frame_n < ANIM_MIN_FRAMES || hdr->frame_n > ANIM_MAX_FRAMES) return ANIM_ERR_FRAMECOUNT;
-    if (hdr->frame_r < ANIM_MIN_RATE || hdr->frame_r > ANIM_MAX_RATE) return ANIM_ERR_FRAMERATE;
-    if (hdr->x_offset < ANIM_MIN_OFFSET || hdr->x_offset > ANIM_MAX_OFFSET) return ANIM_ERR_OFFSET;
-    if (hdr->x_length < ANIM_MIN_LENGTH || hdr->x_length > ANIM_MAX_LENGTH) return ANIM_ERR_WIDTH;
-    if ((hdr->x_offset + hdr->x_length)*ANIM_WIDTH_MULT < ANIM_MIN_FSIZE ||
-        (hdr->x_offset + hdr->x_length)*ANIM_WIDTH_MULT > ANIM_MAX_FSIZE) return ANIM_ERR_SIZE;
-
-    for (frame = 0, info_end = sizeof(anim_t) + (sizeof(anim_frame_info_t) * hdr->frame_n); frame < hdr->frame_n; frame++)
-    {
-        if (hdr->frame_info[frame].offset < info_end || hdr->frame_info[frame].offset > hdr_sz) return ANIM_ERR_INFO_OFF;
-        if (hdr->frame_info[frame].compsz > LZ4_COMPRESSBOUND(ANIM_MAX_FSIZE)) return ANIM_ERR_INFO_SIZE;
-    }
-    return ANIM_OK;
-}
-
 int anim_play(const anim_t *hdr)
 {
     bool stored;
@@ -121,16 +101,8 @@ int anim_play(const anim_t *hdr)
 
     /* Process all configuration flags here */
     gx_psc_fill(VRAM_START, VRAM_SIZE, EXTENDST(hdr->clear_c), PSC_FILL32);
-    if (hdr->flags & ANIM_FLAG_STEREOSCOPIC)
-    {
-        gx_set_framebuffers(&anim_framebuffer_layouts[1]);
-        gx_set_stereoscopy(true);
-    }
-    else
-    {
-        gx_set_framebuffers(&anim_framebuffer_layouts[0]);
-        gx_set_stereoscopy(false);
-    }
+    gx_set_framebuffers(&anim_framebuffer_layout);
+    gx_set_framebuffer_mode(PDC_RGB565);
 
     alloc_attempts = 0;
     frame = 0;
@@ -156,12 +128,8 @@ int anim_play(const anim_t *hdr)
         // hopefully out of RAM and not heap corruption?
         if (framebuffer == NULL)
         {
-            alloc_attempts++;
-            if (alloc_attempts > MAX_ALLOC_ATTEMPTS)
-            {
-                // last ditch measure
+            if (++alloc_attempts > MAX_ALLOC_ATTEMPTS)
                 bugcheck("ANIM_MEMALIGN", (u32[]){frame}, 1);
-            }
 
             // in case it actually is out of memory
             // give the ring buffer some time to be drained

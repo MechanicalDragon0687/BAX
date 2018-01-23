@@ -5,7 +5,6 @@
 
 #define IRQ_IE    ((vu32*)0x10001000)
 #define IRQ_IF    ((vu32*)0x10001004)
-#define IRQ_COUNT (29)
 
 typedef void (*isr_t)(u32 irqn);
 

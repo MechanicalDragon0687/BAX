@@ -1,4 +1,5 @@
 #include <asm.h>
+#include <sys.h>
 #include <vram.h>
 .align 2
 .arm
@@ -7,18 +8,20 @@
 .equ ARG_MAGIC, 0x0003BEEF
 @ if the MPCore firmstub ever grows because reasons
 @ these will have to be increased as well
-.equ ARGV_LOC,  0x1FFFFC80
-.equ PATH_LOC,  0x1FFFFC88
-.equ FBPTR_LOC, 0x1FFFFD88
+@ NOTE: do not write beyond 0x1FFFFE00
+.equ ARGV_LOC,    0x1FFFFC80
+.equ PATH_LOC,    0x1FFFFC88
+.equ FBPTR_LOC,   0x1FFFFD88
+.equ BOOTROM_CPY, 0xFFFF0374
 
 
 @ void firm_boot(void *firm, char *path)
 ASM_FUNCTION firm_boot
     @ Setup the framebuffer struct
     ldr r2, =FBPTR_LOC
-    ldr r3, =VRAM_TOPLEFT
-    ldr r4, =VRAM_TOPRIGHT
-    ldr r5, =VRAM_BOTTOM
+    ldr r3, =VRAM_DEF_TOPLEFT
+    ldr r4, =VRAM_DEF_TOPRIGHT
+    ldr r5, =VRAM_DEF_BOTTOM
     stmia r2!, {r3-r5}
     stmia r2!, {r3-r5}
 
@@ -43,7 +46,7 @@ ASM_FUNCTION firm_boot
         cmp r2, #0
         addne r0, r0, r11
 
-        ldrne r3, =0xFFFF0374
+        ldrne r3, =BOOTROM_CPY
         blxne r3            
 
         subs r9, #1
@@ -69,7 +72,7 @@ ASM_FUNCTION firm_boot
 
     @ Registers:
     @ R0 = 1 or 2
-    @ R1 = 0x1FFFFC80
+    @ R1 = ARGV_LOC
     @ R2 = 0x0003BEEF
     @ R3-R14 are undefined
 
@@ -93,7 +96,9 @@ ASM_FUNCTION firm_boot
     ldr r4, [r11, #0x0C]  @ ARM9 entrypoint
 
     @ Set the ARM11 entrypoint
-    mov r5, #0x1FFFFFFC
+    @ In the event it is NULL, the MPCore code will
+    @ keep waiting until it isnt ("compatible mode")
+    ldr r5, =MPCORE_ENTRY
     str r3, [r5]
 
     @ Branch to the ARM9 entrypoint

@@ -1,4 +1,5 @@
 #include <asm.h>
+#include <interrupt.h>
 #include "arm/mmu.h"
 .arm
 
@@ -172,29 +173,27 @@ ASM_FUNCTION start
     str r1, [r0]
 
 
-    @ Heap init
+    @ Setup heap
     ldr r0, =fake_heap_start
-    ldr r1, =0x20000000
+    ldr r1, =__heap_start
     str r1, [r0]
 
     ldr r0, =fake_heap_end
-    ldr r1, =0x28000000
+    ldr r1, =__heap_end
     str r1, [r0]
+
+
+    @ PXI Setup
+    mov r0, #IRQ_PXI_SYNC
+    ldr r1, =pxi_handler
+    mov r2, #0
+    bl irq_register
+    bl pxi_reset
+
 
     @ Enable interrupts
     cpsie i
 
+
     ldr r12, =main
     bx r12
-
-
-deb:
-    mov r0, #0x18000000
-    mov r1, #0x00600000
-    mov r2, #0x1F
-    orr r2, r2, r2, lsl #16
-    1:
-        subs r1, r1, #4
-        strpl r2, [r0, r1]
-        bpl 1b
-    b .

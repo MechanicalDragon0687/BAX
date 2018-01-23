@@ -6,13 +6,7 @@
 #endif
 #endif
 
-#undef CORE_COUNT
-#ifdef ARM9
-#define CORE_COUNT (1)
-#else
-#define CORE_COUNT (4)
-#endif
-
+#ifndef __ASSEMBLER__
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -40,21 +34,21 @@ typedef volatile s16 vs16;
 typedef volatile s32 vs32;
 typedef volatile s64 vs64;
 
-// Forces failure at compile time if (cond == false)
-#define COMPILE_ASSERT(cond) ((void)sizeof(char[1 - 2*!(cond)]))
-
 #define ALIGNV(x)    __attribute__((aligned((x))))
 #define UNUSED       __attribute__((unused))
 #define NORETURN     __attribute__((noreturn))
 #define NOINLINE     __attribute__((noinline))
 #define PACKED       __attribute__((packed))
+#endif
 
-// Extend char to integer
 #define EXTENDET(x)  ((x) << 24 | (x) << 16 | (x) << 8 | (x))
-
-// Extend short to integer
 #define EXTENDST(x)  ((x) << 16 | (x))
-
 #define BIT(x)       (1<<(x))
-#define max(a,b)     ((a)>(b)?(a):(b))
-#define min(a,b)     ((a)<(b)?(a):(b))
+
+
+#undef CORE_COUNT
+#ifdef ARM9
+#define CORE_COUNT (1)
+#else
+#define CORE_COUNT (4)
+#endif

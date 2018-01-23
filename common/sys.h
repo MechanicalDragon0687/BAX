@@ -2,10 +2,5 @@
 
 #include <common.h>
 
-#define MPCORE_ENTRY    (*(vu32*)(0x1FFFFFFC))
-
-typedef struct
-{
-    u32 bootenv;
-    u32 rndseed;
-} sysinfo_t;
+#define MPCORE_ENTRY (0x1FFFFFFC)
+#define FIRMSTUB_LOC (0x1FFFFC00)

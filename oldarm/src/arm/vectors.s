@@ -1,4 +1,5 @@
 #include <asm.h>
+#include <interrupt.h>
 .align 2
 .arm
 
@@ -47,7 +48,7 @@ ASM_FUNCTION xrq_irq
     mov r3, #1
     rsb r0, r12, #31
 
-    cmp r0, #29
+    cmp r0, #IRQ_COUNT
     bhs 1f                       @ Invalid interrupt source
 
     lsl r3, r3, r0

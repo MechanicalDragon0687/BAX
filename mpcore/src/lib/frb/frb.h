@@ -41,6 +41,3 @@ bool frb_store(frb_t *frb, u32 *data);
 
 // Fetch a frame from the FRB - returns NULL if empty
 u32 *frb_fetch(frb_t *frb);
-
-// Drain the FRB, calls `free` on each item if necessary
-void frb_drain(frb_t *frb, bool free_frame);

@@ -32,14 +32,3 @@ u32 *frb_fetch(frb_t *frb)
     }
     return ret;
 }
-
-void frb_drain(frb_t *frb, bool free_frame)
-{
-    u32 *frame;
-    while(frb_count(frb) > 0)
-    {
-        frame = frb_fetch(frb);
-        if (free_frame) free(frame);
-    }
-    return;
-}

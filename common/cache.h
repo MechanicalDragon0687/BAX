@@ -2,6 +2,7 @@
 
 #include <common.h>
 
+#ifndef __ASSEMBLER__
 #ifdef ARM9
 static inline void _dbt(void)
 {
@@ -113,10 +114,10 @@ static inline void _invalidate_DC_range(const void *base, u32 len)
 static inline void _writeback_DC(void)
 {
     #ifdef ARM9
-    u32 seg=0, ind;
+    u32 seg = 0, ind;
     do
     {
-        ind=0;
+        ind = 0;
         do
         {
             __asm__ __volatile__(
@@ -195,20 +196,4 @@ static inline void _writeback_invalidate_DC_range(const void *base, u32 len)
     _dsb();
     return;
 }
-
-static inline void _fuck_caches(void)
-{
-    #ifdef ARM9
-    _invalidate_DC();
-    _invalidate_IC();
-    _dsb();
-    #else
-    __asm__ __volatile__(
-        "mcr p15, 0, %0, c7, c7, 0\n\t"
-        : : "r"(0) : "memory"
-    );
-    _dsb();
-    _dmb();
-    #endif
-    return;
-}
+#endif

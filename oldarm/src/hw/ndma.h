@@ -61,6 +61,3 @@ void ndma_copy(u32 *dst, const u32 *src, u32 len);
 
 void ndma_fill_async(u32 *dst, u32 fill, u32 len);
 void ndma_fill(u32 *dst, u32 fill, u32 len);
-
-void ndma_copy_event_async(u32 *dst, const u32 *src, u32 blk_size, u32 len, u32 flags);
-void ndma_copy_event(u32 *dst, const u32 *src, u32 blk_size, u32 len, u32 flags);

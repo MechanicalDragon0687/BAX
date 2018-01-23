@@ -1,64 +1,20 @@
 #include <common.h>
-#include <cache.h>
-#include <cpu.h>
-#include <sys.h>
-#include <vram.h>
-#include <interrupt.h>
-
-#define PXI_CODE
-#include <pxi.h>
-
-#define PXICMD_CODE
 #include <pxicmd.h>
 
-#include "arm/irq.h"
-#include "anim.h"
-#include "hw/gx.h"
-#include "hw/timer.h"
-
 #include "arm/bugcheck.h"
-
-#include "lib/ff/ff.h"
+#include "lib/fs/fs.h"
+#include "anim.h"
 
 #define BAX_PATH "sdmc:/bax"
-#define BAX_FIRM "/boot.firm"
 #define BAX_FILE "*.bax"
+#define BAX_FIRM BAX_PATH"/boot.firm"
 
-#define FIRMSTUB_LOC (0x1FFFFC00)
-extern u32 firmstub, firmstub_len;
-int firmlaunch(void *firm, size_t firm_sz, const char *path)
-{
-    int res;
-    void (*firmstub_reloc)(void) = (void (*)(void))FIRMSTUB_LOC;
+// Arbitrary
+#define MAX_ANIMATIONS (32)
+#define MAX_FIRM_SIZE  (0x400000)
 
-    res = pxicmd_send(PXICMD_ARM9_FIRMVERIFY,
-        (u32[]){(u32)firm, firm_sz}, 2);
-    if (res != 0) return res;
-    // ^ invalid FIRM
+int firmlaunch(void *firm, size_t firm_sz, const char *firm_path);
 
-    // good FIRM, begin the boot procedure
-    gx_reset();
-    gx_set_framebuffer_mode(GL_RGB8);
-
-    // Clear the entrypoint
-    MPCORE_ENTRY = 0;
-
-    // Relocate the boot stub
-    memcpy((void*)FIRMSTUB_LOC, &firmstub, firmstub_len);
-    _writeback_DC();
-    _invalidate_IC();
-
-    pxicmd_send(PXICMD_ARM9_FIRMBOOT,
-        (u32[]){(u32)firm, (u32)path}, 2);
-    /*
-     There's a bit of a race here because the ARM9 could
-     potentially overwrite AXIRAM before the MPCore gets
-     to run the relocated firmstub.
-    */
-
-    firmstub_reloc();
-    while(1) _wfi();
-}
 
 void pxi_handler(u32 irqn)
 {
@@ -77,47 +33,76 @@ void pxi_handler(u32 irqn)
     return;
 }
 
+void load_boot_firm(void)
+{
+    int firm_err;
+    size_t firm_sz;
+    void *firm;
+
+    firm_sz = fs_size(BAX_FIRM);
+    if (firm_sz == 0)
+        bugcheck("FIRM_NOT_FOUND", NULL, 0);
+    else if (firm_sz > MAX_FIRM_SIZE)
+        bugcheck("FIRM_TOO_LARGE", (u32[]){firm_sz}, 1);
+
+    firm = malloc(firm_sz);
+    if (firm == NULL)
+        bugcheck("FIRM_MALLOC", (u32[]){firm_sz}, 1);
+
+    fs_read(BAX_FIRM, firm, firm_sz);
+    firm_err = firmlaunch(firm, firm_sz, BAX_FIRM);
+
+    bugcheck("FIRM_ERR", (u32[]){(u32)firm, firm_sz, firm_err}, 3);
+    while(1) _wfi();
+}
+
 void main(void)
 {
-    FATFS fs;
-    int res;
-    FIL fil;
-    size_t sz, br;
-    void *data;
-    char bax_path[] = "sdmc:/bax/gba.bax";
+    int anim_count;
+    u32 rnd, bootenv;
+    char *anim_paths[MAX_ANIMATIONS];
 
-    irq_register(IRQ_PXI_SYNC, pxi_handler, 0);
-    pxi_reset();
+    bootenv = pxicmd_send(PXICMD_ARM9_BOOTENV, NULL, 0);
+    rnd = pxicmd_send(PXICMD_ARM9_RANDOM, NULL, 0);
 
-    res = f_mount(&fs, "sdmc:", 1);
-    if (res != FR_OK)
-        bugcheck("FS_MOUNT", (u32[]){res}, 1);
+    int r = fs_init();
+    if (r != 0)
+        bugcheck("FS_INIT", (u32[]){r}, 1);
 
-    res = f_open(&fil, bax_path, FA_READ);
+    if (bootenv != 0)
+        load_boot_firm();
 
-    if (res == FR_OK)
+    anim_count = fs_list(BAX_PATH, BAX_FILE, anim_paths, MAX_ANIMATIONS);
+    if (anim_count > 0)
     {
-        sz = f_size(&fil);
-        if (sz > ANIM_MAX_SIZE)
-            bugcheck("ANIM_BIG_SIZE", (u32[]){sz}, 1);
+        int anim_valid;
+        size_t anim_sz;
+        char anim_path[MAX_PATH], *anim;
 
-        data = malloc(sz);
-        if (data == NULL)
-            bugcheck("ANIM_ALLOC_ERR", NULL, 0);
+        strcpy(anim_path, BAX_PATH "/");
+        strcat(anim_path, anim_paths[rnd % anim_count]);
 
-        res = f_read(&fil, data, sz, &br);
-        if (res != FR_OK || sz != br)
-            bugcheck("FS_READ_ERROR", (u32[]){br}, 1);
+        anim_sz = fs_size(anim_path);
+        if (anim_sz > ANIM_MAX_SIZE)
+            bugcheck("ANIM_TOO_LARGE", (u32[]){anim_sz}, 1);
 
-        f_close(&fil);
+        anim = malloc(anim_sz);
+        if (anim == NULL)
+            bugcheck("ANIM_MALLOC", (u32[]){anim_sz}, 1);
 
-        res = anim_validate((anim_t*)data, sz);
-        if (res != ANIM_OK)
-            bugcheck("ANIM_INVALID", (u32[]){res}, 1);
+        fs_read(anim_path, anim, anim_sz);
 
-        anim_play((anim_t*)data);
-        free(data);
+        anim_valid = anim_validate((anim_t*)anim, anim_sz);
+        if (anim_valid != ANIM_OK)
+            bugcheck("ANIM_NOT_OK", (u32[]){anim_sz, anim_valid}, 2);
+
+        anim_play((anim_t*)anim);
+        free(anim);
     }
 
+    for (int i = 0; i < anim_count; i++)
+        free(anim_paths[i]);
+
+    load_boot_firm();
     while(1) _wfi();
 }
