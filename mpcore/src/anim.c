@@ -30,9 +30,6 @@ const gx_framebuffers_t anim_framebuffer_layout =
     // <top left, bottom, top right>
 };
 
-static frb_t frb;
-static bool swap_on_vblank;
-
 int anim_validate(const anim_t *hdr, size_t hdr_sz)
 {
     u32 frame = 0, info_end;
@@ -58,29 +55,32 @@ int anim_validate(const anim_t *hdr, size_t hdr_sz)
  TODO:
  - Instead of doing TextureCopy, change the fb addr reg (should work from vblank)
 */
-static void anim_timer_isr(u32 irqn)
-{
-    u32 *frame = frb_fetch(&frb);
-    if (frame != NULL)
-    {
-        gx_dma_copy(frame, 0, (u32*)(gx_next_framebuffer(GFX_TOPL) + frb_offset(&frb)), 0, frb_size(&frb));
-        free(frame);
-        swap_on_vblank = true;
-    }
-    return;
-}
-
+static frb_t frb;
+static float framerate;
+static bool playback;
 static void anim_vblank_isr(u32 irqn)
 {
+    u32 *frame;
+    static float _anim_vblank_isr_rate = 0.0f;
+
     hid_scan();
-    if (hid_held() & HID_DOWN)
+    _anim_vblank_isr_rate += 1 / 60.0f;
+    if (hid_down() & HID_X)
     {
-        // drain the buffer, tell the main code to stahp
+        playback = false;
+        while(frb_count(&frb) > 0)
+            free(frb_fetch(&frb));
     }
-    else if (swap_on_vblank)
+    else if (_anim_vblank_isr_rate > framerate)
     {
-        gx_swap_buffers();
-        swap_on_vblank = false;
+        frame = frb_fetch(&frb);
+        if (frame != NULL)
+        {
+            gx_dma_copy(frame, 0, (u32*)(gx_next_framebuffer(GFX_TOPL) + frb_offset(&frb)), 0, frb_size(&frb));
+            free(frame);
+            gx_swap_buffers();
+            _anim_vblank_isr_rate = 0;
+        }
     }
     return;
 }
@@ -95,7 +95,8 @@ int anim_play(const anim_t *hdr)
     // Initial setup
     frb_init(&frb, hdr->x_offset * ANIM_WIDTH_MULT, hdr->x_length * ANIM_WIDTH_MULT);
     backbuffer = memalign(GX_TEXTURE_ALIGNMENT, frb_size(&frb));
-    if (backbuffer == NULL) return ANIM_ERR_MEM;
+    if (backbuffer == NULL)
+        return ANIM_ERR_MEM;
 
     memset(backbuffer, 0, frb_size(&frb));
 
@@ -105,19 +106,16 @@ int anim_play(const anim_t *hdr)
     gx_set_framebuffer_mode(PDC_RGB565);
 
     alloc_attempts = 0;
+    framerate = 1.0f / (float)hdr->frame_r;
+    playback = true;
     frame = 0;
-    swap_on_vblank = false;
 
     // Register VBlank and Timer interrupt handlers
     crit_status = _enter_critical();
     irq_register(IRQ_VBLANK0, anim_vblank_isr, 0);
-    irq_register(IRQ_TIMER, anim_timer_isr, 0);
     _leave_critical(crit_status);
 
-    // Start timer, triggers an interrupt (hdr->frame_r) times per second and autoreloads
-    timer_start(timer_ms_to_ticks(1000.0f/(float)hdr->frame_r), true, true);
-
-    while(frame < hdr->frame_n)
+    while(frame < hdr->frame_n && playback)
     {
         // Allocate frame in memory
         // must be GPU aligned
@@ -166,10 +164,20 @@ int anim_play(const anim_t *hdr)
             crit_status = _enter_critical();
             stored = frb_store(&frb, framebuffer);
             _leave_critical(crit_status);
+
+            // Not enough space
             if (stored == false) _wfi();
         } while(stored == false);
 
         frame++;
+    }
+
+    if (playback == false)
+    {
+        crit_status = _enter_critical();
+        while(frb_count(&frb) > 0)
+            free(frb_fetch(&frb));
+        _leave_critical(crit_status);
     }
 
     // Wait until it's done playing
@@ -180,7 +188,6 @@ int anim_play(const anim_t *hdr)
     crit_status = _enter_critical();
     free(backbuffer);
     timer_stop();
-    irq_deregister(IRQ_TIMER, 0);
     irq_deregister(IRQ_VBLANK0, 0);
     _leave_critical(crit_status);
     return ANIM_OK;

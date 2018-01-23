@@ -3,6 +3,7 @@
 
 #include "arm/bugcheck.h"
 #include "lib/fs/fs.h"
+#include "hw/hid.h"
 #include "anim.h"
 
 #define BAX_PATH "sdmc:/bax"
@@ -25,6 +26,9 @@ void pxi_handler(u32 irqn)
     cmd = pxicmd_recv(pxia, &pxic);
     switch(cmd)
     {
+        case PXICMD_ARM11_PANIC:
+            bugcheck("ARM9 PANIC!", NULL, 0);
+
         default:
             break;
     }
@@ -73,7 +77,8 @@ void main(void)
         load_boot_firm();
 
     anim_count = fs_list(BAX_PATH, BAX_FILE, anim_paths, MAX_ANIMATIONS);
-    if (anim_count > 0)
+    hid_scan();
+    if ((anim_count > 0) && !(hid_down() & HID_X))
     {
         int anim_valid;
         size_t anim_sz;
@@ -102,6 +107,11 @@ void main(void)
 
     for (int i = 0; i < anim_count; i++)
         free(anim_paths[i]);
+
+    do
+    {
+        hid_scan();
+    } while(hid_down() & HID_X);
 
     load_boot_firm();
     while(1) _wfi();

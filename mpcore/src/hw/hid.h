@@ -4,7 +4,7 @@
 
 #define HID_BASE ((vu16*)0x10146000)
 enum {
-    HID_A      = 0x000,
+    HID_A      = 0x001,
     HID_B      = 0x002,
     HID_X      = 0x400,
     HID_Y      = 0x800,
