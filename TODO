@@ -1,15 +1,24 @@
+
+Mostly done:
+
 - testing, lots of it
 
 - more code cleanup
 
-- better documentation, with schematics and stuff (SVG should do nicely)
+- better documentation
 
-- figure out EMMC + NDMA (dope af, maybe nocash knows?)
+
+
+In research:
 
 - write a transcoder, best candidate so far is python3
+
+
+
+Planned:
+
+- figure out EMMC + NDMA (dope af, maybe nocash knows?)
 
 - enable N3DS extra cache and FCRAM and higher freq
 
 - try to play audio?
-
-- more testing

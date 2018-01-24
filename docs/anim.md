@@ -12,7 +12,7 @@
 | 0x0C           | 0x04   | Frame rate  |
 | 0x10           | 0x02   | Background color |
 | 0x12           | 0x06   | Reserved |
-| 0x18           | 0x04   | Row offset from start |
+| 0x18           | 0x04   | Column offset from start |
 | 0x1C           | 0x04   | Frame width |
 | 0x20           | 0x20   | ASCII author |
 | 0x40           | 0xC0   | ASCII description |
@@ -39,12 +39,12 @@
 Since both screens have the same height (240px), they can be treated as a single, contiguous 720px width screen.
 This allows dual-screen animations to be contained within a single video frame stream.
 
-  - If both screens are to be used, the row offset should be set to 0 and the width to 720.
+  - If both screens are to be used, the column offset should be set to 0 and the width to 720.
 
-  - If only the top screen is to be used, the row offset should be set to 0 and the width to 400.
+  - If only the top screen is to be used, the column offset should be set to 0 and the width to 400.
 
-  - If only the bottom screen is to be used, then the row offset parameter can be set to 400 and the width to 240.
+  - If only the bottom screen is to be used, then the column offset parameter can be set to 400 and the width to 240.
 
-  - If your animation only takes up a chunk of the screen and has a fixed background, you could tweak the row offset and width parameters to make it smaller.
+  - If your animation only takes up a chunk of the screen and has a fixed background, you could tweak the column offset and width parameters to make it smaller.
 
   - In any other case, feel free to experiment!
