@@ -1,6 +1,6 @@
 #include <asm.h>
+#include <mmap.h>
 #include <pxicmd.h>
-#include <sys.h>
 .align 2
 .arm
 

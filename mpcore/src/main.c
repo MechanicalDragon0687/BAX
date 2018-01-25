@@ -27,7 +27,7 @@ void pxi_handler(u32 irqn)
     switch(cmd)
     {
         case PXICMD_ARM11_PANIC:
-            bugcheck("ARM9 PANIC!", NULL, 0);
+            bugcheck("OLDARM_PANIC", NULL, 0);
 
         default:
             break;

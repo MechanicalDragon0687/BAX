@@ -1,5 +1,5 @@
 #include <common.h>
-#include <vram.h>
+#include <mmap.h>
 
 #include "hw/gx.h"
 

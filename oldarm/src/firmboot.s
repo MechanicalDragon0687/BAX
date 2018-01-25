@@ -1,6 +1,5 @@
 #include <asm.h>
-#include <sys.h>
-#include <vram.h>
+#include <mmap.h>
 .align 2
 .arm
 

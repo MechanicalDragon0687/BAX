@@ -1,7 +1,7 @@
 #include <common.h>
 #include <cache.h>
 #include <cpu.h>
-#include <vram.h>
+#include <mmap.h>
 #include <interrupt.h>
 
 #include "anim.h"
@@ -17,15 +17,15 @@ const gx_framebuffers_t anim_framebuffer_layout =
 {
     { // top left screen
         VRAM_START,
-        VRAM_START + VRAM_TOP_SIZE*4 + VRAM_BOT_SIZE*2
+        VRAM_START + VRAM_TOP_DIM*4 + VRAM_BOTTOM_DIM*2
     },
     { // top right screen
-        VRAM_START + VRAM_TOP_SIZE*2 + VRAM_BOT_SIZE*2,
-        VRAM_START + VRAM_TOP_SIZE*6 + VRAM_BOT_SIZE*4
+        VRAM_START + VRAM_TOP_DIM*2 + VRAM_BOTTOM_DIM*2,
+        VRAM_START + VRAM_TOP_DIM*6 + VRAM_BOTTOM_DIM*4
     },
     { // bottom screen
-        VRAM_START + VRAM_TOP_SIZE*2,
-        VRAM_START + VRAM_TOP_SIZE*6 + VRAM_BOT_SIZE*2
+        VRAM_START + VRAM_TOP_DIM*2,
+        VRAM_START + VRAM_TOP_DIM*6 + VRAM_BOTTOM_DIM*2
     }
     // <top left, bottom, top right>
 };
@@ -51,10 +51,6 @@ int anim_validate(const anim_t *hdr, size_t hdr_sz)
     return ANIM_OK;
 }
 
-/*
- TODO:
- - Instead of doing TextureCopy, change the fb addr reg (should work from vblank)
-*/
 static frb_t frb;
 static float framerate;
 static bool playback;

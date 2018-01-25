@@ -1,4 +1,5 @@
 #include <asm.h>
+#include <mmap.h>
 #include <interrupt.h>
 .align 2
 .arm
@@ -56,7 +57,7 @@ ASM_FUNCTION xrq_irq
     cps #SR_SYS                @ Switch to SVC mode
     push {r0-r3, r12, lr}      @ Preserve registers
 
-    ldr lr, =0x17E00000
+    ldr lr, =MPCORE_PMR
     ldr r0, [lr, #0x10C]       @ Get pending interrupt
     cmp r0, #IRQ_COUNT
     bhs 1f                     @ Invalid interrupt ID
@@ -80,7 +81,7 @@ ASM_FUNCTION xrq_irq
     pop {r0, r12}
 
     1:
-    ldr lr, =0x17E00000
+    ldr lr, =MPCORE_PMR
     str r0, [lr, #0x110]       @ End of interrupt
 
     pop {r0-r3, r12, lr}       @ Restore registers
@@ -90,9 +91,9 @@ ASM_FUNCTION xrq_irq
 .section .rodata.xrq_strings
 xrq_reset_str:       .asciz "RESET"
 xrq_undefined_str:   .asciz "UNDEFINED"
-xrq_softwareint_str: .asciz "SOFTWARE INTERRUPT"
-xrq_prefetchabt_str: .asciz "PREFETCH ABORT"
-xrq_dataabt_str:     .asciz "DATA ABORT"
+xrq_softwareint_str: .asciz "SOFTWARE_INT"
+xrq_prefetchabt_str: .asciz "PREFETCH_ABORT"
+xrq_dataabt_str:     .asciz "DATA_ABORT"
 xrq_reserved_str:    .asciz "RESERVED"
 xrq_irq_str:         .asciz "IRQ"
 xrq_fiq_str:         .asciz "FIQ"
