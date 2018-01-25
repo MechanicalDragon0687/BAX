@@ -18,13 +18,13 @@ static inline u32 rb_count(rb_t *rb)
     return rb->count;
 }
 
-void rb_init(rb_t *rb)
+static inline void rb_init(rb_t *rb)
 {
     memset(rb, 0, sizeof(rb_t));
     return;
 }
 
-bool rb_store(rb_t *rb, u32 *data, u32 data_len)
+static inline bool rb_store(rb_t *rb, u32 *data, u32 data_len)
 {
     bool ret = false;
     if (rb_count(rb) < FRB_MAX)
@@ -38,7 +38,7 @@ bool rb_store(rb_t *rb, u32 *data, u32 data_len)
     return ret;
 }
 
-u32 *rb_fetch(rb_t *rb, u32 *size)
+static inline u32 *rb_fetch(rb_t *rb, u32 *size)
 {
     u32 *ret = NULL;
     if (rb_count(rb) > 0)
