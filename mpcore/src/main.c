@@ -76,7 +76,7 @@ void main(void)
     if (bootenv != 0)
         load_boot_firm();
 
-    anim_count = fs_list(BAX_PATH, BAX_FILE, anim_paths, MAX_ANIMATIONS);
+    anim_count = fs_search(BAX_PATH, BAX_FILE, anim_paths, MAX_ANIMATIONS);
     hid_scan();
     if ((anim_count > 0) && !(hid_down() & HID_X))
     {

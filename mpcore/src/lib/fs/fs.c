@@ -8,7 +8,7 @@ int fs_init(void)
     return f_mount(&fs, "sdmc:", 1);
 }
 
-int fs_list(const char *dirpath, const char *pattern, char **paths, int max)
+int fs_search(const char *dirpath, const char *pattern, char **paths, int max)
 {
     int ret;
     FRESULT res;

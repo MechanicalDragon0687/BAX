@@ -17,11 +17,13 @@ Please note that while it's designed to boot another program, it does _not_ allo
 
 Download the BAX FIRM from the release archive, and set up your bootloader so that it's the first thing that gets loaded.
 
-Place any BAX animation files you want on `sdmc:/bax/` ("bax" folder on the SD card) and one will be played randomly.
-Put the FIRM to be loaded afterwards (secondary bootloader, Linux, etc) on `sdmc:/bax/boot.firm`. Compatibility appears to be perfect, although further testing might be required.
+Copy any BAX animation files to sdmc:/bax/ ("bax" folder on the SD card). BAX will randomly choose one animation from all animations found in the folder.
 
-If you're in a hurry and want to skip the playback, press X on boot or during playback. The animation will halt until you let go, giving you time to press any other buttons until the next FIRM is loaded (if any are necessary).
+Put the FIRM to be loaded afterwards (CFW, secondary bootloader, Linux, etc) on `sdmc:/bax/boot.firm`. Compatibility appears to be perfect, although further testing might be required.
 
+If you want to skip the animation playback, press X on boot or during playback. The animation will halt until you let go, giving you time to press any other buttons until the next FIRM is loaded (if any are necessary).
+
+#### ***WARNING: BAX can not be booted from a FIRM partition or an NTRboot cart.***
 
 
 
@@ -68,12 +70,13 @@ Read `docs/bugcheck.md`.
 ### Why would I use this?
 
 I honestly have no idea. Do I really have to tell you what you can and can't do?
+Just give it a shot - if you like it, keep it. Don't like it - remove it
 
 
 
 #### Other notes:
 
-Due to how Horizon works, if you reboot from AGB_FIRM (GBA Virtual Console) the save game **will not** be saved until you reboot back into it again.
+Due to how Horizon/NATIVE_FIRM works, if you reboot from AGB_FIRM (GBA Virtual Console) the save game **will not** be saved until you reboot back into it again.
 
 BAX performs no GPU initialization, only register tweaks and assumes the GPU has already been initialized by the time it boots.
 Any B9S-compatible loaders _should_ do this, given the proper bit is set in the FIRM (it certainly is in BAX), but I can not realistically provide support for every existing loader out there.

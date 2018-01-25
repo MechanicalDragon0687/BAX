@@ -3,6 +3,7 @@
 #include <cpu.h>
 #include <mmap.h>
 #include <interrupt.h>
+#include <rb.h>
 
 #include "anim.h"
 #include "hw/gx.h"
@@ -11,7 +12,6 @@
 #include "arm/irq.h"
 #include "arm/bugcheck.h"
 #include "lib/lz4/lz4.h"
-#include "lib/frb/frb.h"
 
 const gx_framebuffers_t anim_framebuffer_layout =
 {
@@ -51,31 +51,31 @@ int anim_validate(const anim_t *hdr, size_t hdr_sz)
     return ANIM_OK;
 }
 
-static frb_t frb;
-static float framerate;
-static bool playback;
+static rb_t ringbuf;
+static bool anim_playback;
+static u32 frame_rate, frame_size, frame_offset;
 static void anim_vblank_isr(u32 irqn)
 {
     u32 *frame;
-    static float _anim_vblank_isr_rate = 0.0f;
+    static u32 _anim_vblank_isr_ctr = 0;
 
     hid_scan();
-    _anim_vblank_isr_rate += 1 / 60.0f;
+    _anim_vblank_isr_ctr++;
     if (hid_down() & HID_X)
     {
-        playback = false;
-        while(frb_count(&frb) > 0)
-            free(frb_fetch(&frb));
+        anim_playback = false;
+        while(rb_count(&ringbuf) > 0)
+            free(rb_fetch(&ringbuf, NULL));
     }
-    else if (_anim_vblank_isr_rate > framerate)
+    else if ((_anim_vblank_isr_ctr*frame_rate) >= ANIM_MAX_RATE)
     {
-        frame = frb_fetch(&frb);
+        frame = rb_fetch(&ringbuf, NULL);
         if (frame != NULL)
         {
-            gx_dma_copy(frame, 0, (u32*)(gx_next_framebuffer(GFX_TOPL) + frb_offset(&frb)), 0, frb_size(&frb));
+            gx_dma_copy(frame, 0, (u32*)(gx_next_framebuffer(GFX_TOPL) + frame_offset), 0, frame_size);
             free(frame);
             gx_swap_buffers();
-            _anim_vblank_isr_rate = 0;
+            _anim_vblank_isr_ctr = 0;
         }
     }
     return;
@@ -84,39 +84,41 @@ static void anim_vblank_isr(u32 irqn)
 int anim_play(const anim_t *hdr)
 {
     bool stored;
-    int ret = ANIM_OK;
     u32 crit_status, alloc_attempts, frame;
     u32 *backbuffer, *framebuffer;
 
+    // Initialize state
+    frame_offset = hdr->x_offset * ANIM_WIDTH_MULT;
+    frame_size = hdr->x_length * ANIM_WIDTH_MULT;
+    frame_rate = hdr->frame_r;
+    alloc_attempts = 0;
+    anim_playback = true;
+    frame = 0;
+
     // Initial setup
-    frb_init(&frb, hdr->x_offset * ANIM_WIDTH_MULT, hdr->x_length * ANIM_WIDTH_MULT);
-    backbuffer = memalign(GX_TEXTURE_ALIGNMENT, frb_size(&frb));
+    rb_init(&ringbuf);
+    backbuffer = memalign(GX_TEXTURE_ALIGNMENT, frame_size);
     if (backbuffer == NULL)
         return ANIM_ERR_MEM;
 
-    memset(backbuffer, 0, frb_size(&frb));
+    memset(backbuffer, 0, frame_size);
 
     /* Process all configuration flags here */
     gx_psc_fill(VRAM_START, VRAM_SIZE, EXTENDST(hdr->clear_c), PSC_FILL32);
     gx_set_framebuffers(&anim_framebuffer_layout);
     gx_set_framebuffer_mode(PDC_RGB565);
 
-    alloc_attempts = 0;
-    framerate = 1.0f / (float)hdr->frame_r;
-    playback = true;
-    frame = 0;
-
     // Register VBlank and Timer interrupt handlers
     crit_status = _enter_critical();
     irq_register(IRQ_VBLANK0, anim_vblank_isr, 0);
     _leave_critical(crit_status);
 
-    while(frame < hdr->frame_n && playback)
+    while(frame < hdr->frame_n && anim_playback)
     {
         // Allocate frame in memory
         // must be GPU aligned
         crit_status = _enter_critical();
-        framebuffer = memalign(GX_TEXTURE_ALIGNMENT, frb_size(&frb));
+        framebuffer = memalign(GX_TEXTURE_ALIGNMENT, frame_size);
         _leave_critical(crit_status);
 
         // hopefully out of RAM and not heap corruption?
@@ -136,7 +138,7 @@ int anim_play(const anim_t *hdr)
             anim_frame_data(hdr, frame),
             (char*)framebuffer,
             hdr->frame_info[frame].compsz,
-            frb_size(&frb)) != frb_size(&frb))
+            frame_size) != frame_size)
         {
             // bad decompression
             bugcheck("ANIM_DECOMPRESS", (u32[]){frame}, 1);
@@ -144,7 +146,7 @@ int anim_play(const anim_t *hdr)
 
         // Perform delta decoding
         // TODO: unroll this if I ever find a slow anim
-        for (u32 q = 0; q < (frb_size(&frb) / sizeof(u32)); q++)
+        for (u32 q = 0; q < (frame_size / sizeof(u32)); q++)
         {
             u32 delta = backbuffer[q] + framebuffer[q];
             backbuffer[q] = delta;
@@ -152,13 +154,13 @@ int anim_play(const anim_t *hdr)
         }
 
         // GPU DMA is fun
-        _writeback_DC_range(framebuffer, frb_size(&frb));
+        _writeback_DC_range(framebuffer, frame_size);
 
         // Interrupts are fun
         do
         {
             crit_status = _enter_critical();
-            stored = frb_store(&frb, framebuffer);
+            stored = rb_store(&ringbuf, framebuffer, frame_size);
             _leave_critical(crit_status);
 
             // Not enough space
@@ -168,16 +170,17 @@ int anim_play(const anim_t *hdr)
         frame++;
     }
 
-    if (playback == false)
+    // If the animation was exited, drain the buffer
+    if (anim_playback == false)
     {
         crit_status = _enter_critical();
-        while(frb_count(&frb) > 0)
-            free(frb_fetch(&frb));
+        while(rb_count(&ringbuf) > 0)
+            free(rb_fetch(&ringbuf, NULL));
         _leave_critical(crit_status);
     }
 
     // Wait until it's done playing
-    while(frb_count(&frb) > 0) _wfi();
+    while(rb_count(&ringbuf) > 0) _wfi();
 
     // Deallocate used memory
     // Disable VBlank and Timer interrupts
