@@ -55,7 +55,7 @@ void bugcheck(const char *msg, u32 *args, int count)
 {
     u16 *fb;
     int y;
-    _disable_irqs();
+    _enter_critical();
     _writeback_invalidate_DC();
     _invalidate_IC();
 

@@ -15,9 +15,11 @@
 #define SR_UND (0x1B)
 #define SR_SYS (0x1F)
 
-#define SR_T   (1 << 5)
-#define SR_F   (1 << 6)
-#define SR_I   (1 << 7)
+#define SR_THUMB (1 << 5)
+#define SR_NOFIQ (1 << 6)
+#define SR_NOIRQ (1 << 7)
+
+#define SR_NOINT (SR_NOFIQ | SR_NOIRQ)
 
 #ifdef __ASSEMBLER__
 /* Function declaration macro */
@@ -69,10 +71,10 @@
     mrs r10, spsr
     mrs r11, cpsr
 
-    orr r0, r10, #(SR_I | SR_F)
-    bic r0, r0, #(SR_T)
+    orr r0, r10, #SR_NOINT
+    bic r0, r0, #SR_THUMB
     tst r0, #0xF
-    orreq r0, r0, #(SR_SYS)
+    orreq r0, r0, #SR_SYS
 
     @ Switch to previous mode with interrupts disabled and ARM mode
     msr cpsr_c, r0
@@ -80,7 +82,7 @@
     mov r2, lr
     msr cpsr_c, r11
 
-    tst r10, #(SR_T)
+    tst r10, #SR_THUMB
     bicne r2, r2, #1
     subne r3, lr, #3
     subeq r3, lr, #4

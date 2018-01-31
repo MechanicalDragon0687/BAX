@@ -1,6 +1,4 @@
 #include <asm.h>
-.align 2
-.arm
 
 
 @ void mmu_reset(void)

@@ -1,12 +1,12 @@
 #include <asm.h>
 #include <mmap.h>
 #include <interrupt.h>
-.align 2
-.arm
 
 @ TODO: implement tiny pages to map this to VA zero
 
 .global vectors_s
+.align 2
+.arm
 vectors_s:
     @ 0x1FFFFFA0
     ldr pc, [pc, #-4]

@@ -6,7 +6,7 @@
 .global bootstrap
 bootstrap:
     @ Switch to supervisor mode and disable interrupts
-    msr cpsr_c, #(SR_SVC | SR_I | SR_F)
+    msr cpsr_c, #(SR_SVC | SR_NOINT)
 
 
     @ Disable the MPU, caches, TCMs, set high exception vectors

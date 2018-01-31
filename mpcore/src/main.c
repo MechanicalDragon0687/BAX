@@ -47,11 +47,11 @@ void load_boot_firm(void)
     if (firm_sz == 0)
         bugcheck("FIRM_NOT_FOUND", NULL, 0);
     else if (firm_sz > MAX_FIRM_SIZE)
-        bugcheck("FIRM_TOO_LARGE", (u32[]){firm_sz}, 1);
+        bugcheck("FIRM_TOO_LARGE", (u32*)&firm_sz, 1);
 
     firm = malloc(firm_sz);
     if (firm == NULL)
-        bugcheck("FIRM_MALLOC", (u32[]){firm_sz}, 1);
+        bugcheck("FIRM_MALLOC", (u32*)&firm_sz, 1);
 
     fs_read(BAX_FIRM, firm, firm_sz);
     firm_err = firmlaunch(firm, firm_sz, BAX_FIRM);
@@ -62,16 +62,16 @@ void load_boot_firm(void)
 
 void main(void)
 {
-    int anim_count;
+    int res, anim_count;
     u32 rnd, bootenv;
     char *anim_paths[MAX_ANIMATIONS];
 
     bootenv = pxicmd_send(PXICMD_ARM9_BOOTENV, NULL, 0);
     rnd = pxicmd_send(PXICMD_ARM9_RANDOM, NULL, 0);
 
-    int r = fs_init();
-    if (r != 0)
-        bugcheck("FS_INIT", (u32[]){r}, 1);
+    res = fs_init();
+    if (res != 0)
+        bugcheck("FS_INIT", (u32*)&res, 1);
 
     if (bootenv != 0)
         load_boot_firm();
@@ -89,11 +89,11 @@ void main(void)
 
         anim_sz = fs_size(anim_path);
         if (anim_sz > ANIM_MAX_SIZE)
-            bugcheck("ANIM_TOO_LARGE", (u32[]){anim_sz}, 1);
+            bugcheck("ANIM_TOO_LARGE", (u32*)&anim_sz, 1);
 
         anim = malloc(anim_sz);
         if (anim == NULL)
-            bugcheck("ANIM_MALLOC", (u32[]){anim_sz}, 1);
+            bugcheck("ANIM_MALLOC", (u32*)&anim_sz, 1);
 
         fs_read(anim_path, anim, anim_sz);
 

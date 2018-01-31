@@ -6,7 +6,7 @@
 #define ANIM_WIDTH_MULT     (480)
 
 // Arbitrary
-#define MAX_ALLOC_ATTEMPTS  (131072)
+#define MAX_ALLOC_ATTEMPTS  (262144)
 
 // Animation header limits/definitions
 #define ANIM_MAX_SIZE (0x2000000) // 32MB
@@ -91,8 +91,13 @@ static inline const void *anim_frame_data(const anim_t *hdr, int frame)
     return (void*)((u8*)hdr + hdr->frame_info[frame].offset);
 }
 
+static inline u32 anim_frame_size(const anim_t *hdr, int frame)
+{
+    return hdr->frame_info[frame].compsz;
+}
+
 // Validate BAX animation
 int anim_validate(const anim_t *hdr, size_t hdr_sz);
 
-// Playback BAX animation
-int anim_play(const anim_t *hdr);
+// Play BAX animation
+void anim_play(const anim_t *hdr);

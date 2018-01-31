@@ -1,8 +1,6 @@
 #include <asm.h>
 #include <mmap.h>
 #include <pxicmd.h>
-.align 2
-.arm
 
 @ This function MUST be position independent
 ASM_FUNCTION firmstub

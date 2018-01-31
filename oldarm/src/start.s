@@ -1,7 +1,6 @@
 #include <asm.h>
 #include <interrupt.h>
 .align 2
-.arm
 
 ASM_FUNCTION start
     @ Clear BSS
@@ -19,10 +18,10 @@ ASM_FUNCTION start
 
 
     @ Setup stacks
-    msr cpsr_c, #(SR_IRQ | SR_I | SR_F)
+    msr cpsr_c, #(SR_IRQ | SR_NOINT)
     ldr sp, =__stack_irq
 
-    msr cpsr_c, #(SR_SYS | SR_I | SR_F)
+    msr cpsr_c, #(SR_SYS | SR_NOINT)
     ldr sp, =__stack_sys
 
 
@@ -106,7 +105,7 @@ ASM_FUNCTION start
 
     @ Enable interrupts
     mrs r0, cpsr
-    bic r0, r0, #SR_I
+    bic r0, r0, #SR_NOINT
     msr cpsr_c, r0
 
 

@@ -1,7 +1,5 @@
 #include <asm.h>
 #include <mmap.h>
-.align 2
-.arm
 
 
 .equ ARG_MAGIC, 0x0003BEEF
@@ -56,7 +54,7 @@ ASM_FUNCTION firm_boot
     @ CPSR:
     @ ARM, Supervisor, IRQ/FIQs disabled
     @ Flags are undefined
-    msr cpsr_c, #(SR_SVC | SR_I | SR_F)
+    msr cpsr_c, #(SR_SVC | SR_NOINT)
 
     @ CP15:
     @ MPU and Caches are off

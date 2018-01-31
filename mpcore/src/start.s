@@ -1,7 +1,6 @@
 #include <asm.h>
 #include <interrupt.h>
 #include "arm/mmu.h"
-.arm
 
 ASM_FUNCTION start
     cpsid aif @ Disable interrupts & imprecise abort

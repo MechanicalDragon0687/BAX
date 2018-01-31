@@ -21,47 +21,30 @@ static inline void _dmb(void)
 #else
 static inline void _dbt(void)
 {
-    __asm__ __volatile__(
-        "mcr p15, 0, %0, c7, c5, 6\n\t"
-        : : "r"(0) : "memory"
-    );
-    return;
+    __asm__ __volatile__ ("mcr p15, 0, %0, c7, c5, 6\n\t"::"r"(0):"memory");
 }
 
 static inline void _dpb(void)
 {
-    __asm__ __volatile__(
-        "mcr p15, 0, %0, c7, c5, 4"
-        : : "r"(0) : "memory"
-    );
-    return;
+    __asm__ __volatile__ ("mcr p15, 0, %0, c7, c5, 4"::"r"(0):"memory");
 }
 
 static inline void _dmb(void)
 {
-    __asm__ __volatile__(
-        "mcr p15, 0, %0, c7, c10, 5\n\t"
-        : : "r"(0) : "memory"
-    );
-    return;
+    __asm__ __volatile__ ("mcr p15, 0, %0, c7, c10, 5\n\t"::"r"(0):"memory");
 }
 #endif
 
+
+
 static inline void _dsb(void)
 {
-    __asm__ __volatile__(
-        "mcr p15, 0, %0, c7, c10, 4\n\t"
-        : : "r"(0) : "memory"
-    );
-    return;
+    __asm__ __volatile__ ("mcr p15, 0, %0, c7, c10, 4\n\t"::"r"(0):"memory");
 }
 
 static inline void _invalidate_IC(void)
 {
-    __asm__ __volatile__(
-        "mcr p15, 0, %0, c7, c5, 0\n\t"
-        : : "r"(0) : "memory"
-    );
+    __asm__ __volatile__ ("mcr p15, 0, %0, c7, c5, 0\n\t"::"r"(0):"memory");
     _dsb();
     _dpb();
     return;
@@ -87,10 +70,7 @@ static inline void _invalidate_IC_range(const void *base, u32 len)
 
 static inline void _invalidate_DC(void)
 {
-    __asm__ __volatile__(
-        "mcr p15, 0, %0, c7, c6, 0\n\t"
-        : : "r"(0) : "memory"
-    );
+    __asm__ __volatile__("mcr p15, 0, %0, c7, c6, 0\n\t"::"r"(0):"memory");
     _dsb();
     return;
 }

@@ -8,7 +8,6 @@
 #include "anim.h"
 #include "hw/gx.h"
 #include "hw/hid.h"
-#include "hw/timer.h"
 #include "arm/irq.h"
 #include "arm/bugcheck.h"
 #include "lib/lz4/lz4.h"
@@ -56,8 +55,8 @@ static bool anim_playback;
 static u32 frame_rate, frame_size, frame_offset;
 static void anim_vblank_isr(u32 irqn)
 {
-    u32 *frame;
     static u32 _anim_vblank_isr_ctr = 0;
+    u32 *frame;
 
     hid_scan();
     _anim_vblank_isr_ctr++;
@@ -81,68 +80,68 @@ static void anim_vblank_isr(u32 irqn)
     return;
 }
 
-int anim_play(const anim_t *hdr)
+static inline int anim_decompress_frame(const anim_t *hdr, void *framebuffer, int frame, u32 frame_size)
+{
+    char *src;
+    u32 frame_compsize;
+
+    src = (char*)anim_frame_data(hdr, frame);
+    frame_compsize = anim_frame_size(hdr, frame);
+    return LZ4_decompress_safe(src, framebuffer, frame_compsize, frame_size);
+}
+
+void anim_play(const anim_t *hdr)
 {
     bool stored;
-    u32 crit_status, alloc_attempts, frame;
+    u32 critstat, alloc_attempts, frame;
     u32 *backbuffer, *framebuffer;
+
 
     // Initialize state
     frame_offset = hdr->x_offset * ANIM_WIDTH_MULT;
     frame_size = hdr->x_length * ANIM_WIDTH_MULT;
     frame_rate = hdr->frame_r;
-    alloc_attempts = 0;
     anim_playback = true;
     frame = 0;
+
 
     // Initial setup
     rb_init(&ringbuf);
     backbuffer = memalign(GX_TEXTURE_ALIGNMENT, frame_size);
-    if (backbuffer == NULL)
-        return ANIM_ERR_MEM;
-
+    if (backbuffer == NULL) bugcheck("ANIM_BACKALLOC", (u32*)&frame_size, 1);
     memset(backbuffer, 0, frame_size);
 
-    /* Process all configuration flags here */
+
+    // Process all configuration flags here
     gx_psc_fill(VRAM_START, VRAM_SIZE, EXTENDST(hdr->clear_c), PSC_FILL32);
     gx_set_framebuffers(&anim_framebuffer_layout);
     gx_set_framebuffer_mode(PDC_RGB565);
 
-    // Register VBlank and Timer interrupt handlers
-    crit_status = _enter_critical();
+
+    // Register VBlank interrupt handler
+    critstat = _enter_critical();
     irq_register(IRQ_VBLANK0, anim_vblank_isr, 0);
-    _leave_critical(crit_status);
+    _leave_critical(critstat);
 
-    while(frame < hdr->frame_n && anim_playback)
+
+    while((frame < hdr->frame_n) && anim_playback)
     {
-        // Allocate frame in memory
-        // must be GPU aligned
-        crit_status = _enter_critical();
-        framebuffer = memalign(GX_TEXTURE_ALIGNMENT, frame_size);
-        _leave_critical(crit_status);
-
-        // hopefully out of RAM and not heap corruption?
-        if (framebuffer == NULL)
+        framebuffer = NULL;
+        alloc_attempts = 0;
+        while (framebuffer == NULL)
         {
-            if (++alloc_attempts > MAX_ALLOC_ATTEMPTS)
-                bugcheck("ANIM_MEMALIGN", (u32[]){frame}, 1);
-
-            // in case it actually is out of memory
-            // give the ring buffer some time to be drained
+            critstat = _enter_critical();
+            framebuffer = memalign(GX_TEXTURE_ALIGNMENT, frame_size);
+            _leave_critical(critstat);
+            if (framebuffer != NULL) break;
+            // hopefully out of RAM and not heap corruption?
+            if (++alloc_attempts > MAX_ALLOC_ATTEMPTS) bugcheck("ANIM_MEMALIGN", &frame, 1);
             _wfi();
             continue;
         }
-        alloc_attempts = 0; // good, reset the fail counter
 
-        if ((u32)LZ4_decompress_safe(
-            anim_frame_data(hdr, frame),
-            (char*)framebuffer,
-            hdr->frame_info[frame].compsz,
-            frame_size) != frame_size)
-        {
-            // bad decompression
-            bugcheck("ANIM_DECOMPRESS", (u32[]){frame}, 1);
-        }
+        if (anim_decompress_frame(hdr, framebuffer, frame, frame_size) <= 0)
+            bugcheck("ANIM_DECOMPRESS", &frame, 1);
 
         // Perform delta decoding
         // TODO: unroll this if I ever find a slow anim
@@ -159,11 +158,10 @@ int anim_play(const anim_t *hdr)
         // Interrupts are fun
         do
         {
-            crit_status = _enter_critical();
+            critstat = _enter_critical();
             stored = rb_store(&ringbuf, framebuffer, frame_size);
-            _leave_critical(crit_status);
-
-            // Not enough space
+            _leave_critical(critstat);
+            // Not enough room left
             if (stored == false) _wfi();
         } while(stored == false);
 
@@ -173,10 +171,10 @@ int anim_play(const anim_t *hdr)
     // If the animation was exited, drain the buffer
     if (anim_playback == false)
     {
-        crit_status = _enter_critical();
+        critstat = _enter_critical();
         while(rb_count(&ringbuf) > 0)
             free(rb_fetch(&ringbuf, NULL));
-        _leave_critical(crit_status);
+        _leave_critical(critstat);
     }
 
     // Wait until it's done playing
@@ -184,10 +182,10 @@ int anim_play(const anim_t *hdr)
 
     // Deallocate used memory
     // Disable VBlank and Timer interrupts
-    crit_status = _enter_critical();
+    critstat = _enter_critical();
     free(backbuffer);
-    timer_stop();
     irq_deregister(IRQ_VBLANK0, 0);
-    _leave_critical(crit_status);
-    return ANIM_OK;
+    _leave_critical(critstat);
+
+    return;
 }
