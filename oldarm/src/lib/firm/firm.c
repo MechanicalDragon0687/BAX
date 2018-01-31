@@ -24,8 +24,7 @@ int firm_validate(firm_t *firm, size_t firm_sz)
     if (firm_sz >= FIRM_MAX_SIZE)
         return FIRM_BAD_SIZE;
 
-    for (u32 i = 0; i < FIRM_SECTIONS; i++)
-    {
+    for (u32 i = 0; i < FIRM_SECTIONS; i++) {
         sect = &firm->section[i];
         u32 ldaddr, offset, size, addr;
         ldaddr = sect->load_addr,
@@ -53,8 +52,7 @@ int firm_validate(firm_t *firm, size_t firm_sz)
             return FIRM_BAD_SIZE;
 
         // Check load address
-        for (addr = 0; addr < _firm_wlist_regions; addr++)
-        {
+        for (addr = 0; addr < _firm_wlist_regions; addr++) {
             if (ldaddr >= _firm_wlist[addr][0] &&
                 (ldaddr + size) < _firm_wlist[addr][1])
                 break;

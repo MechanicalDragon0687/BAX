@@ -10,19 +10,16 @@ int fs_init(void)
 
 int fs_search(const char *dirpath, const char *pattern, char **paths, int max)
 {
-    int ret;
+    int ret = 0;
     FRESULT res;
     DIR dir;
     FILINFO filinf;
 
     for (int i = 0; i < max; i++) paths[i] = NULL;
-    ret = 0;
 
     res = f_findfirst(&dir, &filinf, dirpath, pattern);
-    while((res == FR_OK) && (filinf.fname[0] != 0) && (ret < max))
-    {
-        if (!(filinf.fattrib & AM_DIR))
-        {
+    while((res == FR_OK) && (filinf.fname[0] != 0) && (ret < max)) {
+        if (!(filinf.fattrib & AM_DIR)) {
             paths[ret] = malloc(strlen(filinf.fname) + 1);
             strcpy(paths[ret], filinf.fname);
             ret++;
@@ -37,13 +34,10 @@ size_t fs_read(const char *path, void *dest, size_t bytes)
     size_t ret;
     FIL f;
 
-    if (f_open(&f, path, FA_READ) == FR_OK)
-    {
+    if (f_open(&f, path, FA_READ) == FR_OK) {
         f_read(&f, dest, bytes, &ret);
         f_close(&f);
-    }
-    else
-    {
+    } else {
         ret = 0;
     }
 
@@ -55,13 +49,10 @@ size_t fs_size(const char *path)
     size_t ret;
     FIL f;
 
-    if (f_open(&f, path, FA_READ) == FR_OK)
-    {
+    if (f_open(&f, path, FA_READ) == FR_OK) {
         ret = f_size(&f);
         f_close(&f);
-    }
-    else
-    {
+    } else {
         ret = 0;
     }
     return ret;

@@ -54,8 +54,7 @@ static inline void _invalidate_IC_range(const void *base, u32 len)
 {
     u32 addr = (u32)base & ~0x1F;
     len >>= 5;
-    do
-    {
+    do {
         __asm__ __volatile__(
             "mcr p15, 0, %0, c7, c5, 1\n\t"
             : : "r"(addr) : "memory"
@@ -79,8 +78,7 @@ static inline void _invalidate_DC_range(const void *base, u32 len)
 {
     u32 addr = (u32)base & ~0x1F;
     len >>= 5;
-    do
-    {
+    do {
         __asm__ __volatile__(
             "mcr p15, 0, %0, c7, c6, 1"
             : : "r"(addr) : "memory"
@@ -95,11 +93,9 @@ static inline void _writeback_DC(void)
 {
     #ifdef ARM9
     u32 seg = 0, ind;
-    do
-    {
+    do {
         ind = 0;
-        do
-        {
+        do {
             __asm__ __volatile__(
                 "mcr p15, 0, %0, c7, c10, 2\n\t"
                 : : "r"(seg | ind) : "memory"
@@ -122,8 +118,7 @@ static inline void _writeback_DC_range(const void *base, u32 len)
 {
     u32 addr = (u32)base & ~0x1F;
     len >>= 5;
-    do
-    {
+    do {
         __asm__ __volatile__(
             "mcr p15, 0, %0, c7, c10, 1"
             : : "r"(addr) : "memory"
@@ -138,11 +133,9 @@ static inline void _writeback_invalidate_DC(void)
 {
     #ifdef ARM9
     u32 seg = 0, ind;
-    do
-    {
+    do {
         ind = 0;
-        do
-        {
+        do {
             __asm__ __volatile__(
                 "mcr p15, 0, %0, c7, c14, 2\n\t"
                 : : "r"(seg|ind) : "memory"
@@ -165,8 +158,7 @@ static inline void _writeback_invalidate_DC_range(const void *base, u32 len)
 {
     u32 addr = (u32)base & ~0x1F;
     len >>= 5;
-    do
-    {
+    do {
         __asm__ __volatile__(
             "mcr p15, 0, %0, c7, c14, 1"
             : : "r"(addr) : "memory"

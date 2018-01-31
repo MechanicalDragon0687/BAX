@@ -15,8 +15,7 @@ void pxi_handler(u32 irqn)
     u8 cmd = pxicmd_recv(pxia, &pxic);
     int resp = 0;
 
-    switch(cmd)
-    {
+    switch(cmd) {
         case PXICMD_ARM9_SDMMC_INIT:
         {
             sdmmc_init();

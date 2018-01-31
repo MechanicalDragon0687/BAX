@@ -13,8 +13,8 @@
 
 #define ANIM_MAGIC    ((u8[]){'B', 'A', 'X'})
 
-#define ANIM_MIN_VER  (0)
-#define ANIM_MAX_VER  (0)
+#define ANIM_MIN_VER  (1)
+#define ANIM_MAX_VER  (1)
 
 #define ANIM_MIN_FRAMES (1)
 #define ANIM_MAX_FRAMES (8192)
@@ -25,11 +25,11 @@
 #define ANIM_MIN_OFFSET (0)
 #define ANIM_MAX_OFFSET (1120)
 
-#define ANIM_MIN_LENGTH (1)
-#define ANIM_MAX_LENGTH (1120)
+#define ANIM_MIN_WIDTH (1)
+#define ANIM_MAX_WIDTH (1120)
 
-#define ANIM_MIN_FSIZE  (1 * ANIM_WIDTH_MULT)
-#define ANIM_MAX_FSIZE  (ANIM_MAX_LENGTH * ANIM_WIDTH_MULT)
+#define ANIM_MIN_FSIZE  (ANIM_MIN_WIDTH * ANIM_WIDTH_MULT)
+#define ANIM_MAX_FSIZE  (ANIM_MAX_WIDTH * ANIM_WIDTH_MULT)
 
 
 // Animation error codes
@@ -59,7 +59,7 @@ enum
 typedef struct
 {
     u32 offset;   // Offset to the compressed frame (from start of file)
-    u32 compsz;   // Compressed frame size
+    int compsz;   // Compressed frame size
 } anim_finfo_t;
 
 typedef struct
@@ -67,14 +67,14 @@ typedef struct
     u8  magic[3]; // 'BAX'
     u8  version;  // Animation header version
     u32 flags;    // Misc flags
-    u32 frame_n;  // Number of frames in the animation
-    u32 frame_r;  // Animation framerate
+    int frame_n;  // Number of frames in the animation
+    int frame_r;  // Animation framerate
 
     u16 clear_c;  // Initial background color
     u8 resv[6];   // Reserved, should be zero
 
-    u32 x_offset; // Frame X-offset
-    u32 x_length; // Frame width
+    int x_offset; // Frame X-offset
+    int x_width;  // Frame width
 
     char author[32];
     char description[192];
@@ -91,7 +91,7 @@ static inline const void *anim_frame_data(const anim_t *hdr, int frame)
     return (void*)((u8*)hdr + hdr->frame_info[frame].offset);
 }
 
-static inline u32 anim_frame_size(const anim_t *hdr, int frame)
+static inline int anim_frame_size(const anim_t *hdr, int frame)
 {
     return hdr->frame_info[frame].compsz;
 }

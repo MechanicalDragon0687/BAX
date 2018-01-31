@@ -16,13 +16,11 @@ void irq_reset(void)
     memset(_lirq_handlers[core], 0, sizeof(_lirq_handlers[core]));
 
     // Setup hardware interrupts
-    if (core == 0)
-    {
+    if (core == 0) {
         *DIC_CONTROL = 0;
         memset(_irq_handlers, 0, sizeof(_irq_handlers));
 
-        for (int i = 0; i < 4; i++)
-        {
+        for (int i = 0; i < 4; i++) {
             DIC_CLRENABLE[i]  = ~0;
             DIC_CLRPENDING[i] = ~0;
         }
@@ -58,8 +56,7 @@ void irq_reset(void)
     *GIC_CONTROL = 1;
 
     // Send end of interrupt until the spurious interrupt shows up
-    do
-    {
+    do {
         irq_s = *GIC_PENDING;
         *GIC_IRQEND = irq_s;
     } while(irq_s != 0x3FF);

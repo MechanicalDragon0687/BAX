@@ -19,8 +19,7 @@ void irq_reset(void)
 
 void irq_register(u32 irqn, isr_t handler)
 {
-    if (irqn < IRQ_COUNT)
-    {
+    if (irqn < IRQ_COUNT) {
         _irq_handlers[irqn] = handler;
 
         // Clear pending interrupt bit (just in case) and enable interrupt
@@ -32,8 +31,7 @@ void irq_register(u32 irqn, isr_t handler)
 
 void irq_deregister(u32 irqn)
 {
-    if (irqn < IRQ_COUNT)
-    {
+    if (irqn < IRQ_COUNT) {
         _irq_handlers[irqn] = NULL;
         *IRQ_IE &= ~BIT(irqn);
     }

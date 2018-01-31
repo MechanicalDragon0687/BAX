@@ -7,8 +7,7 @@
 
 void ndma_reset(void)
 {
-    for (int i = 0; i < 8; i++)
-    {
+    for (int i = 0; i < 8; i++) {
         NDMA_CONTROL(i) = 0;
         irq_register(IRQ_DMA0 + i, NULL);
     }

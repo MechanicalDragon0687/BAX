@@ -13,8 +13,7 @@ const gx_framebuffers_t _fallback_framebuffers =
 
 static inline vu32 *gx_framebuffer_regs(int screen)
 {
-    switch(screen)
-    {
+    switch(screen) {
         default:
         case GFX_TOPL:   return &GX_PDC0[26];
         case GFX_TOPR:   return &GX_PDC0[37];
@@ -24,8 +23,7 @@ static inline vu32 *gx_framebuffer_regs(int screen)
 
 static inline u32 gx_framebuffer_strides(int pdc_mode)
 {
-    switch(pdc_mode)
-    {
+    switch(pdc_mode) {
         default:
         case PDC_RGBA8:  return 960;
         case PDC_BGR8:   return 720;
@@ -86,8 +84,7 @@ u32 gx_next_framebuffer(int screen)
 
 void gx_set_framebuffers(const gx_framebuffers_t *fb)
 {
-    for (int i = 0; i < 3; i++)
-    {
+    for (int i = 0; i < 3; i++) {
         (gx_framebuffer_regs(i))[0] = (*fb)[i][0];
         (gx_framebuffer_regs(i))[1] = (*fb)[i][1];
     }
@@ -97,8 +94,7 @@ void gx_set_framebuffers(const gx_framebuffers_t *fb)
 
 void gx_set_framebuffer_mode(int fmt)
 {
-    if (fmt < PDC_INVALID)
-    {
+    if (fmt < PDC_INVALID) {
         GX_PDC0[28] = fmt | BIT(6);
         GX_PDC1[28] = fmt;
         GX_PDC0[36] = gx_framebuffer_strides(fmt);

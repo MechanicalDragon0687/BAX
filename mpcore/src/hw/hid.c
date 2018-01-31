@@ -13,7 +13,7 @@ void hid_reset(void)
 void hid_scan(void)
 {
     kprev = kcur;
-    kcur = (~(*HID_BASE) & HID_ANY);
+    kcur = ~(*HID_BASE) & HID_ANY;
     return;
 }
 

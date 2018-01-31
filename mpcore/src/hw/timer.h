@@ -22,11 +22,10 @@ void timer_reset(void);
 void timer_start(u32 ticks, bool arel, bool irq);
 void timer_stop(void);
 u32 timer_ticks(void);
-static inline u32 timer_ms_to_ticks(float ms)
-{
+static inline u32 timer_ms_to_ticks(float ms) {
     return ms * TIMER_CONV_FACTOR;
 }
-static inline float timer_ticks_to_ms(u32 ticks)
-{
+
+static inline float timer_ticks_to_ms(u32 ticks) {
     return (float)ticks / TIMER_CONV_FACTOR;
 }

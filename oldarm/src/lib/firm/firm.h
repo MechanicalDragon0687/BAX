@@ -6,8 +6,7 @@
 #define FIRM_MAX_SIZE (0x400000)
 #define FIRM_SECTIONS (4)
 
-enum
-{
+enum {
     FIRM_OK = 0,
     FIRM_MEM_ERR,
     FIRM_BAD_MAGIC,
@@ -20,8 +19,7 @@ enum
     FIRM_SECT_HASH
 };
 
-typedef struct
-{
+typedef struct {
     u32 offset;
     u32 load_addr;
     u32 size;
@@ -29,8 +27,7 @@ typedef struct
     u8  sha_hash[0x20];
 } firm_section_t;
 
-typedef struct
-{
+typedef struct {
     u8  magic[4];
     u32 priority;
     u32 mpcore_entry;

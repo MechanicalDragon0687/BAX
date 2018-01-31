@@ -24,8 +24,7 @@ void pxi_handler(u32 irqn)
     int resp = 0;
 
     cmd = pxicmd_recv(pxia, &pxic);
-    switch(cmd)
-    {
+    switch(cmd) {
         case PXICMD_ARM11_PANIC:
             bugcheck("OLDARM_PANIC", NULL, 0);
 
@@ -78,8 +77,7 @@ void main(void)
 
     anim_count = fs_search(BAX_PATH, BAX_FILE, anim_paths, MAX_ANIMATIONS);
     hid_scan();
-    if ((anim_count > 0) && !(hid_down() & HID_X))
-    {
+    if ((anim_count > 0) && !(hid_down() & HID_X)) {
         int anim_valid;
         size_t anim_sz;
         char anim_path[MAX_PATH], *anim;
@@ -108,8 +106,7 @@ void main(void)
     for (int i = 0; i < anim_count; i++)
         free(anim_paths[i]);
 
-    do
-    {
+    do {
         hid_scan();
     } while(hid_down() & HID_X);
 

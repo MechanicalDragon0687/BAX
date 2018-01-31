@@ -14,20 +14,15 @@ static void _bugcheck_draw_str(u16 *fb, int x, int y, const char *str)
     u16 *px;
     int mask, row;
 
-    for(; (*str > 0x1F) && (*str < 0x60); str++)
-    {
-        for (int _y = 0; _y < 8; _y++)
-        {
+    for(; (*str > 0x1F) && (*str < 0x60); str++) {
+        for (int _y = 0; _y < 8; _y++) {
             px = &fb[FB_COORD_TO_LINEAR(x, y + _y)];
             row = _bugcheck_font[_y + ((*str - 0x20) * 8)];
             mask = 0x80;
 
-            for (int _x = 0; _x < 8; _x++, mask>>=1)
-            {
-                if (mask & row)
-                    *px = ~0;
-                else
-                    *px = 0;
+            for (int _x = 0; _x < 8; _x++, mask >>= 1) {
+                if (mask & row) *px = ~0;
+                else *px = 0;
                 px += 240;
             }
         }
@@ -43,8 +38,7 @@ static void _bugcheck_draw_hex(u16 *fb, int x, int y, u32 h)
     char hexstr[9];
     hexstr[8] = 0;
     int i = 8;
-    do
-    {
+    do {
         hexstr[--i] = _bugcheck_draw_hex_tbl[h & 15];
         h >>= 4;
     } while(i != 0);
@@ -70,8 +64,7 @@ void bugcheck(const char *msg, u32 *args, int count)
     _bugcheck_draw_str(fb, 88, 8, msg);
 
     y = 16;
-    for (int i = 0; i < count; i++)
-    {
+    for (int i = 0; i < count; i++) {
         _bugcheck_draw_hex(fb, 8,  y, i);
         _bugcheck_draw_hex(fb, 80, y, args[i]);
         y += 8;
