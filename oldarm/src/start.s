@@ -4,17 +4,13 @@
 
 ASM_FUNCTION start
     @ Clear BSS
-    mov r4, #0
-    ldr r5, =__bss_s
-    ldr r6, =__bss_e
+    mov r0, #0
+    ldr r1, =__bss_s
+    ldr r2, =__bss_e
     1:
-        cmp r5, r6
-        strlo r4, [r5], #4
+        cmp r1, r2
+        strlo r0, [r1], #4
         blo 1b
-
-    @ Preserve registers to be passed to low level boot code
-    ldr r4, =bootregs
-    stmia r4, {r0-r3}
 
 
     @ Setup stacks
@@ -32,15 +28,15 @@ ASM_FUNCTION start
 
 
     @ MPU Regions:
-    @ Name    @ Start      - End        / Data,  Inst  / IC, DC, DB
-    @ ITCM    @ 0x00000000 - 0x07FFFFFF / RW_NA, RO_NA /  n,  n,  n
-    @ AHBRAM  @ 0x08000000 - 0x08FFFFFF / RW_NA, RO_NA /  y,  y,  y
-    @ MMIO    @ 0x10000000 - 0x101FFFFF / RW_NA, NA_NA /  n,  n,  n
-    @ VRAM    @ 0x18000000 - 0x187FFFFF / RW_NA, NA_NA /  n,  n,  n
-    @ AXIRAM  @ 0x1FF00000 - 0x1FFFFFFF / RW_NA, NA_NA /  n,  n,  n
-    @ FCRAM   @ 0x20000000 - 0x27FFFFFF / RW_NA, NA_NA /  n,  n,  n
-    @ DTCM    @ 0x30000000 - 0x30003FFF / RW_NA, NA_NA /  n,  n,  n
-    @ BootROM @ 0xFFFF0000 - 0xFFFF7FFF / RO_NA, RO_NA /  y,  n,  n
+    @ N | Name    | Start      | End        | Data  | Inst  | IC | DC | DB
+    @ 0 | ITCM    | 0x00000000 | 0x07FFFFFF | RW_NA | RO_NA | n  | n  | n
+    @ 1 | AHBRAM  | 0x08000000 | 0x08FFFFFF | RW_NA | RO_NA | y  | y  | y
+    @ 2 | MMIO    | 0x10000000 | 0x101FFFFF | RW_NA | NA_NA | n  | n  | n
+    @ 3 | VRAM    | 0x18000000 | 0x187FFFFF | RW_NA | NA_NA | n  | n  | n
+    @ 4 | AXIRAM  | 0x1FF00000 | 0x1FFFFFFF | RW_NA | NA_NA | n  | n  | n
+    @ 5 | FCRAM   | 0x20000000 | 0x27FFFFFF | RW_NA | NA_NA | n  | n  | n
+    @ 6 | DTCM    | 0x30000000 | 0x30003FFF | RW_NA | NA_NA | n  | n  | n
+    @ 7 | BootROM | 0xFFFF0000 | 0xFFFF7FFF | RO_NA | RO_NA | y  | n  | n
 
     mov r0, #0b10000010 @ Instruction Cachable
     mov r1, #0b00000010 @ Data Cachable
@@ -75,7 +71,7 @@ ASM_FUNCTION start
     orr r0, r0, r1
     bic r0, r0, r2
     mcr p15, 0, r0, c1, c0, 0
-    NOP_SLED 4
+    NOP_SLED 2
 
 
     @ Setup heap
@@ -111,7 +107,6 @@ ASM_FUNCTION start
 
     @ Branch to C code
     ldr r12, =main
-    ldr r0, =bootregs
     bx r12
 
 
@@ -126,9 +121,3 @@ mpu_regions:
     .word 0x20000035 @ FCRAM
     .word 0x3000001B @ DTCM
     .word 0xFFFF001D @ BootROM
-
-
-.section .bss.bootregs
-.align 2
-bootregs:
-    .word 0, 0, 0, 0

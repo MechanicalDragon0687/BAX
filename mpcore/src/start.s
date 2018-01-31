@@ -25,7 +25,7 @@ ASM_FUNCTION start
 
     ldr r0, =0x54078 @ Control Register reset value
     mcr p15, 0, r0, c1, c0, 0
-    NOP_SLED 8
+    NOP_SLED 2
 
 
     @ Setup stacks
@@ -73,6 +73,12 @@ ASM_FUNCTION start
     bl mmu_reset
     bl hid_reset
     bl timer_reset
+
+
+    @ Clear GPUPROT (GPU can access all FCRAM + AXIRAM)
+    ldr r0, =0x10140140
+    mov r1, #0
+    str r1, [r0]
 
 
     @ Install exception handlers
@@ -166,12 +172,6 @@ ASM_FUNCTION start
     NOP_SLED 4
 
 
-    @ Clear GPUPROT (GPU can access all FCRAM + AXIRAM)
-    ldr r0, =0x10140140
-    mov r1, #0
-    str r1, [r0]
-
-
     @ Setup heap
     ldr r0, =fake_heap_start
     ldr r1, =__heap_start
@@ -194,5 +194,6 @@ ASM_FUNCTION start
     cpsie i
 
 
+    @ Branch to C code
     ldr r12, =main
     bx r12

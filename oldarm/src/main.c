@@ -68,7 +68,7 @@ void pxi_handler(u32 irqn)
     return;
 }
 
-void main(u32 *args)
+void main(void)
 {
     while(firm == NULL) _wfi();
     firm_boot(firm, firm_path);    
