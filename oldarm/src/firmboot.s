@@ -7,8 +7,8 @@
 @ these will have to be increased as well
 @ NOTE: do not write beyond 0x1FFFFE00
 .equ ARGV_LOC,    0x1FFFFC80
-.equ PATH_LOC,    0x1FFFFC88
-.equ FBPTR_LOC,   0x1FFFFD88
+.equ PATH_LOC,    (ARGV_LOC + 8)
+.equ FBPTR_LOC,   (PATH_LOC + 256)
 .equ BOOTROM_CPY, 0xFFFF0374
 
 

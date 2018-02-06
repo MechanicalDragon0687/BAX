@@ -38,7 +38,7 @@ void pxi_handler(u32 irqn)
         case PXICMD_ARM9_FIRMBOOT:
         {
             firm = (firm_t*)pxia[0];
-            strncpy(firm_path, (const char*)pxia[1], 255);
+            strncpy(firm_path, (const char*)pxia[1], sizeof(firm_path) - 1);
             break;
         }
 

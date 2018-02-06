@@ -1,5 +1,6 @@
 #include <asm.h>
 #include <interrupt.h>
+#include <pxicmd.h>
 .align 2
 .arm
 
@@ -33,6 +34,10 @@ xrq_fiq:
 
 xrq_fatal_handler:
     XRQ_SECONDARY_HANDLER
+    mov r0, #PXICMD_ARM11_PANIC
+    mov r1, #0
+    mov r2, #0
+    bl pxicmd_send_async
     b .
 
 
@@ -45,12 +50,12 @@ ASM_FUNCTION xrq_irq
     ldr r12, [lr, #4]            @ Pending IRQ bitmask
 
     clz r12, r12
-    mov r3, #1
     rsb r0, r12, #31
 
     cmp r0, #IRQ_COUNT
     bhs 1f                       @ Invalid interrupt source
 
+    mov r3, #1
     lsl r3, r3, r0
     str r3, [lr, #4]             @ Acknowledge interrupt
 

@@ -6,7 +6,6 @@
 #define MPCORE_PMR   (0x17E00000)
 
 
-
 /* VRAM / Framebuffer */
 #define SCREEN_HEIGHT    (240)
 #define SCREEN_TOP_WIDTH (400)

@@ -1,12 +1,3 @@
-/*-----------------------------------------------------------------------*/
-/* Low level disk I/O module skeleton for FatFs     (C)ChaN, 2016        */
-/*-----------------------------------------------------------------------*/
-/* If a working storage control module is available, it should be        */
-/* attached to the FatFs via a glue function rather than modifying it.   */
-/* This is an example of glue functions to attach various exsisting      */
-/* storage control modules to the FatFs module with a defined API.       */
-/*-----------------------------------------------------------------------*/
-
 #include "diskio.h"
 
 #include <cache.h>
@@ -52,7 +43,7 @@ DRESULT disk_read (
 )
 {
     int ret;
-    _writeback_invalidate_DC_range(buff, count * SECTOR_SIZE);
+    _writeback_DC_range(buff, count * SECTOR_SIZE);
     ret = pxicmd_send(PXICMD_ARM9_SD_READSECTORS, (u32[]){sector, count, (u32)buff}, 3);
     _invalidate_DC_range(buff, count * SECTOR_SIZE);
     return ret;

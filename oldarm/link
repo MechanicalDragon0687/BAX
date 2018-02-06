@@ -60,6 +60,6 @@ SECTIONS
     __heap_start = __end__;
 
     __stack_irq = ORIGIN(DTCM) + LENGTH(DTCM);
-    __stack_abt = __stack_irq - 0x1C00;
-    __stack_sys = __stack_abt - 0x400;
+    __stack_abt = __stack_irq - 0xF00;
+    __stack_sys = __stack_abt - 0x100;
 }

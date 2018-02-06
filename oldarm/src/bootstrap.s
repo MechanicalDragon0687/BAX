@@ -1,6 +1,5 @@
 #include <asm.h>
-.align 2
-.arm
+#include <mmap.h>
 
 .section .bootstrap, "ax"
 .global bootstrap
@@ -16,12 +15,10 @@ bootstrap:
     lsr r5, r2, #16
     cmp r4, r3        @ Check magic hword
     cmpeq r0, #2      @ Check argc == 2
-    1:
-        movne r0, #0
-        mcrne p15, 0, r0, c7, c0, 4
-        bne 1b
+    bne bootstrap_error
+
     cmp r5, #2
-    blo 1b
+    blo bootstrap_error
 
 
     @ Disable the MPU, caches, TCMs, set high exception vectors
@@ -86,3 +83,24 @@ bootstrap_reloc:
     blo bootstrap_reloc
 
     bx lr
+
+@ something went really wrong
+@ void bootstrap_error(void)
+bootstrap_error:
+    @ clear VRAM
+    ldr r0, =VRAM_START
+    ldr r1, =VRAM_END
+    mov r2, #~0
+    1:
+        cmp r0, r1
+        strlo r2, [r0], #4
+        blo 1b
+
+    @ ad infinitum
+    mrs r0, cpsr
+    orr r0, r0, #SR_NOINT
+    msr cpsr_c, r0
+    mov r0, #0
+    2:
+        mcr p15, 0, r0, c7, c0, 4
+        b 2b
