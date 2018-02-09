@@ -17,3 +17,9 @@ Thumbs.db
 *.id*
 *.nam
 *.til
+*.zip
+*.tar*
+*.gz
+*.xz
+*.lzma
+*.bz*

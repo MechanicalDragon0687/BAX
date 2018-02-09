@@ -49,6 +49,15 @@ void RingBuffer_Kill(RingBuf *rb)
     return;
 }
 
+size_t RingBuffer_Count(RingBuf *rb)
+{
+    size_t ret;
+    pthread_mutex_lock(&rb->lock);
+    ret = rb->count;
+    pthread_mutex_unlock(&rb->lock);
+    return ret;
+}
+
 int RingBuffer_Store(RingBuf *rb, void *data, size_t datalen)
 {
     int ret = 0;

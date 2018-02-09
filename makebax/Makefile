@@ -1,11 +1,11 @@
-TARGET  := comp
+TARGET  := makebax
 
-CFLAGS  := -O2 -ffast-math -ggdb
-LDFLAGS := -lpthread -llz4 -lavcodec -lavformat -lswscale -ggdb
+CFLAGS  := -O2
+LDFLAGS := -lpthread -llz4
 
 OBJDIR  := build
 SRCDIR  := source
-_OBJS   := bax.o main.o ringbuf.o
+_OBJS   := bax.o main.o ringbuf.o baxbuild.o lzcompress.o postprocess.o video.o
 OBJS    := $(patsubst %,$(OBJDIR)/%,$(_OBJS))
 
 $(TARGET): $(OBJS)
