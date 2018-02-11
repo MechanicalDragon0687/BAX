@@ -55,7 +55,7 @@ static inline void abort_error(const char *str, ...)
     va_start(va, str);
     vprintf(str, va);
     va_end(va);
-    printf("Aborting...\n");
+    printf("Aborted\n");
 
     exit(EXIT_FAILURE);
 }
@@ -63,7 +63,7 @@ static inline void abort_error(const char *str, ...)
 // Ugly hack that needs to go away ASAP
 static inline void thread_yield(void)
 {
-    usleep(200);
+    usleep(2000);
 }
 
 static inline size_t align_up(size_t n, size_t a)

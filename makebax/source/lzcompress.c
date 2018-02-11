@@ -40,7 +40,6 @@ void *LZ4CompressThread(void *main_state)
 
         free(raw_buffer);
         while(!RingBuffer_Store(store_ring, comp_buffer, comp_size)) thread_yield();
-
     }
 
     pthread_exit(NULL);

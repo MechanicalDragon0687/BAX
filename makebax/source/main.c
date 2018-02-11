@@ -25,8 +25,8 @@ int main(int argc, char *argv[])
     printf("BAXcomp v" BAXCOMP_VERSION "\n");
     if (argc < 3) {
         abort_error(
-            "Usage: %s input.vid output.bax [-t w] [-c l] [-r n] "
-            "[-a \"Author\"] [-d \"Description\"] [-b bg_color]\n",
+            "Usage: %s \"input.ivf\" \"output.bax\" [-t w] [-c l] [-r n] "
+            "[-b bg_color] [-a \"Author\"] [-d \"Description\"]\n",
             argv[0]);
     }
 
@@ -45,14 +45,14 @@ int main(int argc, char *argv[])
                     case 'r':
                         rate = strtol(argv[i], NULL, 0);
                         break;
+                    case 'b':
+                        bgc = strtol(argv[i], NULL, 0);
+                        break;
                     case 'a':
                         author = argv[i];
                         break;
                     case 'd':
                         info = argv[i];
-                        break;
-                    case 'b':
-                        bgc = strtol(argv[i], NULL, 0);
                         break;
                     default:
                         abort_error("Unknown option \"-%c\"\n", opt_char);
@@ -103,6 +103,8 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < 3; i++)
         RingBuffer_Kill(main_state->ring[i]);
+
+    free(main_state);
     printf("\n");
     return 0;
 }

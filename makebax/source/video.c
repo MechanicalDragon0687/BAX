@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "vpx.h"
 #include "main.h"
 #include "ringbuf.h"
 
@@ -9,25 +10,44 @@ void *VideoDecodeThread(void *main_state)
 {
     MainState *state;
     RingBuf *store_ring;
-    const char *vid_path;
+    VPX_State *vpx;
 
     state = (MainState*)main_state;
+    store_ring = state->ring[0];
 
-    state->frame_rate = 20;
-    state->frame_count = 200;
-    state->frame_width = 400;
+    vpx = VPX_Init(state->in_path);
+    if (vpx == NULL)
+        abort_error("Failed to open/parse IVF\n");
+
+    state->frame_rate   = VPX_Framerate(vpx);
+    state->frame_count  = VPX_Framecount(vpx);
+    state->frame_width  = VPX_Width(vpx);
     state->frame_offset = 0;
 
     state->state = 0;
 
-    store_ring = state->ring[0];
+    for (size_t i = 0; i < state->frame_count; i++) {
+        uint8_t **rgb_buffers;
+        size_t  rgb_buf_size;
+        int rgb_frames;
 
-    for (size_t i = 0; i < 200; i++) {
-        uint16_t *buf = malloc(400 * 240 * 2);
-        for (int j = 0; j < 400 * 240; j++)
-            buf[j] = i + j;
-        while(!RingBuffer_Store(store_ring, buf, 400 * 240 * 2)) thread_yield();
+        rgb_buffers = VPX_DecodeFrame(vpx, &rgb_buf_size, &rgb_frames);
+
+        if (i + rgb_frames > state->frame_count)
+            abort_error("Frame overflow\n");
+
+        if (rgb_frames == 0)
+            abort_error("Error while decoding?\n");
+
+        for (int j = 0; j < rgb_frames; j++) {
+            if (rgb_buffers[j] == NULL) abort_error("Bad frame %d %d\n", i, j);
+            while(!RingBuffer_Store(store_ring, rgb_buffers[j], rgb_buf_size)) thread_yield();
+        }
+        free(rgb_buffers);
+        i += rgb_frames - 1;
     }
+
+    VPX_Kill(vpx);
 
     pthread_exit(NULL);
 }

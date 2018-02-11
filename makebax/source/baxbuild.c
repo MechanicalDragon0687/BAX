@@ -41,7 +41,7 @@ void *BAXBuildThread(void *main_state)
         while(!RingBuffer_Fetch(fetch_ring, &frame_data, &frame_size)) thread_yield();
 
         fseek(bax_file, bax_size, SEEK_SET);
-        BAX_FrameInfoSet(frame_info, i, ftell(bax_file), frame_size);
+        BAX_FrameInfoSet(frame_info, i, bax_size, frame_size);
 
         if (fwrite(frame_data, frame_size, 1, bax_file) != 1)
             abort_error("Couldn't write to output file!\n");
@@ -49,9 +49,10 @@ void *BAXBuildThread(void *main_state)
         free(frame_data);
 
         bax_size += frame_size;
-        bax_size = align_up(bax_size, 8);
+        bax_size = align_up(bax_size, 4);
 
-        printf("Wrote frame %d / %d (%d KiB)\r", i, state->frame_count, bax_size / 1024);
+        printf("Wrote frame %d / %d (%d KiB)\r", i + 1, state->frame_count, bax_size / 1024);
+        fflush(stdout);
     }
 
     fseek(bax_file, 0, SEEK_SET);
