@@ -1,8 +1,6 @@
 # BAX
 ###### Successor to BootAnim9
 
-
-
 ### What is this?
 
 BAX is a homebrew program for the Nintendo 3DS (compatible with all models) that allows you to display video streams on load.

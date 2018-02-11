@@ -4,10 +4,9 @@
 *.o
 
 # Leftover data
-*.mkv
-*.mp4
-*.webm
 *.rgb
+*.bax
+*.ivf
 
 # Windows-isms
 Thumbs.db
@@ -17,3 +16,9 @@ Thumbs.db
 *.id*
 *.nam
 *.til
+*.zip
+*.tar*
+*.gz
+*.xz
+*.lzma
+*.bz*
