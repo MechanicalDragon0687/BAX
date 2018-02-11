@@ -12,10 +12,14 @@
 #include "endian.h"
 #include "vpx.h"
 
-#define IVF_SIGNATURE ((uint8_t[]){'D', 'K', 'I', 'F'})
+#define IVF_SIGNATURE ((uint32_t)(0x46494B44))
+
+#define VP8_FOURCC ((uint32_t)(0x30385056))
+#define VP9_FOURCC ((uint32_t)(0x30395056))
 
 VPX_State *VPX_Init(const char *path)
 {
+    vpx_codec_iface_t *dx_iface = NULL;
     VPX_State *ret = NULL;
     size_t ivf_size;
     int res;
@@ -36,6 +40,7 @@ VPX_State *VPX_Init(const char *path)
     assert(ret->ivf_buffer != NULL);
 
     res = fread(ret->ivf_buffer, ivf_size, 1, ivf_file);
+    ret->hdr = (IVF_Header*)ret->ivf_buffer;
     fclose(ivf_file);
 
     if (res != 1) {
@@ -44,19 +49,28 @@ VPX_State *VPX_Init(const char *path)
         return NULL;
     }
 
-    if (memcmp(ret->ivf_buffer, IVF_SIGNATURE, sizeof(IVF_SIGNATURE))) {
+    if (VPX_Signature(ret) != IVF_SIGNATURE) {
         free(ret->ivf_buffer);
         free(ret);
         return NULL;
     }
 
-    if (vpx_codec_dec_init(&ret->codec, vpx_codec_vp8_dx(), NULL, 0) != 0) {
+    if (VPX_FourCC(ret) == VP8_FOURCC) {
+        dx_iface = vpx_codec_vp8_dx();
+    } else if (VPX_FourCC(ret) == VP9_FOURCC) {
+        dx_iface = vpx_codec_vp9_dx();
+    } else {
         free(ret->ivf_buffer);
         free(ret);
         return NULL;
     }
 
-    ret->hdr = (IVF_Header*)ret->ivf_buffer;
+    if (vpx_codec_dec_init(&ret->codec, dx_iface, NULL, 0) != 0) {
+        free(ret->ivf_buffer);
+        free(ret);
+        return NULL;
+    }
+
     ret->frame = (IVF_Frame_Header*)(ret->ivf_buffer + IVF_Headerlen(ret));
 
     return ret;
@@ -112,6 +126,8 @@ uint8_t **VPX_DecodeFrame(VPX_State *vpx, size_t *size, int *count)
 
     while ((img = vpx_codec_get_frame(&vpx->codec, &iter)) != NULL) {
         fcount++;
+
+        assert(img->fmt == VPX_IMG_FMT_I420);
 
         ret = realloc(ret, fcount * sizeof(char*));
         assert(ret != NULL);

@@ -6,7 +6,7 @@
 #include "endian.h"
 
 typedef struct IVF_Header {
-    uint8_t  signature[4];
+    uint32_t signature;
     uint16_t version;
     uint16_t header_len;
     uint32_t fourcc;
@@ -33,6 +33,16 @@ typedef struct VPX_State {
 
     vpx_codec_ctx_t  codec;
 } VPX_State;
+
+static inline uint32_t VPX_Signature(VPX_State *vpx)
+{
+    return le32(vpx->hdr->signature);
+}
+
+static inline uint32_t VPX_FourCC(VPX_State *vpx)
+{
+    return le32(vpx->hdr->fourcc);
+}
 
 static inline size_t VPX_Width(VPX_State *vpx)
 {

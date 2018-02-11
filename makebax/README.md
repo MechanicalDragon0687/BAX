@@ -8,9 +8,9 @@
 
 Parameters enclosed in `[ ]` are optional.
 
- - `input.ivf` is the input IVF file path, the size must have a resolution of either 400x240 (top screen only), 320x240 (bottom screen only) or 720x240 (both screens side-by-side). Input must be an IVF container with a VP8/VP9 FourCC.
+ - `input.ivf` is the input IVF file path, the size must have a resolution of either 400x240 (top screen only), 320x240 (bottom screen only) or 720x240 (both screens side-by-side). Input must be an IVF container with a VP8/VP9 stream.
 
- - `output` is the path of the BAX file that will be created.
+ - `output.bax` is the path of the BAX file that will be created.
 
  - `t` sets the work pipeline length, larger values make the program consume more memory. Default is 4 (approximately 350MiB used in a worst case scenario).
 
