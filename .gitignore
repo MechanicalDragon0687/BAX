@@ -4,10 +4,9 @@
 *.o
 
 # Leftover data
-*.mkv
-*.mp4
-*.webm
 *.rgb
+*.bax
+*.ivf
 
 # Windows-isms
 Thumbs.db

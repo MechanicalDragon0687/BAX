@@ -49,7 +49,7 @@ void *BAXBuildThread(void *main_state)
         free(frame_data);
 
         bax_size += frame_size;
-        bax_size = align_up(bax_size, 4);
+        bax_size = align_up(bax_size, 8);
 
         printf("Wrote frame %d / %d (%d KiB)\r", i + 1, state->frame_count, bax_size / 1024);
         fflush(stdout);

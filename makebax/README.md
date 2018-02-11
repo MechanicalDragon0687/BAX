@@ -33,3 +33,5 @@ Requires `pthreads`, `lz4` and `libvpx` (besides the obvious `make` and `cc`).
 #### Notes
 
 Although it should be compatible with big endian platforms (PowerPC, Microblaze, etc) this has not been properly tested yet. Please report any issues regarding compilation/usage on big endian platforms.
+
+I'll eventually rewrite it in C++, whenever I get the time.

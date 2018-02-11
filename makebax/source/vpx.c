@@ -87,9 +87,12 @@ static inline uint16_t yuvtorgb_color(int y, int u, int v)
 {
     int r, g, b;
 
-    r = (clamp8(y + (1.370705 * (v-128))) >> 3) & 0x1F;
-    g = (clamp8(y - (0.698001 * (v-128)) - (0.337633 * (u-128))) >> 2) & 0x3F;
-    b = (clamp8(y + (1.732446 * (u-128))) >> 3) & 0x1F;
+    v -= 128;
+    u -= 128;
+
+    r = (clamp8(y + (1.370705 * v)) >> 3) & 0x1F;
+    g = (clamp8(y - (0.698001 * v) - (0.337633 * u)) >> 2) & 0x3F;
+    b = (clamp8(y + (1.732446 * u)) >> 3) & 0x1F;
 
     return le16((r << 11) | (g << 5) | b);
 }
@@ -100,12 +103,14 @@ static inline void yuv420torgb565(uint16_t width, uint16_t height,
                  uint16_t *out)
 {
     int yc, uc, vc;
+
+    #pragma omp parallel for
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
 
-            int yc = yb[(y * ystride) + x];
-            int uc = ub[(y / 2) * ustride + x / 2];
-            int vc = vb[(y / 2) * vstride + x / 2];
+            yc = yb[(y * ystride) + x];
+            uc = ub[(y / 2) * ustride + x / 2];
+            vc = vb[(y / 2) * vstride + x / 2];
 
             out[y*width + x] = yuvtorgb_color(yc, uc, vc);
         }

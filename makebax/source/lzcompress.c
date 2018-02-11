@@ -31,9 +31,15 @@ void *LZ4CompressThread(void *main_state)
         if (comp_buffer == NULL)
             abort_error("Failed to allocate compression buffer %d!\n", i);
 
-        comp_size = LZ4_compress_HC(
-            (const char*)raw_buffer, (char*)comp_buffer,
-            raw_size, max_comp_size, state->compression_lvl);
+        if (state->compression_lvl > LZ4_DEF_COMP) {
+            comp_size = LZ4_compress_HC(
+                (const char*)raw_buffer, (char*)comp_buffer,
+                raw_size, max_comp_size, state->compression_lvl);
+        } else {
+            comp_size = LZ4_compress_default(
+                (const char*)raw_buffer, (char*)comp_buffer,
+                raw_size, max_comp_size);
+        }
 
         if (comp_size <= 0)
             abort_error("Failed to compress frame %d!\n", i);
