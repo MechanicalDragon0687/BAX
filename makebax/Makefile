@@ -1,7 +1,13 @@
 TARGET  := makebax
 
-CFLAGS  := -O2
+CFLAGS  ?= -O2
 LDFLAGS := -lpthread -llz4 -lvpx
+
+ifeq ($(OS),Windows_NT)
+	CFLAGS  := $(CFLAGS) -mno-ms-bitfields
+	LDFLAGS := -static $(LDFLAGS)
+	TARGET  := $(TARGET).exe
+endif
 
 OBJDIR  := build
 SRCDIR  := source
