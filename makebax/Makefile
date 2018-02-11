@@ -9,11 +9,11 @@ _OBJS   := bax.o main.o ringbuf.o baxbuild.o lzcompress.o postprocess.o video.o 
 OBJS    := $(patsubst %,$(OBJDIR)/%,$(_OBJS))
 
 $(TARGET): $(OBJS)
-	$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p "$(@D)"
-	$(CC) $(CFLAGS) $^ -c -o $@
+	$(CC) -c -o $@ $^ $(CFLAGS)
 
 .PHONY: clean
 clean:

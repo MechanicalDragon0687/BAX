@@ -10,7 +10,7 @@
 #include "ringbuf.h"
 #include "bax.h"
 
-#define BAXCOMP_VERSION "0.0a"
+#define BAXCOMP_VERSION "0.0b"
 
 #define WORKRING_MIN_SIZE (4)
 #define WORKRING_DEF_SIZE (1024)
@@ -19,7 +19,7 @@
 
 // Latest LZ4 does include minimum and maximum compression levels
 // but this'll have to do (even buster/sid doesn't have them!)
-#define LZ4_MIN_COMP   (0)
+#define LZ4_MIN_COMP   (9)
 #define LZ4_DEF_COMP   (9)
 #define LZ4_MAX_COMP   (16)
 
