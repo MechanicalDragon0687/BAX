@@ -1,9 +1,60 @@
 #ifndef IVF_H
 #define IVF_H
 
+#include <iostream>
 #include <vpx/vpx_decoder.h>
 
 #include "endian.h"
+
+class IVF {
+    private:
+        size_t Width;
+        size_t Height;
+        size_t FrameRate;
+        size_t FrameCount;
+
+        uint8_t **Frames;
+        size_t   *FrameSize;
+
+        int WorkFrame;
+        vpx_codec_ctx_t VPXCodec;
+
+    public:
+        IVF(const char *path);
+        ~IVF(void);
+
+
+        size_t GetWidth(void) {
+            return Width;
+        }
+
+        size_t GetHeight(void) {
+            return Height;
+        }
+
+        size_t GetFrameRate(void) {
+            return FrameRate;
+        }
+
+        size_t GetFrameCount(void) {
+            return FrameCount;
+        }
+
+        size_t GetFramePixels(void) {
+            return GetWidth() * GetHeight();
+        }
+
+        size_t GetFrameByteSize(void) {
+            return GetFramePixels() * sizeof(uint16_t);
+        }
+
+
+        int GetCurrentFrame(void) {
+            return WorkFrame;
+        }
+
+        int DecodeNextFrame(uint16_t *b);
+};
 
 typedef struct IVF_Header {
     uint32_t signature;

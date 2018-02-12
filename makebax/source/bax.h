@@ -1,18 +1,54 @@
 #ifndef BAX_H
 #define BAX_H
 
-typedef struct BAX_Header BAX_Header;
-typedef struct BAX_FrameInfo BAX_FrameInfo;
+#include <iostream>
+#include <mutex>
 
-BAX_Header *BAX_Init(int count, int rate, uint16_t bg, int offset, int width, const char *auth, const char *desc);
-void BAX_Kill(BAX_Header *hdr);
+class BAX {
+    private:
+        FILE *File;
 
-BAX_FrameInfo *BAX_FrameInfoInit(BAX_Header *hdr);
-void BAX_FrameInfoSet(BAX_FrameInfo *info, int frame, size_t offset, size_t size);
-void BAX_FrameInfoKill(BAX_FrameInfo *info);
+        char Author[32];
+        char Info[192];
 
-size_t BAX_DataStart(BAX_Header *hdr);
-size_t BAX_HeaderSize(void);
-size_t BAX_FrameInfoSize(BAX_Header *hdr);
+        size_t BackgroundColor;
+
+        size_t FileSize;
+
+        size_t AnimOffset;
+        size_t AnimWidth;
+
+        size_t FrameCount;
+        size_t FrameRate;
+
+        size_t *FrameStart;
+        size_t *FrameSize;
+
+        uint32_t **FrameData;
+        bool      *FramePresent;
+        size_t     FlushStart, FlushEnd;
+
+        std::mutex Lock;
+
+    public:
+        BAX(const char *path, size_t n);
+        ~BAX(void);
+
+        void SetAuthor(const char *auth);
+        void SetInfo(const char *info);
+
+        void SetBackgroundColor(size_t c);
+
+        void SetAnimOffset(size_t o);
+        void SetAnimWidth(size_t w);
+        void SetAnimRate(size_t r);
+
+        void AddFrame(uint32_t *f, size_t l, size_t p);
+
+        void FlushFramesToDisk(void);
+
+        size_t GetSizeInDisk(void);
+        void   FlushHeaderToDisk(void);
+};
 
 #endif

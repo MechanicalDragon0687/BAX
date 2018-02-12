@@ -1,7 +1,7 @@
 TARGET  := makebax
 
-CFLAGS  ?= -O2
-LDFLAGS := -lpthread -llz4 -lvpx
+CXXFLAGS := -std=c++1z -O2 -Wall -fopenmp
+LDFLAGS  := -lgomp -llz4 -lvpx
 
 ifeq ($(OS),Windows_NT)
 	CFLAGS  := $(CFLAGS) -mno-ms-bitfields
@@ -11,15 +11,16 @@ endif
 
 OBJDIR  := build
 SRCDIR  := source
-_OBJS   := bax.o main.o ringbuf.o baxbuild.o lzcompress.o postprocess.o video.o vpx.o
+_OBJS   := bax.o main.o ivf.o
+#lzcompress.o postprocess.o video.o vpx.o
 OBJS    := $(patsubst %,$(OBJDIR)/%,$(_OBJS))
 
 $(TARGET): $(OBJS)
-	$(CC) -o $@ $^ $(LDFLAGS)
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.c
+$(OBJDIR)/%.o: $(SRCDIR)/%.cc
 	@mkdir -p "$(@D)"
-	$(CC) -c -o $@ $^ $(CFLAGS)
+	$(CXX) -c -o $@ $^ $(CXXFLAGS)
 
 .PHONY: clean
 clean:
