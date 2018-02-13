@@ -1,13 +1,15 @@
 /**
 Copyright 2018 Wolfvak
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+For more information, read LICENSE.
 */
+
 
 #ifndef BAX_H
 #define BAX_H
 
 #include <iostream>
+#include <cassert>
+#include <cstring>
 #include <mutex>
 
 class BAX {
@@ -30,9 +32,9 @@ class BAX {
         size_t *FrameStart;
         size_t *FrameSize;
 
-        uint32_t **FrameData;
-        bool      *FramePresent;
-        size_t     FlushStart, FlushEnd;
+        void **FrameData;
+        bool  *FramePresent;
+        size_t FlushStart, FlushEnd;
 
         std::mutex Lock;
 
@@ -40,21 +42,41 @@ class BAX {
         BAX(const char *path, size_t n);
         ~BAX(void);
 
-        void SetAuthor(const char *auth);
-        void SetInfo(const char *info);
+        void SetAuthor(const char *auth) {
+            assert(auth != NULL);
+            strncpy(this->Author, auth, 31);
+        }
 
-        void SetBackgroundColor(size_t c);
+        void SetInfo(const char *info) {
+            assert(info != NULL);
+            strncpy(this->Info, info, 191);
+        }
 
-        void SetAnimOffset(size_t o);
-        void SetAnimWidth(size_t w);
-        void SetAnimRate(size_t r);
+        void SetBackgroundColor(size_t c) {
+            this->BackgroundColor = static_cast<uint16_t> (c);
+        }
 
-        void AddFrame(uint32_t *f, size_t l, size_t p);
+        void SetAnimOffset(size_t o) {
+            this->AnimOffset = o;
+        }
+
+        void SetAnimWidth(size_t w) {
+            this->AnimWidth = w;
+        }
+
+        void SetAnimRate(size_t r) {
+            this->FrameRate = r;
+        }
+
+        size_t SizeInDisk(void) {
+            return this->FileSize;
+        }
+
+        void AddFrame(void *f, size_t l, size_t p);
 
         void FlushFramesToDisk(void);
 
-        size_t GetSizeInDisk(void);
-        void   FlushHeaderToDisk(void);
+        void FlushHeaderToDisk(void);
 };
 
 #endif

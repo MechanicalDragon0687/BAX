@@ -1,8 +1,8 @@
 /**
 Copyright 2018 Wolfvak
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+For more information, read LICENSE.
 */
+
 
 #ifndef IVF_H
 #define IVF_H
@@ -54,12 +54,7 @@ class IVF {
             return GetFramePixels() * sizeof(uint16_t);
         }
 
-
-        int GetCurrentFrame(void) {
-            return WorkFrame;
-        }
-
-        int DecodeNextFrame(uint16_t *b);
+        void DecodeNextFrame(uint16_t *b);
 };
 
 typedef struct IVF_Header {

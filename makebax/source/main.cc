@@ -1,8 +1,8 @@
 /**
 Copyright 2018 Wolfvak
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+For more information, read LICENSE.
 */
+
 
 #include <iostream>
 #include <cstring>
@@ -18,7 +18,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 using namespace std;
 
 #define MIN_BLOCKSIZE (1)
-#define DEF_BLOCKSIZE (32)
+#define DEF_BLOCKSIZE (48)
 #define MAX_BLOCKSIZE (1024)
 
 /*
@@ -63,7 +63,7 @@ uint8_t *CompressFrame(uint16_t *fb, int sz, size_t &szc, int clvl)
 
     szc = comp_size;
     retblock = new uint8_t[comp_size];
-    copy(retblock, bigblock, comp_size);
+    memcpy(retblock, bigblock, comp_size);
     delete []bigblock;
 
     return retblock;
@@ -83,8 +83,8 @@ int main(int argc, char *argv[])
     printf("makebax v" MAKEBAX_VERSION "\n");
     if (argc < 3 || ((argc - 3) % 2 != 0)) {
         Abort_Error(
-            "Usage: %s \"input.ivf\" \"output.bax\" [-t n] [-s n] "
-            "[-c l] [-b back_color] [-a \"Author\"] [-i \"Info\"]\n",
+            "Usage: %s \"input.ivf\" \"output.bax\" [-s n] [-c l] "
+            "[-b back_color] [-a \"Author\"] [-i \"Info\"]\n",
             argv[0]);
     }
 
@@ -137,12 +137,10 @@ int main(int argc, char *argv[])
         complvl = DEF_COMPLVL_LZ4;
     }
 
-    cout << "Working with a " << blocksize << " frame buffer.\n";
-
     IVF_State = new IVF(IVF_Path);
 
     if (IVF_State->GetHeight() != FRAME_H)
-        Abort_Error("Invalid height %d (expected %d).\n", IVF_State->GetHeight());
+        Abort_Error("Invalid height %d (expected %d).\n", IVF_State->GetHeight(), FRAME_H);
 
     BAX_State = new BAX(BAX_Path, IVF_State->GetFrameCount());
 
@@ -161,8 +159,12 @@ int main(int argc, char *argv[])
     if (Author != NULL) BAX_State->SetAuthor(Author);
     if (Info != NULL) BAX_State->SetInfo(Info);
 
+    blocksize  = min(blocksize, static_cast<int> (IVF_State->GetFrameCount()));
     rgb_buffer = new uint16_t[IVF_State->GetFramePixels() * blocksize];
     backbuffer = new uint16_t[IVF_State->GetFramePixels()] {0};
+
+    cout << "Working with a " << blocksize << " frame buffer.\n";
+    cout << "Compression level " << complvl << ".\n";
 
     frames_rem = IVF_State->GetFrameCount();
     while(frames_rem > 0) {
@@ -192,13 +194,13 @@ int main(int argc, char *argv[])
 
             CompressedBuffers[i] = CompressedBuffer;
 
-            BAX_State->AddFrame((uint32_t*)CompressedBuffer, CompressedSize,
+            BAX_State->AddFrame(CompressedBuffer, CompressedSize,
                                 (IVF_State->GetFrameCount() - frames_rem + i));
 
             stdout_mutex.lock();
             frames_proc++;
             cout << "Frame " << frames_proc << " / " << IVF_State->GetFrameCount();
-            cout << " (" << BAX_State->GetSizeInDisk() / 1024 << "KiB)\r" << flush;
+            cout << " (" << BAX_State->SizeInDisk() / 1024 << "KiB)\r" << flush;
             stdout_mutex.unlock();
         }
 

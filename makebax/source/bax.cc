@@ -1,12 +1,11 @@
 /**
 Copyright 2018 Wolfvak
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+For more information, read LICENSE.
 */
+
 
 #include <assert.h>
 #include <iostream>
-#include <cstring>
 #include <cstdint>
 
 #include <mutex>
@@ -17,6 +16,8 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 
 #define BAX_VERSION (1)
 
+// Exactly 1092.2667 seconds @ 60fps
+// I'd say that's more than enough
 #define BAX_MAX_FRAMES (64 * 1024)
 
 #define BAX_MAX_OFFSET (720)
@@ -36,8 +37,8 @@ BAX::BAX(const char *path, size_t n)
 
     this->FileSize = 256 + (8 * n);
 
-    memset(this->Author, 0, 32);
-    memset(this->Info, 0, 192);
+    std::fill(this->Author, this->Author + 32, 0);
+    std::fill(this->Info, this->Info + 192, 0);
 
     this->BackgroundColor = 0;
 
@@ -50,7 +51,7 @@ BAX::BAX(const char *path, size_t n)
     this->FrameStart = new size_t[n] {0};
     this->FrameSize  = new size_t[n] {0};
 
-    this->FrameData  = new uint32_t*[n] {nullptr};
+    this->FrameData  = new void*[n] {nullptr};
 
     this->FramePresent = new bool[n] {false};
 
@@ -71,48 +72,7 @@ BAX::~BAX(void)
     return;
 }
 
-void BAX::SetAuthor(const char *auth)
-{
-    assert(auth != nullptr);
-    strncpy(this->Author, auth, 31);
-    return;
-}
-
-void BAX::SetInfo(const char *info)
-{
-    assert(info != nullptr);
-    strncpy(this->Info, info, 191);
-    return;
-}
-
-void BAX::SetBackgroundColor(size_t c)
-{
-    this->BackgroundColor = c;
-    return;
-}
-
-void BAX::SetAnimOffset(size_t o)
-{
-    assert(o <= BAX_MAX_OFFSET);
-    this->AnimOffset = o;
-    return;
-}
-
-void BAX::SetAnimWidth(size_t w)
-{
-    assert(w <= BAX_MAX_WIDTH);
-    this->AnimWidth = w;
-    return;
-}
-
-void BAX::SetAnimRate(size_t r)
-{
-    assert(r <= BAX_MAX_RATE);
-    this->FrameRate = r;
-    return;
-}
-
-void BAX::AddFrame(uint32_t *f, size_t l, size_t p)
+void BAX::AddFrame(void *f, size_t l, size_t p)
 {
     std::lock_guard<std::mutex> lock_guard(this->Lock);
 
@@ -126,7 +86,7 @@ void BAX::AddFrame(uint32_t *f, size_t l, size_t p)
 
     this->FramePresent[p] = true;
 
-    this->FileSize += Align_Up(l, 8);
+    this->FileSize += Align_Up(l, 4);
 
     if (p < this->FlushStart) {
         this->FlushStart = p;
@@ -155,11 +115,6 @@ void BAX::FlushFramesToDisk(void)
     this->FlushEnd++;
     this->FlushStart = this->FlushEnd;
     return;
-}
-
-size_t BAX::GetSizeInDisk(void)
-{
-    return this->FileSize;
 }
 
 void BAX::FlushHeaderToDisk(void)
@@ -192,9 +147,16 @@ void BAX::FlushHeaderToDisk(void)
     std::lock_guard<std::mutex> lock_guard(this->Lock);
 
     const uint32_t HeaderData[] = {
-        0, le32((uint32_t)this->FrameCount), le32((uint32_t)this->FrameRate),
-        le32((uint32_t)this->BackgroundColor), 0,
-        le32((uint32_t)this->AnimOffset), le32((uint32_t)this->AnimWidth)
+        0,
+
+        le32(static_cast<uint32_t> (this->FrameCount)),
+        le32(static_cast<uint32_t> (this->FrameRate)),
+
+        le32(static_cast<uint32_t> (this->BackgroundColor)),
+        0,
+
+        le32(static_cast<uint32_t> (this->AnimOffset)),
+        le32(static_cast<uint32_t> (this->AnimWidth))
     };
 
     fseek(this->File, 0L, SEEK_SET);
@@ -212,11 +174,9 @@ void BAX::FlushHeaderToDisk(void)
     fseek(this->File, 256L, SEEK_SET);
     for (size_t i = 0; i < this->FrameCount; i++) {
         const uint32_t FrameInfo[] = {
-            le32((uint32_t)this->FrameStart[i]), le32((uint32_t)this->FrameSize[i])
+            le32(static_cast<uint32_t> (this->FrameStart[i])),
+            le32(static_cast<uint32_t> (this->FrameSize[i]))
         };
-
-        if (this->FrameStart[i] > this->FileSize || this->FrameStart[i] < 256)
-            Abort_Error("frame %d is fucked\n", i);
 
         fwrite(FrameInfo, sizeof(FrameInfo), 1, this->File);
     }

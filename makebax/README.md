@@ -12,11 +12,11 @@ Parameters enclosed in `[ ]` are optional.
 
  - `output.bax` is the path to the BAX file that will be created.
 
- - `s` sets the block size. `n` is the number of frames that are processed in one go. The higher the number, the more memory is used on runtime.
+ - `s` sets the block size. `n` is the number of frames that are processed per iteration. The higher the number, the more memory is used on runtime (and the less often disk accesses are required). Defaults to 48.
 
- - `c` sets the compression level. Values of `l` higher than 9 invoke the HC which takes considerably longer time than lower compression.
+ - `c` sets the compression level. Should be between 1 (lowest) and 16 (highest). Defaults to 6.
 
- - `b` sets the background color. `bg_color` should be the 16-bit integer representation of an RGB565 color. Defaults to zero (black).
+ - `b` sets the background color. `bg_color` should be the 16-bit integer representation of an RGB565 color. Defaults to zero (black). Refer to [this site](http://www.barth-dev.de/online/rgb565-color-picker/) for more information.
 
  - `a` sets the Author string. It doesn't affect the player at all, but it's nice to include some metadata. Maximum length is 32 ASCII characters (or as much UTF-8 fits in there).
 
@@ -30,8 +30,6 @@ Requires a C++14 compatible compiler with thread support, `OpenMP`, `lz4` and `l
 
 #### Notes
 
-THE FOLLOWING STATEMENT IS NOT TRUE
-
-THE PREVIOUS STATEMENT IS TRUE
-
 Although it should be compatible with big endian platforms (PowerPC, Microblaze, etc) this has not been properly tested yet. Please report any issues regarding compilation/usage on big endian platforms.
+
+For best performance, the block size should be an integer multiple of the number of available hardware threads (logical processors). This is why the default block size is 48: it's a multiple of the most common PO2 and MO6 multithread setups.

@@ -1,8 +1,8 @@
 /**
 Copyright 2018 Wolfvak
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+For more information, read LICENSE.
 */
+
 
 #include <assert.h>
 #include <iostream>
@@ -59,19 +59,19 @@ IVF::IVF(const char *path)
     if (memcmp(IVF_Header, IVF_Signature, sizeof(IVF_Signature)))
         Abort_Error("Not a valid IVF file (bad signature).\n");
 
-    Version = le16(*(uint16_t*)(IVF_Header + 4));
+    Version = mem_le16(IVF_Header + 4);
     if (Version != 0)
         Abort_Error("Not a valid IVF file (bad version).\n");
 
-    HeaderLen = le16(*(uint16_t*)(IVF_Header + 6));
+    HeaderLen = mem_le16(IVF_Header + 6);
     if (HeaderLen != IVF_HEADER_SIZE)
         Abort_Error("Not a valid IVF file (invalid header length).\n");
 
-    this->Width  = le16(*(uint16_t*)(IVF_Header + 12));
-    this->Height = le16(*(uint16_t*)(IVF_Header + 14));
+    this->Width  = mem_le16(IVF_Header + 12);
+    this->Height = mem_le16(IVF_Header + 14);
 
-    this->FrameRate  = le32(*(uint32_t*)(IVF_Header + 16));
-    this->FrameCount = le32(*(uint32_t*)(IVF_Header + 24));
+    this->FrameRate  = mem_le32(IVF_Header + 16);
+    this->FrameCount = mem_le32(IVF_Header + 24);
 
     this->Frames    = new uint8_t*[this->FrameCount] {nullptr};
     this->FrameSize = new size_t[this->FrameCount]   {0};
@@ -79,8 +79,10 @@ IVF::IVF(const char *path)
     this->WorkFrame = 0;
 
     for (auto i = 0; i < CodecCount; i++) {
-        if (memcmp(IVF_Header + 8, VPX_Codecs[i].FourCC, 4) == 0)
+        if (memcmp(IVF_Header + 8, VPX_Codecs[i].FourCC, 4) == 0) {
             DXInterface = VPX_Codecs[i].DX;
+            break;
+        }
     }
 
     if (DXInterface == nullptr)
@@ -101,7 +103,6 @@ IVF::IVF(const char *path)
 
         if (fread(&CurrentFrameSize, sizeof(uint32_t), 1, IVF_File) != 1)
             Abort_Error("Failed to read the size of IVF frame %d.\n", i);
-
         CurrentFrameSize = le32(CurrentFrameSize);
 
         this->FrameSize[i] = CurrentFrameSize;
@@ -129,9 +130,7 @@ IVF::~IVF(void)
 
 static inline int ClampByte(int n)
 {
-    if (n > 0xFF) return 0xFF;
-    else if (n < 0) return 0;
-    else return n;
+    return std::max(std::min(n, 0xFF), 0);
 }
 static inline uint16_t YUV420ToRGB565Color(int y, int u, int v)
 {
@@ -170,14 +169,14 @@ static inline void IVF_ColorTrans(uint16_t *buffer, int w, int h,
     return;
 }
 
-int IVF::DecodeNextFrame(uint16_t *b)
+void IVF::DecodeNextFrame(uint16_t *b)
 {
     vpx_codec_iter_t iter = nullptr;
     vpx_image_t      *img = nullptr;
     vpx_codec_err_t   err;
 
     uint8_t *yuv[3];
-    int f = this->WorkFrame, strides[3], ret = this->WorkFrame;
+    int f = this->WorkFrame, strides[3];
 
     assert(b != nullptr);
 
@@ -210,5 +209,5 @@ int IVF::DecodeNextFrame(uint16_t *b)
 
     this->WorkFrame++;
     vpx_img_free(img);
-    return ret;
+    return;
 }

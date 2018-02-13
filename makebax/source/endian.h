@@ -1,13 +1,62 @@
 /**
 Copyright 2018 Wolfvak
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+For more information, read LICENSE.
 */
+
 
 #ifndef ENDIAN_H
 #define ENDIAN_H
 
-#include <stddef.h>
+#include <stdint.h>
+
+static inline uint16_t mem_le16(uint8_t *p)
+{
+    uint16_t ret;
+    ret  = static_cast<uint16_t> (p[1]) << 8;
+    ret |= static_cast<uint16_t> (p[0]);
+    return ret;
+}
+
+static inline uint16_t mem_be16(uint8_t *p)
+{
+    uint16_t ret;
+    ret  = static_cast<uint16_t> (p[0]) << 8;
+    ret |= static_cast<uint16_t> (p[1]);
+    return ret;
+}
+
+static inline uint32_t mem_le32(uint8_t *p)
+{
+    uint32_t ret;
+    ret  = static_cast<uint32_t> (mem_le16(p + 2)) << 16;
+    ret |= static_cast<uint32_t> (mem_le16(p + 0));
+    return ret;
+}
+
+static inline uint32_t mem_be32(uint8_t *p)
+{
+    uint32_t ret;
+    ret  = static_cast<uint32_t> (mem_be16(p + 0)) << 16;
+    ret |= static_cast<uint32_t> (mem_be16(p + 2));
+    return ret;
+}
+
+static inline uint64_t mem_le64(uint8_t *p)
+{
+    uint64_t ret;
+    ret  = static_cast<uint64_t> (mem_le32(p + 4)) << 32;
+    ret |= static_cast<uint64_t> (mem_le32(p + 0));
+    return ret;
+}
+
+static inline uint64_t mem_be64(uint8_t *p)
+{
+    uint64_t ret;
+    ret  = static_cast<uint64_t> (mem_be32(p + 0)) << 32;
+    ret |= static_cast<uint64_t> (mem_be32(p + 4));
+    return ret;
+}
+
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define le16(x) ((x))
