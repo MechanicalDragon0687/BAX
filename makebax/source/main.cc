@@ -17,7 +17,7 @@ For more information, read LICENSE.
 
 using namespace std;
 
-#define MIN_BLOCKSIZE (1)
+#define MIN_BLOCKSIZE (2)
 #define DEF_BLOCKSIZE (48)
 #define MAX_BLOCKSIZE (1024)
 
