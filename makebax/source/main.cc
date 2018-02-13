@@ -1,3 +1,9 @@
+/**
+Copyright 2018 Wolfvak
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+*/
+
 #include <iostream>
 #include <cstring>
 #include <mutex>
@@ -28,8 +34,8 @@ void DeltaEncode(uint16_t *bb, uint16_t *fb, int sz)
 {
     uint32_t *backbuffer, *framebuffer, delta;
 
-    backbuffer  = (uint32_t*)bb;
-    framebuffer = (uint32_t*)fb;
+    backbuffer  = reinterpret_cast<uint32_t*> (bb);
+    framebuffer = reinterpret_cast<uint32_t*> (fb);
 
     for (size_t i = 0; i < (sz / sizeof(uint32_t)); i++) {
         delta = framebuffer[i] - backbuffer[i];
@@ -47,14 +53,17 @@ uint8_t *CompressFrame(uint16_t *fb, int sz, size_t &szc, int clvl)
     max_comp_size = LZ4_compressBound(sz);
     bigblock = new uint8_t[max_comp_size];
 
-    comp_size = LZ4_compress_HC((const char*)fb, (char*)bigblock, sz, max_comp_size, clvl);
+    comp_size = LZ4_compress_HC(
+        reinterpret_cast<const char*> (fb),
+        reinterpret_cast<char*> (bigblock),
+        sz, max_comp_size, clvl);
 
     if (comp_size <= 0)
         Abort_Error("Failed to compress data.\n");
 
     szc = comp_size;
     retblock = new uint8_t[comp_size];
-    memcpy(retblock, bigblock, comp_size);
+    copy(retblock, bigblock, comp_size);
     delete []bigblock;
 
     return retblock;
@@ -69,7 +78,6 @@ int main(int argc, char *argv[])
     mutex stdout_mutex;
     uint16_t *rgb_buffer, *backbuffer;
     int blocksize = -1, complvl = -1, background = 0, frames_rem, frames_proc = 0;
-
     const char *IVF_Path, *BAX_Path, *Author = NULL, *Info = NULL;
 
     printf("makebax v" MAKEBAX_VERSION "\n");
