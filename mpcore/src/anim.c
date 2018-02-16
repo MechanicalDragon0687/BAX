@@ -1,183 +1,259 @@
 #include <common.h>
-#include <cache.h>
 #include <cpu.h>
+#include <cache.h>
 #include <mmap.h>
+#include <lock.h>
 #include <interrupt.h>
-#include <rb.h>
+#include <ringbuf.h>
 
 #include "anim.h"
 #include "hw/gx.h"
 #include "hw/hid.h"
 #include "arm/irq.h"
-#include "arm/bugcheck.h"
+#include "arm/bug.h"
+#include "lib/fs/fs.h"
 #include "lib/lz4/lz4.h"
 
-const gx_framebuffers_t anim_framebuffer_layout =
-{
-    { // top left screen
-        VRAM_START,
-        VRAM_START + VRAM_TOP_DIM*4 + VRAM_BOTTOM_DIM*2
-    },
-    { // top right screen
-        VRAM_START + VRAM_TOP_DIM*2 + VRAM_BOTTOM_DIM*2,
-        VRAM_START + VRAM_TOP_DIM*6 + VRAM_BOTTOM_DIM*4
-    },
-    { // bottom screen
-        VRAM_START + VRAM_TOP_DIM*2,
-        VRAM_START + VRAM_TOP_DIM*6 + VRAM_BOTTOM_DIM*2
-    }
-    // <top left, bottom, top right>
+const GX_FrameBuffers ANIM_FramebufferLayout = {
+    VRAM_FRAMEBUFFER_A, VRAM_FRAMEBUFFER_B
 };
 
-int anim_validate(const anim_t *hdr, size_t hdr_sz)
+int BAX_Validate(FS_File *bax_f)
 {
-    int frame = 0;
-    u32 info_end = sizeof(anim_t) + (sizeof(anim_finfo_t) * hdr->frame_n);
-    if (hdr == NULL || hdr_sz <= sizeof(anim_t)) return ANIM_ERR_MEM;
-    if (memcmp(hdr->magic, ANIM_MAGIC, sizeof(hdr->magic)) != 0) return ANIM_ERR_MAGIC;
-    if (hdr->version < ANIM_MIN_VER || hdr->version > ANIM_MAX_VER) return ANIM_ERR_VERSION;
-    if (hdr->frame_n < ANIM_MIN_FRAMES || hdr->frame_n > ANIM_MAX_FRAMES) return ANIM_ERR_FRAMECOUNT;
-    if (hdr->frame_r < ANIM_MIN_RATE || hdr->frame_r > ANIM_MAX_RATE) return ANIM_ERR_FRAMERATE;
-    if (hdr->x_offset < ANIM_MIN_OFFSET || hdr->x_offset > ANIM_MAX_OFFSET) return ANIM_ERR_OFFSET;
-    if (hdr->x_width < ANIM_MIN_WIDTH || hdr->x_width > ANIM_MAX_WIDTH) return ANIM_ERR_WIDTH;
-    if ((hdr->x_offset + hdr->x_width)*ANIM_WIDTH_MULT < ANIM_MIN_FSIZE ||
-        (hdr->x_offset + hdr->x_width)*ANIM_WIDTH_MULT > ANIM_MAX_FSIZE) return ANIM_ERR_SIZE;
+    BAX hdr;
+    BAX_FData *fdata;
+    size_t bax_s, bax_data_pos;
 
-    for (frame = 0; frame < hdr->frame_n; frame++) {
-        if (hdr->frame_info[frame].offset < info_end || hdr->frame_info[frame].offset > hdr_sz) return ANIM_ERR_INFO_OFF;
-        if (hdr->frame_info[frame].compsz > LZ4_COMPRESSBOUND(hdr->x_width*ANIM_WIDTH_MULT)) return ANIM_ERR_INFO_SIZE;
+    assert(bax_f != NULL);
+
+    FS_FileSetPos(bax_f, 0L);
+    bax_s = FS_FileSize(bax_f);
+    FS_FileRead(bax_f, &hdr, sizeof(BAX));
+
+    if (bax_s <= sizeof(BAX))
+        return ANIM_ERR_SIZE;
+
+    if (!bound(hdr.version, ANIM_MIN_VER, ANIM_MAX_VER))
+        return ANIM_ERR_VERSION;
+
+    if (!bound(hdr.frame_n, ANIM_MIN_FRAMES, ANIM_MAX_FRAMES))
+        return ANIM_ERR_FRAMECOUNT;
+
+    if (!bound(hdr.frame_r, ANIM_MIN_RATE, ANIM_MAX_RATE))
+        return ANIM_ERR_FRAMERATE;
+
+    if (!bound((s32)hdr.x_offset, ANIM_MIN_OFFSET, ANIM_MAX_OFFSET))
+        return ANIM_ERR_OFFSET;
+
+    if (!bound(hdr.x_width, ANIM_MIN_WIDTH, ANIM_MAX_WIDTH))
+        return ANIM_ERR_WIDTH;
+
+    if (!bound((hdr.x_offset + hdr.x_width) * ANIM_WIDTH_MULT, ANIM_MIN_FSIZE, ANIM_MAX_FSIZE))
+        return ANIM_ERR_SIZE;
+
+    bax_data_pos = sizeof(BAX) + (sizeof(BAX_FData) * hdr.frame_n);
+
+    fdata = LockMalloc(sizeof(BAX_FData) * hdr.frame_n);
+    assert(fdata != NULL);
+
+    FS_FileSetPos(bax_f, sizeof(BAX));
+    FS_FileRead(bax_f, fdata, sizeof(BAX_FData) * hdr.frame_n);
+    for (u32 i = 0; i < hdr.frame_n; i++) {
+        if (!bound(BAX_FDataPos(&fdata[i]), bax_data_pos, bax_s))
+            return ANIM_ERR_INFO_OFF;
+
+        if (!bound(BAX_FDataCompSZ(&fdata[i]), 1, (u32)LZ4_COMPRESSBOUND(hdr.x_width * ANIM_WIDTH_MULT)))
+            return ANIM_ERR_INFO_SIZE;
     }
+    LockFree(fdata);
+
     return ANIM_OK;
 }
 
-static rb_t ringbuf;
-static bool anim_playback;
-static u32 frame_rate, frame_size, frame_offset;
-static void anim_vblank_isr(u32 irqn)
-{
-    static u32 _anim_vblank_isr_ctr = 0;
-    u32 *frame;
+static RingBuffer FrameRB;
+static int ANIM_PlaybackState;
+static u32 ANIM_PlaybackRate, ANIM_PlaybackOff;
 
-    hid_scan();
-    _anim_vblank_isr_ctr++;
-    if (hid_down() & HID_X) {
-        anim_playback = false;
-        while(rb_count(&ringbuf) > 0)
-            free(rb_fetch(&ringbuf, NULL));
-    } else if ((_anim_vblank_isr_ctr*frame_rate) >= ANIM_MAX_RATE) {
-        frame = rb_fetch(&ringbuf, NULL);
-        if (frame != NULL) {
-            gx_dma_copy(frame, 0, (u32*)(gx_next_framebuffer(GFX_TOPL) + frame_offset), 0, frame_size);
-            free(frame);
-            gx_swap_buffers();
-            _anim_vblank_isr_ctr = 0;
+static inline void ANIM_DrainFreeRB(RingBuffer *rb) {
+    CritStat cs = CPU_EnterCritical();
+    void *b;
+    while(RingBuffer_Count(rb) > 0) {
+        RingBuffer_Fetch(rb, &b, NULL);
+        free(b);
+    }
+    CPU_LeaveCritical(cs);
+}
+
+static void ANIM_VBlankISR(u32 irqn)
+{
+    static u32 ANIM_VBlankISRCounter = 0;
+    static void *f = NULL;
+    size_t fsz;
+
+    HID_Scan();
+    ANIM_VBlankISRCounter++;
+
+    if (HID_Down() & HID_X) {
+        ANIM_PlaybackState = -1;
+        ANIM_DrainFreeRB(&FrameRB);
+        if (f != NULL) free(f);
+    }
+
+    if (ANIM_VBlankISRCounter == 1) {
+        if (RingBuffer_Fetch(&FrameRB, &f, &fsz) == true) {
+            GX_DMAWait();
+            GX_DMACopyAsync(f, 0, (void*)(GX_NextFramebuffer() + ANIM_PlaybackOff), 0, fsz);
+        } else {
+            ANIM_VBlankISRCounter = 0;
+            f = NULL;
         }
+    }
+
+    if ((ANIM_VBlankISRCounter * ANIM_PlaybackRate) >= ANIM_MAX_RATE) {
+        free(f);
+        f = NULL;
+
+        GX_DMAWait();
+        GX_SwapBuffers();
+        ANIM_VBlankISRCounter = 0;
     }
     return;
 }
 
-static inline int anim_decompress_frame(const anim_t *hdr, void *framebuffer, int frame, u32 frame_size)
-{
-    char *src;
-    u32 frame_compsize;
-
-    src = (char*)anim_frame_data(hdr, frame);
-    frame_compsize = anim_frame_size(hdr, frame);
-    return LZ4_decompress_safe(src, framebuffer, frame_compsize, frame_size);
+static inline int BAX_DecompressFrame(char *u, size_t us, const char *c, size_t cs) {
+    return LZ4_decompress_safe(c, u, cs, us);
 }
 
-void anim_play(const anim_t *hdr)
+static inline void BAX_DeltaDecode(void *bb, void *fb, size_t l) {
+    u32 *bb_, *fb_, delta;
+
+    bb_ = (u32*)bb;
+    fb_ = (u32*)fb;
+    l /= sizeof(u32);
+    while(l--) {
+        delta = bb_[l] + fb_[l];
+        fb_[l] = delta;
+        bb_[l] = delta;
+    }
+}
+
+static inline void *ANIM_AttemptAlloc(size_t sz, size_t a, size_t n) {
+    void *ret;
+    size_t n_ = n;
+    while(1) {
+        ret = LockMemalign(a, sz);
+        if (ret != NULL)
+            break;
+
+        if (n_--) BUG(BUGSTR("ANIM_ALLOC"), 1, BUGINT(sz, n), 2);
+        CPU_WFI();
+    }
+    return ret;
+}
+
+void BAX_Play(FS_File *bax_f)
 {
-    bool stored;
-    int frame;
-    u32 critstat, alloc_attempts;
-    u32 *backbuffer, *framebuffer;
+    CritStat cs;
+    int res;
+    BAX hdr;
+    BAX_FData *fdata;
+    u32 frame, memfail, fsz, compsz;
+    u32 *backbuffer, *framebuffer, *compfb;
+
+    assert(bax_f != NULL);
+
+
+    // Validate BAX header and frames
+    res = BAX_Validate(bax_f);
+    if (res != ANIM_OK)
+        BUG(BUGSTR("ANIM_VALIDATE", FS_FilePath(bax_f)), 2, BUGINT(res, FS_FileSize(bax_f)), 2);
+
+
+    // Read BAX header and frames (again...)
+    FS_FileSetPos(bax_f, 0L);
+    FS_FileRead(bax_f, &hdr, sizeof(BAX));
+
+    fdata = LockMalloc(sizeof(BAX_FData) * hdr.frame_n);
+    assert(fdata != NULL);
+
+    FS_FileSetPos(bax_f, sizeof(BAX));
+    FS_FileRead(bax_f, fdata, sizeof(BAX_FData) * hdr.frame_n);
 
 
     // Initialize state
-    frame_offset = hdr->x_offset * ANIM_WIDTH_MULT;
-    frame_size = hdr->x_width * ANIM_WIDTH_MULT;
-    frame_rate = hdr->frame_r;
-    anim_playback = true;
+    ANIM_PlaybackOff   = hdr.x_offset * ANIM_WIDTH_MULT;
+    ANIM_PlaybackRate  = hdr.frame_r;
+    ANIM_PlaybackState = 1;
+    fsz = hdr.x_width * ANIM_WIDTH_MULT;
     frame = 0;
 
 
     // Initial setup
-    rb_init(&ringbuf);
-    backbuffer = memalign(GX_TEXTURE_ALIGNMENT, frame_size);
-    if (backbuffer == NULL) bugcheck("ANIM_BACKALLOC", (u32*)&frame_size, 1);
-    memset(backbuffer, 0, frame_size);
+    RingBuffer_Init(&FrameRB, 64);
+
+    backbuffer = LockMemalign(GX_TEXTURE_ALIGNMENT, fsz);
+    assert(backbuffer != NULL);
+    memset(backbuffer, 0, fsz);
 
 
     // Process all configuration flags here
-    gx_psc_fill(VRAM_START, VRAM_SIZE, EXTENDST(hdr->clear_c), PSC_FILL32);
-    gx_set_framebuffers(&anim_framebuffer_layout);
-    gx_set_framebuffer_mode(PDC_RGB565);
+    // if any...
+
+
+    // GPU stuff
+    GX_PSCFill(VRAM_START, VRAM_SIZE, EXTENDST(hdr.clear_c), PSC_FILL32);
+    GX_SetFramebuffers(&ANIM_FramebufferLayout);
+    GX_SetFramebufferMode(PDC_RGB565);
 
 
     // Register VBlank interrupt handler
-    critstat = _enter_critical();
-    irq_register(IRQ_VBLANK0, anim_vblank_isr, 0);
-    _leave_critical(critstat);
+    cs = CPU_EnterCritical();
+    IRQ_Register(IRQ_VBLANK0, ANIM_VBlankISR, 0);
+    CPU_LeaveCritical(cs);
 
+    while((frame < hdr.frame_n) && (ANIM_PlaybackState >= 0)) {
+        compsz = BAX_FDataCompSZ(&fdata[frame]);
+        compfb = ANIM_AttemptAlloc(compsz, 8, MAX_ALLOC_ATTEMPTS);
+        framebuffer = ANIM_AttemptAlloc(fsz, GX_TEXTURE_ALIGNMENT, MAX_ALLOC_ATTEMPTS);
 
-    while((frame < hdr->frame_n) && anim_playback) {
-        framebuffer = NULL;
-        alloc_attempts = 0;
-        while (framebuffer == NULL) {
-            critstat = _enter_critical();
-            framebuffer = memalign(GX_TEXTURE_ALIGNMENT, frame_size);
-            _leave_critical(critstat);
-            if (framebuffer != NULL) break;
-            // hopefully out of RAM and not heap corruption?
-            if (++alloc_attempts > MAX_ALLOC_ATTEMPTS)
-                bugcheck("ANIM_MEMALIGN", (u32*)&frame, 1);
-            _wfi();
-            continue;
-        }
+        FS_FileSetPos(bax_f, BAX_FDataPos(&fdata[frame]));
+        FS_FileRead(bax_f, compfb, compsz);
 
-        if (anim_decompress_frame(hdr, framebuffer, frame, frame_size) <= 0)
-            bugcheck("ANIM_DECOMPRESS", (u32*)&frame, 1);
+        res = BAX_DecompressFrame((char*)framebuffer, fsz, (const char*)compfb, compsz);
+        if (res <= 0)
+            BUG(BUGSTR("ANIM_DECOMPRESS"), 1, BUGINT(frame, res, fsz, compsz), 4);
 
         // Perform delta decoding
         // TODO: unroll this if I ever find a slow anim
-        for (u32 q = 0; q < (frame_size / sizeof(u32)); q++) {
-            u32 delta = backbuffer[q] + framebuffer[q];
-            backbuffer[q] = delta;
-            framebuffer[q] = delta;
-        }
+        BAX_DeltaDecode(backbuffer, framebuffer, fsz);
 
-        // GPU DMA is fun
-        _writeback_DC_range(framebuffer, frame_size);
-
-        // Interrupts are fun
-        do {
-            critstat = _enter_critical();
-            stored = rb_store(&ringbuf, framebuffer, frame_size);
-            _leave_critical(critstat);
-            // Not enough room left
-            if (stored == false) _wfi();
-        } while(stored == false);
+        CACHE_WbDCRange(framebuffer, fsz);
+        while(RingBuffer_Store(&FrameRB, framebuffer, fsz) == false) CPU_WFI();
 
         frame++;
+
+        LockFree(compfb);
     }
 
     // If the animation was exited, drain the buffer
-    if (anim_playback == false) {
-        critstat = _enter_critical();
-        while(rb_count(&ringbuf) > 0)
-            free(rb_fetch(&ringbuf, NULL));
-        _leave_critical(critstat);
+    cs = CPU_EnterCritical();
+    if (ANIM_PlaybackState < 0) {
+        ANIM_DrainFreeRB(&FrameRB);
+    } else {
+        ANIM_PlaybackState = 0;
     }
+    CPU_LeaveCritical(cs);
 
     // Wait until it's done playing
-    while(rb_count(&ringbuf) > 0) _wfi();
+    while(RingBuffer_Count(&FrameRB) > 0) CPU_WFI();
 
     // Deallocate used memory
     // Disable VBlank interrupt
-    critstat = _enter_critical();
+    cs = CPU_EnterCritical();
+    free(fdata);
     free(backbuffer);
-    irq_deregister(IRQ_VBLANK0, 0);
-    _leave_critical(critstat);
+    RingBuffer_Destroy(&FrameRB);
+    IRQ_Disable(IRQ_VBLANK0, 0);
+    CPU_LeaveCritical(cs);
     return;
 }

@@ -14,12 +14,11 @@ ASM_FUNCTION firmstub
     mcr p15, 0, r0, c7, c10, 5
     mcr p15, 0, r0, c7, c5, 4
 
-    mov r0, #0x54000
-    orr r0, r0, #0x78
+    ldr r0, =0x54078
     mcr p15, 0, r0, c1, c0, 0
 
-    NOP_SLED 3
-    mov r0, #0x1FFFFFFC
+    NOP_SLED 2
+    ldr r0, =MPCORE_ENTRY
     1:
         ldr r1, [r0]
         cmp r1, #0
@@ -32,8 +31,8 @@ firmstub_len:
     .word (firmstub_e - firmstub)
 
 
-@ int firmlaunch(const void *firm, size_t firm_sz, const char *path)
-ASM_FUNCTION firmlaunch
+@ int FIRM_Launch(const void *firm, size_t firm_sz, const char *path)
+ASM_FUNCTION FIRM_Launch
     push {r4-r6, lr}
     mov r4, r0
     mov r5, r1
@@ -44,13 +43,16 @@ ASM_FUNCTION firmlaunch
     mov r1, sp
     stmia r1, {r4, r5}
     mov r2, #2
-    bl pxicmd_send
+    bl PXICMD_Send
     add sp, sp, #8
 
     cmp r0, #0
     popne {r4-r6, pc}
 
-    bl gx_reset
+    @ Give approximately zero fucks about what happens after this
+    cpsid if
+
+    bl GX_Reset
 
     mov r0, #0
     ldr r1, =MPCORE_ENTRY
@@ -74,6 +76,6 @@ ASM_FUNCTION firmlaunch
     stmia r1, {r4, r6}
     mov r2, #2
     ldr r4, =FIRMSTUB_LOC
-    bl pxicmd_send_async
+    bl PXICMD_SendAsync
 
     bx r4

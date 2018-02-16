@@ -1,96 +1,67 @@
 #include <common.h>
 #include <cpu.h>
 
-#include "arm/bugcheck.h"
+#include "arm/bug.h"
 #include "arm/irq.h"
 
-isr_t _lirq_handlers[2][32];
-isr_t _irq_handlers[96];
+ISR IRQ_LocalHandlers[2][32];
+ISR IRQ_GlobalHandlers[96];
 
-void irq_reset(void)
+void IRQ_Reset(void)
 {
-    u32 core = _coreID(), irq_s;
+    u32 core = CPU_CoreID(), irq_s;
 
-    // Disable local interrupt distributor
-    *GIC_CONTROL = 0;
-    memset(_lirq_handlers[core], 0, sizeof(_lirq_handlers[core]));
+    REG_GIC_CONTROL = 0;
+    memset(IRQ_LocalHandlers[core], 0, sizeof(IRQ_LocalHandlers[core]));
 
-    // Setup hardware interrupts
     if (core == 0) {
-        *DIC_CONTROL = 0;
-        memset(_irq_handlers, 0, sizeof(_irq_handlers));
-
+        REG_DIC_CONTROL = 0;
+        memset(IRQ_GlobalHandlers, 0, sizeof(IRQ_GlobalHandlers));
         for (int i = 0; i < 4; i++) {
-            DIC_CLRENABLE[i]  = ~0;
-            DIC_CLRPENDING[i] = ~0;
+            REG_DIC_CLRENABLE[i]  = ~0;
+            REG_DIC_CLRPENDING[i] = ~0;
         }
-
-        for (int i = 0; i < 32; i++)
-            DIC_PRIORITY[i] = 0;
-
-        for (int i = 32; i < 128; i++)
-            DIC_TARGETPROC[i] = 0;
-
-        for (int i = 0; i < 8; i++)
-            DIC_CFGREG[i] = ~0;
-
-        *DIC_CONTROL = 1;
+        for (int i = 0; i < 32; i++)   REG_DIC_PRIORITY[i] = 0;
+        for (int i = 32; i < 128; i++) REG_DIC_TARGETPROC[i] = 0;
+        for (int i = 0; i < 8; i++)    REG_DIC_CFGREG[i] = ~0;
+        REG_DIC_CONTROL = 1;
     }
 
-    // Setup local interrupts
-    DIC_CLRENABLE[0] = ~0;
+    REG_DIC_CLRENABLE[0] = ~0;
+    for (int i = 0; i < 32; i++) REG_DIC_PRIORITY[i] = 0;
+    for (int i = 0; i < 2; i++) REG_DIC_CFGREG[i] = ~0;
+    REG_GIC_POI = 3;
+    REG_GIC_PRIOMASK = 0xF << 4;
+    REG_GIC_CONTROL = 1;
 
-    for (int i = 0; i < 32; i++)
-        DIC_PRIORITY[i] = 0;
-
-    for (int i = 0; i < 2; i++)
-        DIC_CFGREG[i] = ~0;
-
-    // All priority bits are compared for pre-emption
-    *GIC_POI = 3;
-
-    // All 4 bits are used for the priority mask
-    *GIC_PRIOMASK = 0xF0;
-
-    // Enable the local distributor
-    *GIC_CONTROL = 1;
-
-    // Send end of interrupt until the spurious interrupt shows up
     do {
-        irq_s = *GIC_PENDING;
-        *GIC_IRQEND = irq_s;
-    } while(irq_s != 0x3FF);
-    return;
+        irq_s = REG_GIC_PENDING;
+        REG_GIC_IRQEND = irq_s;
+    } while(irq_s != IRQ_SPURIOUS);
 }
 
-void irq_register(u32 irqn, isr_t handler, u32 core)
+void IRQ_Register(u32 irq, ISR Handler, u32 core)
 {
-    if (irqn >= 128 || core >= 2)
-        bugcheck("IRQ_REGISTER", (u32[]){irqn, core}, 2);
+    assert(irq < IRQ_COUNT);
+    assert(core < 2);
 
-    if (irqn < 32)
-        _lirq_handlers[core][irqn] = handler;
-    else
-        _irq_handlers[irqn - 32] = handler;
+    if (irq < 32) IRQ_LocalHandlers[core][irq] = Handler;
+    else IRQ_GlobalHandlers[irq - 32] = Handler;
 
-    DIC_CLRPENDING[irqn >> 5] |= BIT(irqn & 0x1F);
-    DIC_SETENABLE[irqn >> 5]  |= BIT(irqn & 0x1F);
-    DIC_TARGETPROC[irqn] = core + 1;
-    return;
+    REG_DIC_CLRPENDING[irq >> 5] |= BIT(irq & 0x1F);
+    REG_DIC_SETENABLE[irq >> 5]  |= BIT(irq & 0x1F);
+    REG_DIC_TARGETPROC[irq] = core + 1;
 }
 
-void irq_deregister(u32 irqn, u32 core)
+void IRQ_Disable(u32 irq, u32 core)
 {
-    if (irqn >= 128 || core >= 2)
-        bugcheck("IRQ_DEREGISTER", (u32[]){irqn, core}, 2);
+    assert(irq < IRQ_COUNT);
+    assert(core < 2);
 
-    if (irqn < 32)
-        _lirq_handlers[core][irqn] = NULL;
-    else
-        _irq_handlers[irqn - 32] = NULL;
+    if (irq < 32) IRQ_LocalHandlers[core][irq] = NULL;
+    else IRQ_GlobalHandlers[irq - 32] = NULL;
 
-    DIC_CLRPENDING[irqn >> 5] |= BIT(irqn & 0x1F);
-    DIC_CLRENABLE[irqn >> 5]  |= BIT(irqn & 0x1F);
-    DIC_TARGETPROC[irqn] = 0;
-    return;
+    REG_DIC_CLRPENDING[irq >> 5] |= BIT(irq & 0x1F);
+    REG_DIC_CLRENABLE[irq >> 5]  |= BIT(irq & 0x1F);
+    REG_DIC_TARGETPROC[irq] = 0;
 }

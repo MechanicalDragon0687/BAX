@@ -1,33 +1,34 @@
-#include <common.h>
+#include <types.h>
+
 #include "hw/hid.h"
 
-static u32 kprev, kcur;
+static u32 KPrev, KCur;
 
-void hid_reset(void)
+void HID_Reset(void)
 {
-    kprev = 0;
-    kcur = 0;
+    KPrev = 0;
+    KCur = 0;
     return;
 }
 
-void hid_scan(void)
+void HID_Scan(void)
 {
-    kprev = kcur;
-    kcur = ~(*HID_BASE) & HID_ANY;
+    KPrev = KCur;
+    KCur = ~REG_HID_BASE & HID_ANY;
     return;
 }
 
-u32 hid_down(void)
+u32 HID_Down(void)
 {
-    return kcur;
+    return KCur;
 }
 
-u32 hid_held(void)
+u32 HID_Held(void)
 {
-    return kprev & kcur;
+    return KPrev & KCur;
 }
 
-u32 hid_up(void)
+u32 HID_Up(void)
 {
-    return kprev & ~kcur;
+    return KPrev & ~KCur;
 }

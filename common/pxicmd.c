@@ -3,46 +3,38 @@
 #include <pxi.h>
 #include <pxicmd.h>
 
-void pxicmd_send_async(u32 cmd_id, const u32 *args, u32 argc)
+void PXICMD_SendAsync(u32 cmd, const u32 *a, int c)
 {
-    while(!(*PXI_CNT & PXI_SEND_FIFO_EMPTY));
-    pxi_send_FIFO_data(args, argc);
-
-    pxi_set_remote(cmd_id);
-    pxi_sync();
+    while(!PXI_SendFIFOEmpty());
+    PXI_SendData(a, c);
+    PXI_SendSync(cmd);
+    PXI_Sync();
     return;
 }
 
-int pxicmd_send_finish(void)
+int PXICMD_SendWait(void)
 {
-    int ret;
-
-    // wait for reply
-    while(*PXI_CNT & PXI_RECV_FIFO_EMPTY);
-    ret = pxi_recv_FIFO();
-
-    pxi_set_remote(0);
-    return ret;
+    int ret = PXI_Recv();
+    PXI_SendSync(0);
+    return ret;    
 }
 
-int pxicmd_send(u32 cmd_id, const u32 *args, u32 argc)
+int PXICMD_Send(u32 cmd, const u32 *a, int c)
 {
-    pxicmd_send_async(cmd_id, args, argc);
-    return pxicmd_send_finish();
+    PXICMD_SendAsync(cmd, a, c);
+    return PXICMD_SendWait();
 }
 
-u8 pxicmd_recv(u32 *args, u32 *argc)
+int PXICMD_Recv(u32 *a, int *c)
 {
-    u32 count;
-    u8 cmd = pxi_get_remote();
-    count = pxi_recv_FIFO_data(args, PXICMD_MAX_ARGC);
-    if (argc) *argc = count;
+    int count, cmd;
+    cmd = PXI_RecvSync();
+    count = PXI_RecvData(a, PXICMD_MAX_ARGC);
+    if (c) *c = count;
     return cmd;
 }
 
-void pxicmd_reply(int resp)
-{
-    pxi_send_FIFO(resp);
-    pxi_set_remote(0);
-    return;
+void PXICMD_Reply(int r) {
+    PXI_Send(r);
+    PXI_SendSync(0);
 }

@@ -2,7 +2,7 @@
 #include <interrupt.h>
 #include "arm/mmu.h"
 
-ASM_FUNCTION start
+ASM_FUNCTION __start
     cpsid aif @ Disable interrupts & imprecise abort
     clrex     @ Clear any exclusive locks
 
@@ -68,11 +68,10 @@ ASM_FUNCTION start
 
 
     @ Device reset
-    bl gx_reset
-    bl irq_reset
-    bl mmu_reset
-    bl hid_reset
-    bl timer_reset
+    bl GX_Reset
+    bl IRQ_Reset
+    bl MMU_Reset
+    bl HID_Reset
 
 
     @ Clear GPUPROT (GPU can access all FCRAM + AXIRAM)
@@ -99,7 +98,7 @@ ASM_FUNCTION start
     mov r2, #1 
     ldr r1, =0x00000000
     mov r0, r1
-    bl mmu_map_section
+    bl MMU_MapSections
 
 
     @ IO Registers
@@ -107,7 +106,7 @@ ASM_FUNCTION start
     mov r2, #4
     ldr r1, =0x10100000
     mov r0, r1
-    bl mmu_map_section
+    bl MMU_MapSections
 
 
     @ MPCore Private Memory Region
@@ -115,7 +114,7 @@ ASM_FUNCTION start
     mov r2, #1
     ldr r1, =0x17E00000
     mov r0, r1
-    bl mmu_map_section
+    bl MMU_MapSections
 
 
     @ VRAM
@@ -123,7 +122,7 @@ ASM_FUNCTION start
     mov r2, #6
     ldr r1, =0x18000000
     mov r0, r1
-    bl mmu_map_section
+    bl MMU_MapSections
 
 
     @ AXI BUS Work RAM
@@ -131,7 +130,7 @@ ASM_FUNCTION start
     mov r2, #1
     ldr r1, =0x1FF00000
     mov r0, r1
-    bl mmu_map_section
+    bl MMU_MapSections
 
 
     @ FCRAM
@@ -139,7 +138,7 @@ ASM_FUNCTION start
     mov r2, #128
     ldr r1, =0x20000000
     mov r0, r1
-    bl mmu_map_section
+    bl MMU_MapSections
 
 
     @ BootROM mirror
@@ -147,14 +146,14 @@ ASM_FUNCTION start
     mov r2, #1
     ldr r1, =0xFFF00000
     mov r0, r1
-    bl mmu_map_section
+    bl MMU_MapSections
 
 
     @ Set up the TTBR and invalidate the entire TLB
     ldr r0, =mmu_tt
     orr r0, r0, #0x12
-    bl mmu_set_ttbr
-    bl mmu_invalidate_tlb
+    bl MMU_SetTTBR
+    bl MMU_InvTLB
     NOP_SLED 4
 
 
@@ -186,8 +185,8 @@ ASM_FUNCTION start
     mov r0, #IRQ_PXI_SYNC
     ldr r1, =pxi_handler
     mov r2, #0
-    bl irq_register
-    bl pxi_reset
+    bl IRQ_Register
+    bl PXI_Reset
 
 
     @ Enable interrupts

@@ -8,7 +8,6 @@
 
 enum {
     FIRM_OK = 0,
-    FIRM_MEM_ERR,
     FIRM_BAD_MAGIC,
     FIRM_BAD_SIZE,
     FIRM_MPCORE_ENTRY,
@@ -20,22 +19,22 @@ enum {
 };
 
 typedef struct {
-    u32 offset;
-    u32 load_addr;
-    u32 size;
-    u32 copy_method;
-    u8  sha_hash[0x20];
-} firm_section_t;
+    u32 Offset;
+    u32 LoadAddress;
+    u32 Length;
+    u32 CopyMethod;
+    u8  SecureHash[0x20];
+} FSect;
 
 typedef struct {
-    u8  magic[4];
-    u32 priority;
-    u32 mpcore_entry;
-    u32 oldarm_entry;
-    u8  reserved[0x30];
-    firm_section_t section[FIRM_SECTIONS];
-    u8  rsa_sig[0x100];
-} firm_t;
+    u8  Signature[4];
+    u32 Priority;
+    u32 EntryNew;
+    u32 EntryOld;
+    u8  __rsrvd[0x30];
+    FSect Section[FIRM_SECTIONS];
+    u8  SecureSignature[0x100];
+} FIRM;
 
-int firm_validate(firm_t *firm, size_t firm_sz);
-void firm_boot(firm_t *firm, const char *path);
+int  FIRM_Validate(FIRM *f, size_t sz);
+void FIRM_Boot(FIRM *f, const char *path);

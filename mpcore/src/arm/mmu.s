@@ -1,8 +1,8 @@
 #include <asm.h>
 
 
-@ void mmu_reset(void)
-ASM_FUNCTION mmu_reset
+@ void MMU_Reset(void)
+ASM_FUNCTION MMU_Reset
     mov r0, #0
     ldr r1, =0x55555555
 
@@ -13,39 +13,39 @@ ASM_FUNCTION mmu_reset
     bx lr
 
 
-@ void mmu_invalidate_tlb(void)
-ASM_FUNCTION mmu_invalidate_tlb
+@ void MMU_InvTLB(void)
+ASM_FUNCTION MMU_InvTLB
     mov r0, #0
     mcr p15, 0, r0, c8, c7, 0
     bx lr
 
 
-@ void mmu_set_ttbr(u32 ttbr_flags)
-ASM_FUNCTION mmu_set_ttbr
+@ void MMU_SetTTBR(u32 ttbr_flags)
+ASM_FUNCTION MMU_SetTTBR
     mcr p15, 0, r0, c2, c0, 0
     bx lr
 
 
-@ u32 mmu_get_ttbr(void)
-ASM_FUNCTION mmu_get_ttbr
+@ u32 MMU_GetTTBR(void)
+ASM_FUNCTION MMU_GetTTBR
     mrc p15, 0, r0, c2, c0, 0
     bx lr
 
 
-@ void mmu_set_dacr(u32 dacr)
-ASM_FUNCTION mmu_set_dacr
+@ void MMU_SetDACR(u32 dacr)
+ASM_FUNCTION MMU_SetDACR
     mcr p15, 0, r0, c3, c0, 0
     bx lr
 
 
-@ u32 mmu_get_dacr(void)
-ASM_FUNCTION mmu_get_dacr
+@ u32 MMU_GetDACR(void)
+ASM_FUNCTION MMU_GetDACR
     mrc p15, 0, r0, c3, c0, 0
     bx lr
 
 
-@ void mmu_map_section(u32 pa, u32 va, u32 count, u32 flags)
-ASM_FUNCTION mmu_map_section
+@ void MMU_MapSections(u32 pa, u32 va, u32 count, u32 flags)
+ASM_FUNCTION MMU_MapSections
     ldr r12, =mmu_tt
     lsr r0, r0, #20
     lsr r1, r1, #20
@@ -61,7 +61,6 @@ ASM_FUNCTION mmu_map_section
         bpl 1b
 
     bx lr
-
 
 
 .section .bss.mmu_tt

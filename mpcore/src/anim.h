@@ -1,32 +1,33 @@
 #pragma once
 
 #include <common.h>
+#include "lib/fs/fs.h"
 
 // Multiply any x position by this to get the address offset
-#define ANIM_WIDTH_MULT     (480)
+#define ANIM_WIDTH_MULT     (240 * 2)
 
 // Arbitrary
 #define MAX_ALLOC_ATTEMPTS  (262144)
 
 // Animation header limits/definitions
-#define ANIM_MAX_SIZE (0x2000000) // 32MB
+#define ANIM_MAX_SIZE   (0x2000000) // 32MB
 
-#define ANIM_MAGIC    ((u8[]){'B', 'A', 'X'})
+#define ANIM_MAGIC      ((u8[]){'B', 'A', 'X'})
 
-#define ANIM_MIN_VER  (1)
-#define ANIM_MAX_VER  (1)
+#define ANIM_MIN_VER    (1)
+#define ANIM_MAX_VER    (1)
 
 #define ANIM_MIN_FRAMES (1)
 #define ANIM_MAX_FRAMES (8192)
 
-#define ANIM_MIN_RATE (1)
-#define ANIM_MAX_RATE (60)
+#define ANIM_MIN_RATE   (1)
+#define ANIM_MAX_RATE   (60)
 
 #define ANIM_MIN_OFFSET (0)
-#define ANIM_MAX_OFFSET (1120)
+#define ANIM_MAX_OFFSET (719)
 
-#define ANIM_MIN_WIDTH (1)
-#define ANIM_MAX_WIDTH (1120)
+#define ANIM_MIN_WIDTH  (1)
+#define ANIM_MAX_WIDTH  (720)
 
 #define ANIM_MIN_FSIZE  (ANIM_MIN_WIDTH * ANIM_WIDTH_MULT)
 #define ANIM_MAX_FSIZE  (ANIM_MAX_WIDTH * ANIM_WIDTH_MULT)
@@ -53,51 +54,43 @@ enum
 // Animation special flags
 enum
 {
-    ANIM_FLAG_STEREOSCOPIC = BIT(0)
+    ANIM_FLAG_NONE = BIT(0)
 };
 
 typedef struct
 {
     u32 offset;   // Offset to the compressed frame (from start of file)
-    int compsz;   // Compressed frame size
-} anim_finfo_t;
+    u32 compsz;   // Compressed frame size
+} BAX_FData;
 
 typedef struct
 {
     u8  magic[3]; // 'BAX'
     u8  version;  // Animation header version
     u32 flags;    // Misc flags
-    int frame_n;  // Number of frames in the animation
-    int frame_r;  // Animation framerate
+    u32 frame_n;  // Number of frames in the animation
+    u32 frame_r;  // Animation framerate
 
     u16 clear_c;  // Initial background color
     u8 resv[6];   // Reserved, should be zero
 
-    int x_offset; // Frame X-offset
-    int x_width;  // Frame width
+    u32 x_offset; // Frame X-offset
+    u32 x_width;  // Frame width
 
     char author[32];
     char description[192];
-
-    anim_finfo_t frame_info[0];
     // Frame table comes after this
-    // Compressed frames come after this
-} anim_t;
+    // Compressed frames come after that
+} BAX;
 
-
-// Get the location of a compressed frame
-static inline const void *anim_frame_data(const anim_t *hdr, int frame)
-{
-    return (void*)((u8*)hdr + hdr->frame_info[frame].offset);
+static inline u32 BAX_FDataPos(BAX_FData *d) {
+    return d->offset;
 }
 
-static inline int anim_frame_size(const anim_t *hdr, int frame)
-{
-    return hdr->frame_info[frame].compsz;
+static inline u32 BAX_FDataCompSZ(BAX_FData *d) {
+    return d->compsz;
 }
 
-// Validate BAX animation
-int anim_validate(const anim_t *hdr, size_t hdr_sz);
 
-// Play BAX animation
-void anim_play(const anim_t *hdr);
+// Play BAX file
+void BAX_Play(FS_File *bax_f);

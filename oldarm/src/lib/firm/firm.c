@@ -2,68 +2,65 @@
 
 #include "lib/firm/firm.h"
 
-const u32 _firm_wlist[][2] =
+static const u8  FIRM_Signature[4] = {'F', 'I', 'R', 'M'};
+static const u32 FIRM_MemWhiteList[][2] =
 {
     {0x08000040, 0x08100000},
     {0x18000000, 0x18300000},
     {0x1FF00000, 0x1FFFFC00},
     {0x20000000, 0x28000000}
-};
-const u32 _firm_wlist_regions = 4;
+}, FIRM_MemWhiteListRegions = sizeof(FIRM_MemWhiteList) / sizeof(*FIRM_MemWhiteList);
 
-int firm_validate(firm_t *firm, size_t firm_sz)
+int FIRM_Validate(FIRM *f, size_t sz)
 {
-    firm_section_t *sect;
-    bool oldarm_entry = false;
-    if (firm == NULL)
-        return FIRM_MEM_ERR;
+    FSect *s;
+    bool OldEntryFound = false;
 
-    if (memcmp(firm->magic, FIRM_MAGIC, sizeof(firm->magic)))
+    assert(f != NULL);
+
+    if (memcmp(f->Signature, FIRM_Signature, sizeof(f->Signature)))
         return FIRM_BAD_MAGIC;
 
-    if (firm_sz >= FIRM_MAX_SIZE)
+    if (sz >= FIRM_MAX_SIZE)
         return FIRM_BAD_SIZE;
 
     for (u32 i = 0; i < FIRM_SECTIONS; i++) {
-        sect = &firm->section[i];
-        u32 ldaddr, offset, size, addr;
-        ldaddr = sect->load_addr,
-        offset = sect->offset,
-        size = sect->size;
+        s = &f->Section[i];
+        u32 addr;
 
-        if (size == 0)
+        if (s->Length == 0)
             continue;
 
-        if (oldarm_entry == false && 
-            ldaddr <= firm->oldarm_entry &&
-            (ldaddr + size) > firm->oldarm_entry)
-            oldarm_entry = true;
+        if ((OldEntryFound == false) &&
+            bound(f->EntryOld, s->LoadAddress, s->LoadAddress + s->Length))
+            OldEntryFound = true;
 
-        if (offset & 0x1FF)
+        if (s->Offset & 0x1FF)
             return FIRM_SECT_OFFSET;
 
-        if (ldaddr & 0xF)
+        if (s->LoadAddress & 0xF)
             return FIRM_SECT_LDADDR;
 
-        if (size & 0x1FF)
+        if (s->Length & 0x1FF)
             return FIRM_SECT_SIZE;
 
-        if ((offset + size) > firm_sz)
+        if ((s->Offset + s->Length) > sz)
             return FIRM_BAD_SIZE;
 
-        // Check load address
-        for (addr = 0; addr < _firm_wlist_regions; addr++) {
-            if (ldaddr >= _firm_wlist[addr][0] &&
-                (ldaddr + size) < _firm_wlist[addr][1])
+        for (addr = 0; addr < FIRM_MemWhiteListRegions; addr++) {
+            if (bound(s->LoadAddress,
+                FIRM_MemWhiteList[addr][0],
+                FIRM_MemWhiteList[addr][1]))
                 break;
         }
-        if (addr == _firm_wlist_regions)
+
+        if (addr == FIRM_MemWhiteListRegions)
             return FIRM_SECT_LDADDR;
 
         // TODO: SHA check
     }
 
-    if (oldarm_entry == false)
+    if (OldEntryFound == false)
         return FIRM_OLDARM_ENTRY;
 
     return FIRM_OK;

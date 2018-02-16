@@ -2,24 +2,26 @@
 
 #include <common.h>
 
-#define NDMA_GLOBAL_CONTROL ((vu32*)(0x10002000))
+#define NDMA_CHANNELS (8)
+#define NDMA_BASE     (0x10002000)
+
+
+#define REG_NDMA_GLOBAL_CONTROL   (*((vu32*)NDMA_BASE))
 
 #define NDMA_GLOBAL_ENABLE        (BIT(0))
 #define NDMA_GLOBAL_ROUNDROBIN(n) (BIT(31) | ((n) & 0xF) << 16)
 
-#define NDMA_SRC(n)         *(NDMA_GLOBAL_CONTROL + ((n)*7) + 1)
-#define NDMA_DST(n)         *(NDMA_GLOBAL_CONTROL + ((n)*7) + 2)
-#define NDMA_XFER_COUNT(n)  *(NDMA_GLOBAL_CONTROL + ((n)*7) + 3)
-#define NDMA_BLK_COUNT(n)   *(NDMA_GLOBAL_CONTROL + ((n)*7) + 4)
-#define NDMA_BLK_TIMING(n)  *(NDMA_GLOBAL_CONTROL + ((n)*7) + 5)
-#define NDMA_FILL_DATA(n)   *(NDMA_GLOBAL_CONTROL + ((n)*7) + 6)
-#define NDMA_CONTROL(n)     *(NDMA_GLOBAL_CONTROL + ((n)*7) + 7)
 
-#define NDMA_BLK_TIMING_0  (0)
-#define NDMA_BLK_TIMING_4  (1 << 16)
-#define NDMA_BLK_TIMING_16 (2 << 16)
-#define NDMA_BLK_TIMING_64 (3 << 16)
+#define REG_NDMA_BASE           ((vu32*)NDMA_BASE)
+#define REG_NDMA_SRC(n)         (REG_NDMA_BASE[((n)*7) + 1])
+#define REG_NDMA_DST(n)         (REG_NDMA_BASE[((n)*7) + 2])
+#define REG_NDMA_XFER_COUNT(n)  (REG_NDMA_BASE[((n)*7) + 3])
+#define REG_NDMA_BLK_COUNT(n)   (REG_NDMA_BASE[((n)*7) + 4])
+#define REG_NDMA_BLK_TIMING(n)  (REG_NDMA_BASE[((n)*7) + 5])
+#define REG_NDMA_FILL_DATA(n)   (REG_NDMA_BASE[((n)*7) + 6])
+#define REG_NDMA_CONTROL(n)     (REG_NDMA_BASE[((n)*7) + 7])
 
+#define NDMA_BLK_TIMING_0   (0)
 
 #define NDMA_DST_UPDATE_INC (0 << 10)
 #define NDMA_DST_UPDATE_DEC (1 << 10)
@@ -53,11 +55,10 @@
 #define NDMA_ENABLE         (BIT(31))
 
 
-void ndma_reset(void);
-void ndma_stop(void);
+void NDMA_Reset(void);
 
-void ndma_copy_async(u32 *dst, const u32 *src, u32 len);
-void ndma_copy(u32 *dst, const u32 *src, u32 len);
+void NDMA_CopyAsync(u32 *dst, const u32 *src, size_t len);
+void NDMA_Copy(u32 *dst, const u32 *src, size_t len);
 
-void ndma_fill_async(u32 *dst, u32 fill, u32 len);
-void ndma_fill(u32 *dst, u32 fill, u32 len);
+void NDMA_FillAsync(u32 *dst, u32 fill, size_t len);
+void NDMA_Fill(u32 *dst, u32 fill, size_t len);

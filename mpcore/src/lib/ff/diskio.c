@@ -26,7 +26,7 @@ DSTATUS disk_initialize (
     BYTE pdrv               /* Physical drive nmuber to identify the drive */
 )
 {
-    return pxicmd_send(PXICMD_ARM9_SDMMC_INIT, NULL, 0);
+    return PXICMD_Send(PXICMD_ARM9_SDMMC_INIT, NULL, 0);
 }
 
 
@@ -43,9 +43,12 @@ DRESULT disk_read (
 )
 {
     int ret;
-    _writeback_DC_range(buff, count * SECTOR_SIZE);
-    ret = pxicmd_send(PXICMD_ARM9_SD_READSECTORS, (u32[]){sector, count, (u32)buff}, 3);
-    _invalidate_DC_range(buff, count * SECTOR_SIZE);
+    CACHE_WbDCRange(buff, SECTOR_SIZE);
+    CACHE_WbDCRange(buff + (count * SECTOR_SIZE), SECTOR_SIZE);
+
+    ret = PXICMD_Send(PXICMD_ARM9_SD_READSECTORS, (u32[]){sector, count, (u32)buff}, 3);
+
+    CACHE_InvDCRange(buff, count * SECTOR_SIZE);
     return ret;
 }
 

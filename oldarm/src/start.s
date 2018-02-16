@@ -1,8 +1,70 @@
 #include <asm.h>
+#include <mmap.h>
 #include <interrupt.h>
 .align 2
 
-ASM_FUNCTION start
+.section .bootstrap, "ax"
+.global __start
+__start:
+    @ Switch to supervisor mode and disable interrupts
+    msr cpsr_c, #(SR_SVC | SR_NOINT)
+
+
+    @ Check for B9S compat
+    ldr r3, =0xBEEF
+    lsl r4, r2, #16
+    lsr r4, r4, #16
+    lsr r5, r2, #16
+    cmp r4, r3        @ Check magic hword
+    cmpeq r0, #2      @ Check argc == 2
+    bne CRTError
+
+    cmp r5, #2
+    blo CRTError
+
+
+    @ Cache coherency stuff
+    mov r0, #0
+    mcr p15, 0, r0, c7, c5, 0
+    mcr p15, 0, r0, c7, c6, 0
+    mcr p15, 0, r0, c7, c10, 4
+
+
+    @ Disable the MPU, caches, TCMs, set high exception vectors
+    ldr r0, =0x2078
+    mcr p15, 0, r0, c1, c0, 0
+    NOP_SLED 2
+
+
+    @ Setup Tightly Coupled Memory
+    ldr r0, =0x3000000A @ DTCM @ 0x30000000 / 16KB (16KB)
+    ldr r1, =0x00000024 @ ITCM @ 0x00000000 / 32KB (128MB)
+    mcr p15, 0, r0, c9, c1, 0
+    mcr p15, 0, r1, c9, c1, 1
+    NOP_SLED 2
+
+
+    @ Enable TCMs
+    mrc p15, 0, r0, c1, c0, 0
+    orr r0, r0, #0x50000
+    mcr p15, 0, r0, c1, c0, 0
+    NOP_SLED 2
+
+
+    @ Relocate executable
+    ldr r0, =__text_lma
+    ldr r1, =__text_s
+    ldr r2, =__text_e
+    bl BootstrapReloc
+
+
+    @ Relocate vectors
+    ldr r0, =__vectors_lma
+    ldr r1, =__vectors_s
+    ldr r2, =__vectors_e
+    bl BootstrapReloc
+
+
     @ Clear BSS
     mov r0, #0
     ldr r1, =__bss_s
@@ -13,6 +75,44 @@ ASM_FUNCTION start
         blo 1b
 
 
+    @ Branch to main startup code
+    ldr lr, =start_itcm
+    bx lr
+
+
+@ void BootstrapReloc(void *lma, void *vma_start, void *vma_end)
+@ equivalent to memcpy(vma_start, lma, vma_end - vma_start)
+BootstrapReloc:
+    cmp r1, r2
+    ldrlo r3, [r0], #4
+    strlo r3, [r1], #4
+    blo BootstrapReloc
+    bx lr
+
+@ something went really wrong
+@ might be completely useless but better than nothing?
+@ void CRTError(void)
+CRTError:
+    @ clear VRAM
+    ldr r0, =VRAM_START
+    ldr r1, =VRAM_END
+    mov r2, #0xFFFFFFFF
+    1:
+        cmp r0, r1
+        strlo r2, [r0], #4
+        blo 1b
+
+    @ ad infinitum
+    msr cpsr_c, #(SR_NOINT | SR_SVC)
+    mov r0, #0
+    2:
+        mcr p15, 0, r0, c7, c0, 4
+        b 2b
+.pool
+
+
+
+ASM_FUNCTION start_itcm
     @ Setup stacks
     msr cpsr_c, #(SR_IRQ | SR_NOINT)
     ldr sp, =__stack_irq
@@ -22,9 +122,8 @@ ASM_FUNCTION start
 
 
     @ Reset devices
-    bl irq_reset
-    bl timer_reset
-    bl ndma_reset
+    bl IRQ_Reset
+    bl NDMA_Reset
 
 
     @ MPU Regions:
@@ -74,16 +173,6 @@ ASM_FUNCTION start
     NOP_SLED 2
 
 
-    @ Setup heap
-    ldr r0, =fake_heap_start
-    ldr r1, =__heap_start
-    str r1, [r0]
-
-    ldr r0, =fake_heap_end
-    ldr r1, =__heap_end
-    str r1, [r0]
-
-
     @ Fix SDMC?
     mov r0, #0x10000000
     ldrh r1, [r0, #0x20]
@@ -95,8 +184,8 @@ ASM_FUNCTION start
     @ PXI Setup
     mov r0, #IRQ_PXI_SYNC
     ldr r1, =pxi_handler
-    bl irq_register
-    bl pxi_reset
+    bl IRQ_Register
+    bl PXI_Reset
 
 
     @ Enable interrupts
@@ -108,6 +197,7 @@ ASM_FUNCTION start
     @ Branch to C code
     ldr r12, =main
     bx r12
+
 
 
 .section .rodata.mpu_regions

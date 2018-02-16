@@ -1,12 +1,12 @@
 OUTPUT_FORMAT("elf32-littlearm")
 OUTPUT_ARCH(arm)
-ENTRY(bootstrap)
+ENTRY(__start)
 
 MEMORY
 {
   AHBRAM  (RWX) : ORIGIN = 0x08006000, LENGTH = 0xFA000
-  VECTORS (RWX) : ORIGIN = 0x00000000, LENGTH = 0x100
-  ITCM    (RWX) : ORIGIN = 0x00000100, LENGTH = 0x3600
+  VECTORS (RWX) : ORIGIN = 0x00000000, LENGTH = 0x200
+  ITCM    (RWX) : ORIGIN = 0x00000200, LENGTH = 0x3500
   DTCM    (RW)  : ORIGIN = 0x30000000, LENGTH = 0x4000
 }
 
@@ -15,7 +15,17 @@ SECTIONS
     .bootstrap : ALIGN(16)
     {
         KEEP(*(.bootstrap))
+        . = ALIGN(16);
     } >AHBRAM
+
+    .text : ALIGN(16)
+    {
+        __text_lma = LOADADDR(.text);
+        __text_s = ABSOLUTE(.);
+        *(.text*)
+        . = ALIGN(16);
+        __text_e = ABSOLUTE(.);
+    } >ITCM AT>AHBRAM
 
     .vectors : ALIGN(16)
     {
@@ -26,25 +36,14 @@ SECTIONS
         __vectors_e = ABSOLUTE(.);
     } >VECTORS AT>AHBRAM
 
-    .text : ALIGN(16)
-    {
-        __text_lma = LOADADDR(.text);
-        __text_s = ABSOLUTE(.);
-        *(.text.start)
-        *(.text*)
-        . = ALIGN(16);
-        __text_e = ABSOLUTE(.);
-    } >ITCM AT>AHBRAM
-
     .data : ALIGN(16)
     {
-        __data_lma = LOADADDR(.data);
         __data_s = ABSOLUTE(.);
         *(.data*)
         *(.rodata*)
         . = ALIGN(16);
         __data_e = ABSOLUTE(.);
-    } >DTCM AT>AHBRAM
+    } >AHBRAM
 
     .bss (NOLOAD) : ALIGN(16)
     {
@@ -52,14 +51,10 @@ SECTIONS
         *(.bss*)
         . = ALIGN(16);
         __bss_e = ABSOLUTE(.);
-    } >DTCM
+    } >AHBRAM
 
     __end__ = ABSOLUTE(.);
 
-    __heap_end = ORIGIN(AHBRAM) + LENGTH(AHBRAM);
-    __heap_start = __end__;
-
-    __stack_irq = ORIGIN(DTCM) + LENGTH(DTCM);
-    __stack_abt = __stack_irq - 0xF00;
-    __stack_sys = __stack_abt - 0x100;
+    __stack_irq = ORIGIN(AHBRAM) + LENGTH(AHBRAM);
+    __stack_sys = __stack_irq - 0x2000;
 }

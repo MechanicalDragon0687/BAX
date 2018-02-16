@@ -7,45 +7,53 @@
 .section .vectors, "ax"
 .global vectors
 vectors:
-    ldr pc, =start            @ Reset
-    ldr pc, =xrq_undefined    @ Undefined
-    ldr pc, =xrq_softwareint  @ Software Interrupt
-    ldr pc, =xrq_prefetchabt  @ Prefetch Abort
-    ldr pc, =xrq_dataabt      @ Data Abort
-    b .                       @ Reserved
-    ldr pc, =xrq_irq          @ IRQ
-    ldr pc, =xrq_fiq          @ FIQ
+    ldr pc, =XRQ_Reset         @ Reset
+    ldr pc, =XRQ_Undefined     @ Undefined
+    ldr pc, =XRQ_SoftwareInt   @ Software Interrupt
+    ldr pc, =XRQ_PrefetchAbort @ Prefetch Abort
+    ldr pc, =XRQ_DataAbort     @ Data Abort
+    b .                        @ Reserved
+    ldr pc, =XRQ_IRQ           @ IRQ
+    ldr pc, =XRQ_FIQ           @ FIQ
     .pool
 
-xrq_undefined:
-    XRQ_PRIMARY_HANDLER 1, xrq_fatal_handler
+XRQ_Reset:
+    XRQ_PRIMARY_HANDLER 0, XRQ_StackTop, XRQ_FatalHandler
 
-xrq_softwareint:
+XRQ_Undefined:
+    XRQ_PRIMARY_HANDLER 1, XRQ_StackTop, XRQ_FatalHandler
+
+XRQ_SoftwareInt:
     bkpt
 
-xrq_prefetchabt:
-    XRQ_PRIMARY_HANDLER 3, xrq_fatal_handler
+XRQ_PrefetchAbort:
+    XRQ_PRIMARY_HANDLER 3, XRQ_StackTop, XRQ_FatalHandler
 
-xrq_dataabt:
-    XRQ_PRIMARY_HANDLER 4, xrq_fatal_handler
+XRQ_DataAbort:
+    XRQ_PRIMARY_HANDLER 4, XRQ_StackTop, XRQ_FatalHandler
 
-xrq_fiq:
+XRQ_FIQ:
     subs pc, lr, #4
 
-xrq_fatal_handler:
+XRQ_FatalHandler:
     XRQ_SECONDARY_HANDLER
     mov r0, #PXICMD_ARM11_PANIC
     mov r1, #0
     mov r2, #0
-    bl pxicmd_send_async
     b .
 
 
+.section .bss.XRQ_Stack
+XRQ_Stack:
+    .space (128 * 4)
+XRQ_StackTop:
 
-ASM_FUNCTION xrq_irq
+
+ASM_FUNCTION XRQ_IRQ
     sub lr, lr, #4
     stmfd sp!, {r0-r3, r12, lr}  @ Preserve registers
 
+    1:
     ldr lr, =0x10001000
     ldr r12, [lr, #4]            @ Pending IRQ bitmask
 
@@ -53,17 +61,19 @@ ASM_FUNCTION xrq_irq
     rsb r0, r12, #31
 
     cmp r0, #IRQ_COUNT
-    bhs 1f                       @ Invalid interrupt source
+    bhs 2f                       @ Invalid interrupt source
 
     mov r3, #1
     lsl r3, r3, r0
     str r3, [lr, #4]             @ Acknowledge interrupt
 
-    ldr lr, =_irq_handlers
+    ldr lr, =IRQ_Handlers
     ldr r12, [lr, r0, lsl #2]
 
     cmp r12, #0
-    blxne r12                    @ Execute handler
+    blxne r12                    @ Execute handler if registered
 
-    1:
+    b 1b                         @ Check if theres other pending interrupts
+
+    2:
     ldmfd sp!, {r0-r3, r12, pc}^ @ Return from exception

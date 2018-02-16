@@ -1,8 +1,10 @@
-#pragma once
+#ifndef HID_H
+#define HID_H
 
-#include <common.h>
+#include <types.h>
 
-#define HID_BASE ((vu16*)0x10146000)
+#define REG_HID_BASE (*((vu16*)0x10146000))
+
 enum {
     HID_A      = 0x001,
     HID_B      = 0x002,
@@ -19,8 +21,11 @@ enum {
     HID_ANY    = 0xFFF
 };
 
-void hid_reset(void);
-void hid_scan(void);
-u32 hid_down(void);
-u32 hid_held(void);
-u32 hid_up(void);
+void HID_Reset(void);
+void HID_Scan(void);
+
+u32 HID_Down(void);
+u32 HID_Held(void);
+u32 HID_Up(void);
+
+#endif // HID_H

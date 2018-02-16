@@ -1,115 +1,110 @@
 #include <common.h>
+#include <cpu.h>
 #include <pxicmd.h>
 
-#include "arm/bugcheck.h"
+#include "arm/bug.h"
 #include "lib/fs/fs.h"
 #include "hw/hid.h"
 #include "anim.h"
 
-#define BAX_PATH "sdmc:/bax"
-#define BAX_FILE "*.bax"
-#define BAX_FIRM BAX_PATH"/boot.firm"
 
 // Arbitrary
-#define MAX_ANIMATIONS (32)
+#define MAX_ANIMATIONS (64)
 #define MAX_FIRM_SIZE  (0x400000)
 
-int firmlaunch(void *firm, size_t firm_sz, const char *firm_path);
+#define HID_SKIP       (HID_X)
+
+int FIRM_Launch(void *firm, size_t firm_sz, const char *firm_path);
 
 
 void pxi_handler(u32 irqn)
 {
-    u32 pxia[PXICMD_MAX_ARGC], pxic;
-    u8 cmd = pxicmd_recv(pxia, &pxic);
-    int resp = 0;
+    u32 pxia[PXICMD_MAX_ARGC];
+    int resp = 0, pxic;
+    u8 cmd = PXICMD_Recv(pxia, &pxic);
 
-    cmd = pxicmd_recv(pxia, &pxic);
     switch(cmd) {
         case PXICMD_ARM11_PANIC:
-            bugcheck("OLDARM_PANIC", NULL, 0);
+            BUG(BUGSTR("OLDARM_PANIC"), 1, NULL, 0);
 
         default:
             break;
     }
 
-    pxicmd_reply(resp);
+    PXICMD_Reply(resp);
     return;
 }
 
 void load_boot_firm(void)
 {
-    int firm_err;
-    size_t firm_sz;
+    int firm_r;
     void *firm;
+    size_t firm_s;
+    FS_File *firm_f;
 
-    firm_sz = fs_size(BAX_FIRM);
-    if (firm_sz == 0)
-        bugcheck("FIRM_NOT_FOUND", NULL, 0);
-    else if (firm_sz > MAX_FIRM_SIZE)
-        bugcheck("FIRM_TOO_LARGE", (u32*)&firm_sz, 1);
+    firm_f = FS_FileOpen(BAX_FIRM);
+    firm_s = FS_FileSize(firm_f);
+    if (firm_s > MAX_FIRM_SIZE)
+        BUG(BUGSTR("FIRM_TOO_LARGE"), 1, BUGINT(firm_s), 1);
 
-    firm = malloc(firm_sz);
+    firm = malloc(firm_s);
     if (firm == NULL)
-        bugcheck("FIRM_MALLOC", (u32*)&firm_sz, 1);
+        BUG(BUGSTR("FIRM_MALLOC"), 1, BUGINT(firm_s), 1);
 
-    fs_read(BAX_FIRM, firm, firm_sz);
-    firm_err = firmlaunch(firm, firm_sz, BAX_FIRM);
+    FS_FileRead(firm_f, firm, firm_s);
+    FS_FileClose(firm_f);
 
-    bugcheck("FIRM_ERR", (u32[]){(u32)firm, firm_sz, firm_err}, 3);
-    while(1) _wfi();
+    firm_r = FIRM_Launch(firm, firm_s, BAX_FIRM);
+
+    BUG(BUGSTR("FIRM_ERR"), 1, BUGINT((u32)firm, firm_s, firm_r), 3);
+    while(1) CPU_WFI();
 }
 
 void main(void)
 {
-    int res, anim_count;
-    u32 rnd, bootenv;
-    char *anim_paths[MAX_ANIMATIONS];
+    FS_File *bax_f;
+    FS_Dir *bax_d;
+    size_t bax_s;
+    u32 randseed, bootenv;
 
-    bootenv = pxicmd_send(PXICMD_ARM9_BOOTENV, NULL, 0);
-    rnd = pxicmd_send(PXICMD_ARM9_RANDOM, NULL, 0);
+    bootenv  = PXICMD_Send(PXICMD_ARM9_BOOTENV, NULL, 0);
+    randseed = PXICMD_Send(PXICMD_ARM9_RANDOM, NULL, 0);
 
-    res = fs_init();
-    if (res != 0)
-        bugcheck("FS_INIT", (u32*)&res, 1);
+    FS_Init();
 
     if (bootenv != 0)
         load_boot_firm();
 
-    anim_count = fs_search(BAX_PATH, BAX_FILE, anim_paths, MAX_ANIMATIONS);
-    hid_scan();
-    if ((anim_count > 0) && !(hid_down() & HID_X)) {
-        int anim_valid;
-        size_t anim_sz;
-        char anim_path[MAX_PATH], *anim;
+    HID_Scan();
+    if ((HID_Down() & HID_SKIP) == HID_SKIP)
+        load_boot_firm();
 
-        strcpy(anim_path, BAX_PATH "/");
-        strcat(anim_path, anim_paths[rnd % anim_count]);
+    bax_d = FS_DirOpen(BAX_PATH);
+    FS_DirSearch(bax_d, BAX_FILE, MAX_ANIMATIONS);
 
-        anim_sz = fs_size(anim_path);
-        if (anim_sz > ANIM_MAX_SIZE)
-            bugcheck("ANIM_TOO_LARGE", (u32*)&anim_sz, 1);
+    if (FS_DirSearchCount(bax_d) > 0) {
+        char bax_p[FS_MAXPATH];
 
-        anim = malloc(anim_sz);
-        if (anim == NULL)
-            bugcheck("ANIM_MALLOC", (u32*)&anim_sz, 1);
+        strcpy(bax_p, BAX_PATH "/");
+        strcat(bax_p, FS_DirSearchResult(bax_d, randseed % FS_DirSearchCount(bax_d)));
 
-        fs_read(anim_path, anim, anim_sz);
+        bax_f = FS_FileOpen(bax_p);
+        bax_s = FS_FileSize(bax_f);
 
-        anim_valid = anim_validate((anim_t*)anim, anim_sz);
-        if (anim_valid != ANIM_OK)
-            bugcheck("ANIM_NOT_OK", (u32[]){anim_sz, anim_valid}, 2);
+        if (bax_s > ANIM_MAX_SIZE)
+            BUG(BUGSTR("ANIM_TOO_LARGE", bax_p), 2, BUGINT(bax_s), 1);
 
-        anim_play((anim_t*)anim);
-        free(anim);
+        BAX_Play(bax_f);
+
+        FS_FileClose(bax_f);
     }
 
-    for (int i = 0; i < anim_count; i++)
-        free(anim_paths[i]);
+    FS_DirClose(bax_d);
 
     do {
-        hid_scan();
-    } while(hid_down() & HID_X);
+        HID_Scan();
+    } while(HID_Down() & HID_SKIP);
 
     load_boot_firm();
-    while(1) _wfi();
+    while(1) CPU_WFI();
 }

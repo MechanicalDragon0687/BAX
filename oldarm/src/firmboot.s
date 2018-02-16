@@ -12,13 +12,13 @@
 .equ BOOTROM_CPY, 0xFFFF0374
 
 
-@ void firm_boot(void *firm, char *path)
-ASM_FUNCTION firm_boot
+@ void FIRM_Boot(void *firm, char *path)
+ASM_FUNCTION FIRM_Boot
     @ Setup the framebuffer struct
     ldr r2, =FBPTR_LOC
-    ldr r3, =VRAM_DEF_TOPLEFT
-    ldr r4, =VRAM_DEF_TOPRIGHT
-    ldr r5, =VRAM_DEF_BOTTOM
+    ldr r3, =VRAM_TOPLEFT(VRAM_FRAMEBUFFER_A)
+    ldr r4, =VRAM_TOPRIGHT(VRAM_FRAMEBUFFER_A)
+    ldr r5, =VRAM_BOTTOM(VRAM_FRAMEBUFFER_A)
     stmia r2!, {r3-r5}
     stmia r2!, {r3-r5}
 
@@ -94,9 +94,9 @@ ASM_FUNCTION firm_boot
 
     @ Set the ARM11 entrypoint
     @ In the event it is NULL, the MPCore code will
-    @ keep waiting until it isnt ("compatible mode")
-    ldr r5, =MPCORE_ENTRY
-    str r3, [r5]
+    @ keep waiting until it isnt ("legacy mode")
+    ldr r12, =MPCORE_ENTRY
+    str r3, [r12]
 
     @ Branch to the ARM9 entrypoint
     bx r4

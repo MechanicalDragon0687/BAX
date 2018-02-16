@@ -6,74 +6,98 @@
 #include "hw/gx.h"
 #include "hw/lcd.h"
 
-#define FB_COORD_TO_LINEAR(x,y) (((x)*240) + (239 - (y)))
-static const u8 _bugcheck_font[];
+static const u8 bug_font[];
 
-static void _bugcheck_draw_str(u16 *fb, int x, int y, const char *str)
+static int bug_draw_str(u16 *fb, int x, int y, const char *str)
 {
     u16 *px;
-    int mask, row;
+    int mask, row, c, xpos = x;
 
-    for(; (*str > 0x1F) && (*str < 0x60); str++) {
-        for (int _y = 0; _y < 8; _y++) {
-            px = &fb[FB_COORD_TO_LINEAR(x, y + _y)];
-            row = _bugcheck_font[_y + ((*str - 0x20) * 8)];
+    while(1) {
+        c = *str++;
+
+        if (c == 0)
+            break;
+
+        // lowercase -> uppercase conv
+        if (c >= 'a' && c < 'z')
+            c &= ~0x20;;
+
+        // unknown char, print a blob instead
+        if (c < 0x20 || c > 0x5F)
+            c = 0x61;
+
+        if (c == '\n' || xpos >= 400) {
+            xpos = x;
+            y += 8;
+        }
+
+        c -= 0x20;
+
+        for (int y_ = 0; y_ < 8; y_++) {
+            px = fb + ((xpos) * 240 + (239 - (y + y_)));
+            row = bug_font[y_ + (c * 8)];
             mask = 0x80;
 
-            for (int _x = 0; _x < 8; _x++, mask >>= 1) {
-                if (mask & row) *px = ~0;
-                else *px = 0;
+            for (int x_ = 0; x_ < 8; x_++, mask >>= 1) {
+                *px = (mask & row) ? 0xFFFF : 0;
                 px += 240;
             }
         }
-        x += 8;
+        xpos += 8;
     }
-    return;
+
+    return y;
 }
 
 
-static const char _bugcheck_draw_hex_tbl[] = "0123456789ABCDEF";
-static void _bugcheck_draw_hex(u16 *fb, int x, int y, u32 h)
+static const char bug_draw_int_lut[] = "0123456789ABCDEF";
+static void bug_draw_int(u16 *fb, int x, int y, u32 h)
 {
     char hexstr[9];
     hexstr[8] = 0;
     int i = 8;
     do {
-        hexstr[--i] = _bugcheck_draw_hex_tbl[h & 15];
+        hexstr[--i] = bug_draw_int_lut[h & 15];
         h >>= 4;
     } while(i != 0);
-    return _bugcheck_draw_str(fb, x, y, hexstr);
+    bug_draw_str(fb, x, y, hexstr);
 }
 
-void bugcheck(const char *msg, u32 *args, int count)
+void BUG(const char **strs, int sc, u32 *n, int nc)
 {
     u16 *fb;
     int y;
-    _enter_critical();
-    _writeback_invalidate_DC();
-    _invalidate_IC();
 
-    pxicmd_send_async(PXICMD_ARM9_HALT, NULL, 0);
+    CPU_EnterCritical();
+    CACHE_WbInvDC();
+    CACHE_InvIC();
 
-    gx_reset();
-    gx_set_framebuffer_mode(PDC_RGB565);
-    lcd_stop_fill();
+    PXICMD_SendAsync(PXICMD_ARM9_HALT, NULL, 0);
 
-    fb = (u16*)gx_framebuffer(GFX_TOPL);
-    _bugcheck_draw_str(fb, 8, 8, "BUGCHECK: ");
-    _bugcheck_draw_str(fb, 88, 8, msg);
+    GX_Reset();
+    GX_SetFramebufferMode(PDC_RGB565);
+    LCD_StopFill();
 
+    fb = (u16*)GX_Framebuffer();
+    bug_draw_str(fb, 8, 8, "BUG!");
     y = 16;
-    for (int i = 0; i < count; i++) {
-        _bugcheck_draw_hex(fb, 8,  y, i);
-        _bugcheck_draw_hex(fb, 80, y, args[i]);
+
+    for (int i = 0; i < sc; i++) {
+        y = bug_draw_str(fb, 8, y, strs[i]);
         y += 8;
     }
 
-    while(1) _wfi();
+    for (int i = 0; i < nc; i++) {
+        bug_draw_int(fb, 8,  y, i);
+        bug_draw_int(fb, 80, y, n[i]);
+        y += 8;
+    }
+
+    while(1) CPU_WFI();
 }
 
-static const u8 _bugcheck_font[] = {
+static const u8 bug_font[] = {
 /* 20 */  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /*   */
 /* 21 */  0x18, 0x3c, 0x3c, 0x18, 0x18, 0x00, 0x18, 0x00, /* ! */
 /* 22 */  0x6C, 0x6C, 0x6C, 0x00, 0x00, 0x00, 0x00, 0x00, /* " */
@@ -139,6 +163,5 @@ static const u8 _bugcheck_font[] = {
 /* 5E */  0x3C, 0x66, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* ^ */
 /* 5F */  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, /* _ */
 /* 60 */  0x30, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* ` */
+/* 61 */  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /* idk */
 };
-
-

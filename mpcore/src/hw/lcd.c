@@ -2,24 +2,21 @@
 
 #include "hw/lcd.h"
 
-void lcd_set_brightness(u8 brightness)
+void LCD_SetBrightness(u8 brightness)
 {
-    LCD0_BASE[16] = brightness;
-    LCD1_BASE[16] = brightness;
-    return;
+    REG_LCD0_BASE[16] = brightness;
+    REG_LCD1_BASE[16] = brightness;
 }
 
-void lcd_fill(u8 r, u8 g, u8 b)
+void LCD_Fill(u8 r, u8 g, u8 b)
 {
     u32 cfg = BIT(24) | (b << 16) | (g << 8) | (r);
-    LCD0_BASE[1] = cfg;
-    LCD1_BASE[1] = cfg;
-    return;
+    REG_LCD0_BASE[1] = cfg;
+    REG_LCD1_BASE[1] = cfg;
 }
 
-void lcd_stop_fill(void)
+void LCD_StopFill(void)
 {
-    LCD0_BASE[1] = 0;
-    LCD1_BASE[1] = 0;
-    return;
+    REG_LCD0_BASE[1] = 0;
+    REG_LCD1_BASE[1] = 0;
 }

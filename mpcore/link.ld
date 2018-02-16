@@ -1,6 +1,6 @@
 OUTPUT_FORMAT("elf32-littlearm")
 OUTPUT_ARCH(arm)
-ENTRY(start)
+ENTRY(__start)
 
 MEMORY
 {

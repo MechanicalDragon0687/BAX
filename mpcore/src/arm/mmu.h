@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MMU_H
+#define MMU_H
 
 #define MMU_AP_NA_NA (0x0000)
 #define MMU_AP_RO_NA (0x8400)
@@ -20,3 +21,5 @@
 
 #define MMU_PAGE_SECTION   (2)
 #define MMU_PAGE_DOMAIN(x) ((x) << 5)
+
+#endif

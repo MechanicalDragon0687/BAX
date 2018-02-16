@@ -1,10 +1,11 @@
-#pragma once
+#ifndef ASM_H
+#define ASM_H
 
 #ifdef ARM9
 #define XRQ_REG_COUNT (18)
 #else
 #define XRQ_REG_COUNT (23)
-#endif
+#endif // ARM9
 
 // Status Register bits
 #define SR_USR (0x10)
@@ -40,13 +41,13 @@
 .endm
 
 
-.macro XRQ_PRIMARY_HANDLER n, h
+.macro XRQ_PRIMARY_HANDLER n, s, h
     #ifdef ARM11
     cpsid aif
     clrex
     #endif
 
-    ldr sp, =__stack_abt
+    ldr sp, =\s
     sub sp, sp, #(XRQ_REG_COUNT*4)
     stmia sp, {r0-r12}
     add r9, sp, #(13*4)
@@ -102,4 +103,6 @@
     mov r1, sp
     bic sp, sp, #7 @ Align stack to an 8 byte boundary
 .endm
-#endif
+#endif // __ASSEMBLER__
+
+#endif // ASM_H

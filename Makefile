@@ -13,7 +13,7 @@ export ASFLAGS := -x assembler-with-cpp -ggdb
 export CFLAGS  := -O2 -std=c99 -pipe -fomit-frame-pointer \
                   -ffunction-sections -ffast-math -Wall -Wextra \
                   -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-main -ggdb
-export LDFLAGS := -Tlink -Wl,--gc-sections,--nmagic,-z,max-page-size=4 -nostartfiles -ggdb
+export LDFLAGS := -Tlink.ld -Wl,--gc-sections,--nmagic,-z,max-page-size=4 -nostartfiles -ggdb
 
 ELF  := oldarm/oldarm.elf mpcore/mpcore.elf
 FIRM := BAX.firm

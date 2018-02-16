@@ -2,18 +2,18 @@
 #include <cpu.h>
 #include <pxicmd.h>
 
-#include "arm/irq.h"
+#include "hw/irq.h"
 #include "hw/sdmmc.h"
 
 #include "lib/firm/firm.h"
 
-static firm_t *volatile firm = NULL;
-static char firm_path[256] = {0};
+static FIRM *volatile firm;
+static char firm_path[256];
 void pxi_handler(u32 irqn)
 {
-    u32 pxia[PXICMD_MAX_ARGC], pxic;
-    u8 cmd = pxicmd_recv(pxia, &pxic);
-    int resp = 0;
+    u32 pxia[PXICMD_MAX_ARGC];
+    int resp = 0, pxic;
+    u8 cmd = PXICMD_Recv(pxia, &pxic);
 
     switch(cmd) {
         case PXICMD_ARM9_SDMMC_INIT:
@@ -31,20 +31,21 @@ void pxi_handler(u32 irqn)
 
         case PXICMD_ARM9_FIRMVERIFY:
         {
-            resp = firm_validate((firm_t*)pxia[0], pxia[1]);
+            resp = FIRM_Validate((FIRM*)pxia[0], pxia[1]);
             break;
         }
 
         case PXICMD_ARM9_FIRMBOOT:
         {
-            firm = (firm_t*)pxia[0];
+            firm = (FIRM*)pxia[0];
             strncpy(firm_path, (const char*)pxia[1], sizeof(firm_path) - 1);
+            firm_path[sizeof(firm_path) - 1] = '\0';
             break;
         }
 
         case PXICMD_ARM9_HALT:
         {
-            while(1) _wfi();
+            while(1) CPU_WFI();
         }
 
         case PXICMD_ARM9_BOOTENV:
@@ -64,12 +65,13 @@ void pxi_handler(u32 irqn)
             break;
     }
 
-    pxicmd_reply(resp);
+    PXICMD_Reply(resp);
     return;
 }
 
 void main(void)
 {
-    while(firm == NULL) _wfi();
-    firm_boot(firm, firm_path);    
+    firm = NULL;
+    while(firm == NULL) CPU_WFI();
+    FIRM_Boot(firm, firm_path);    
 }

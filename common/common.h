@@ -1,54 +1,43 @@
-#pragma once
+#ifndef COMMON_H
+#define COMMON_H
 
 #ifndef ARM9
 #ifndef ARM11
 #error "Undefined processor!"
-#endif
-#endif
+#endif // ARM11
+#endif // ARM9
 
 #ifndef __ASSEMBLER__
+
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <malloc.h>
 
-typedef uint8_t  u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
-
-typedef int8_t   s8;
-typedef int16_t  s16;
-typedef int32_t  s32;
-typedef int64_t  s64;
-
-typedef volatile u8  vu8;
-typedef volatile u16 vu16;
-typedef volatile u32 vu32;
-typedef volatile u64 vu64;
-
-typedef volatile s8  vs8;
-typedef volatile s16 vs16;
-typedef volatile s32 vs32;
-typedef volatile s64 vs64;
+#include <types.h>
 
 #define ALIGNV(x)    __attribute__((aligned((x))))
 #define UNUSED       __attribute__((unused))
 #define NORETURN     __attribute__((noreturn))
 #define NOINLINE     __attribute__((noinline))
 #define PACKED       __attribute__((packed))
-#endif
+
+#define asmv         __asm__ __volatile__
+
+#define assert(x)    do{if((x)==false){asmv("bkpt 0xFF\n\t");__builtin_unreachable();}}while(0)
+
+#define bound(x,a,b) (((x) >= (a)) && (((x) <= (b))))
+
+#define BAX_PATH "sdmc:/bax"
+#define BAX_FILE ".bax"
+#define BAX_FIRM BAX_PATH"/boot.firm"
+
+#endif // __ASSEMBLER__
+
 
 #define EXTENDET(x)  ((x) << 24 | (x) << 16 | (x) << 8 | (x))
 #define EXTENDST(x)  ((x) << 16 | (x))
 #define BIT(x)       (1<<(x))
 
-
-#undef CORE_COUNT
-#ifdef ARM9
-#define CORE_COUNT (1)
-#else
-#define CORE_COUNT (4)
-#endif
+#endif // COMMON_H
