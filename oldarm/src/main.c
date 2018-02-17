@@ -61,8 +61,7 @@ void PXICMD_Handler(u32 irqn)
         }
 
         default:
-        // TODO: bugcheck
-            break;
+            assert(0 != 0); // NO MORE GAMES
     }
 
     PXICMD_Reply(resp);

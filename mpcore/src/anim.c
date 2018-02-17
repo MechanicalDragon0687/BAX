@@ -72,7 +72,7 @@ int BAX_Validate(FS_File *bax_f)
 }
 
 static RingBuffer FrameRB;
-static int ANIM_PlaybackState;
+static int ANIM_PlaybackState, ANIM_PlaybackSkipKey;
 static u32 ANIM_PlaybackRate, ANIM_PlaybackOff;
 
 static inline void ANIM_DrainFreeRB(RingBuffer *rb) {
@@ -94,7 +94,7 @@ static void ANIM_VBlankISR(u32 irqn)
     HID_Scan();
     ANIM_VBlankISRCounter++;
 
-    if (HID_Down() & HID_X) {
+    if ((HID_Down() & ANIM_PlaybackSkipKey) == ANIM_PlaybackSkipKey) {
         ANIM_PlaybackState = -1;
         ANIM_DrainFreeRB(&FrameRB);
         if (f != NULL) free(f);
@@ -152,7 +152,7 @@ static inline void *ANIM_AttemptAlloc(size_t sz, size_t a, size_t n) {
     return ret;
 }
 
-void BAX_Play(FS_File *bax_f)
+void BAX_Play(FS_File *bax_f, int skip_hid)
 {
     CritStat cs;
     int res;
@@ -182,9 +182,10 @@ void BAX_Play(FS_File *bax_f)
 
 
     // Initialize state
-    ANIM_PlaybackOff   = hdr.x_offset * ANIM_WIDTH_MULT;
-    ANIM_PlaybackRate  = hdr.frame_r;
-    ANIM_PlaybackState = 1;
+    ANIM_PlaybackOff     = hdr.x_offset * ANIM_WIDTH_MULT;
+    ANIM_PlaybackRate    = hdr.frame_r;
+    ANIM_PlaybackState   = 1;
+    ANIM_PlaybackSkipKey = skip_hid;
     fsz = hdr.x_width * ANIM_WIDTH_MULT;
     frame = 0;
 

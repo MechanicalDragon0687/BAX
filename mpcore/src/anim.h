@@ -93,4 +93,4 @@ static inline u32 BAX_FDataCompSZ(BAX_FData *d) {
 
 
 // Play BAX file
-void BAX_Play(FS_File *bax_f);
+void BAX_Play(FS_File *bax_f, int skip_hid);

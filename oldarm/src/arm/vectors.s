@@ -38,8 +38,9 @@ XRQ_FIQ:
 XRQ_FatalHandler:
     XRQ_SECONDARY_HANDLER
     mov r0, #PXICMD_ARM11_PANIC
-    mov r1, #0
-    mov r2, #0
+    mov r2, #16
+    ldr r12, =PXICMD_SendAsync
+    blx r12
     b .
 
 

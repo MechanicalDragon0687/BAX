@@ -14,7 +14,9 @@ Those not marked in bold are bugs arising from either user error or invalid BAX 
 | **PREFETCH ABORT**  | Registers                | Attempted to execute an instruction from an invalid address |
 | **DATA ABORT**      | Registers                | Attempted to access data on an invalid address |
 
-| **OLDARM_PANIC**    | None                     | The ARM9 processor suffered an unrecoverable error |
+| **OLDARM_PANIC**    | Registers                | The ARM9 processor suffered an unrecoverable error |
+
+| **PXICMD_HANDLER**  | Command ID and argcount  | Received an unknown PXI command |
 
 | **FS_INIT**         | FF error code            | Failed to initialize FatFS |
 | FS_FILEOPEN         | Path and FF error code   | Failed to open a file |

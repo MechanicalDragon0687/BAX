@@ -21,8 +21,7 @@ Put the FIRM to be loaded afterwards (CFW, secondary bootloader, Linux, etc) on 
 
 If you want to skip the animation playback, press `X` during playback. The animation will halt until you let go, giving you time to press any other necessary buttons until the next FIRM is loaded and executed.
 
-#### ***WARNING: BAX can not be booted from a FIRM partition or an NTRboot cart.***
-#### ***ANY SANE FIRM INSTALLER WILL DETECT IT DOESN'T HAVE A PROPER SIGNATURE AND ABORT INMEDIATELY ***
+***WARNING: BAX can not be booted from a FIRM partition or an NTRboot cart. Don't even try.***
 
 
 

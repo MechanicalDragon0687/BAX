@@ -26,9 +26,10 @@ void PXICMD_Handler(u32 irqn)
 
     switch(cmd) {
         case PXICMD_ARM11_PANIC:
-            BUG(BUGSTR("OLDARM_PANIC"), 1, NULL, 0);
+            BUG(BUGSTR("OLDARM_PANIC"), 1, pxia, pxic);
 
         default:
+            BUG(BUGSTR("PXICMD_HANDLER"), 1, BUGINT(cmd, pxic), 2);
             break;
     }
 
@@ -97,7 +98,7 @@ void main(void)
         if (bax_s > ANIM_MAX_SIZE)
             BUG(BUGSTR("ANIM_TOO_LARGE", bax_p), 2, BUGINT(bax_s), 1);
 
-        BAX_Play(bax_f);
+        BAX_Play(bax_f, HID_SKIP);
 
         FS_FileClose(bax_f);
     }
