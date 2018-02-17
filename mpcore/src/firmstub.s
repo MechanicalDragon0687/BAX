@@ -49,9 +49,6 @@ ASM_FUNCTION FIRM_Launch
     cmp r0, #0
     popne {r4-r6, pc}
 
-    @ Give approximately zero fucks about what happens after this
-    cpsid if
-
     bl GX_Reset
 
     mov r0, #0

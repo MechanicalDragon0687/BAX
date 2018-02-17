@@ -7,8 +7,8 @@
 
 #include "lib/firm/firm.h"
 
-static FIRM *volatile firm;
-static char firm_path[256];
+static FIRM *volatile firm = NULL;
+static char firm_path[256] = {0};
 void PXICMD_Handler(u32 irqn)
 {
     u32 pxia[PXICMD_MAX_ARGC];
@@ -70,7 +70,6 @@ void PXICMD_Handler(u32 irqn)
 
 void main(void)
 {
-    firm = NULL;
     while(firm == NULL) CPU_WFI();
     FIRM_Boot(firm, firm_path);    
 }

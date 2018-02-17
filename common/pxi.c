@@ -29,7 +29,7 @@ void PXI_Reset(void)
 int PXI_RecvData(u32 *w, int wc)
 {
     int i = 0;
-    while (i < wc && !(REG_PXI_CNT & PXI_RECV_FIFO_EMPTY))
+    while (i < wc && !PXI_RecvFIFOEmpty())
         w[i++] = PXI_Recv();
     return i;
 }
@@ -37,7 +37,7 @@ int PXI_RecvData(u32 *w, int wc)
 int PXI_SendData(const u32 *w, int wc)
 {
     int i = 0;
-    while (i < wc && !(REG_PXI_CNT & PXI_SEND_FIFO_FULL))
+    while (i < wc && !PXI_SendFIFOFull())
         PXI_Send(w[i++]);
     return i;
 }

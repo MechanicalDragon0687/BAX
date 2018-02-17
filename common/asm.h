@@ -52,7 +52,7 @@
     stmia sp, {r0-r12}
     add r9, sp, #(13*4)
     mov r12, #(\n)
-    b \h
+    ldr pc, =\h
 .endm
 
 

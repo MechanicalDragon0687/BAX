@@ -41,13 +41,18 @@ XRQ_FatalHandler:
     mov r2, #16
     ldr r12, =PXICMD_SendAsync
     blx r12
-    b .
+
+    mov r0, #0
+    1:
+        mcr p15, 0, r0, c7, c0, 4
+        b 1b
 
 
 .section .bss.XRQ_Stack
 XRQ_Stack:
     .space (128 * 4)
 XRQ_StackTop:
+
 
 
 ASM_FUNCTION XRQ_IRQ
