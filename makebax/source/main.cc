@@ -8,6 +8,7 @@ For more information, read LICENSE.
 #include <cstring>
 #include <mutex>
 
+#include <omp.h>
 #include <lz4.h>
 #include <lz4hc.h>
 
@@ -178,7 +179,13 @@ int main(int argc, char *argv[])
 
         // Delta encoding
         for (auto i = 0; i < iter_count; i++) {
-            DeltaEncode(backbuffer, &rgb_buffer[IVF_State->GetFramePixels() * i], IVF_State->GetFrameByteSize());
+            #pragma omp parallel for
+            for (auto j = 0; j < omp_get_num_threads(); j++) {
+                int tc = omp_get_num_threads();
+                uint16_t *bb = backbuffer + ((IVF_State->GetFramePixels() / tc) * j);
+                uint16_t *fb = rgb_buffer + ((IVF_State->GetFramePixels() / tc) * j) + (IVF_State->GetFramePixels() * i);
+                DeltaEncode(bb, fb, IVF_State->GetFrameByteSize() / tc);
+            }
         }
 
         // Compression

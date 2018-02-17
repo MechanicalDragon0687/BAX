@@ -1,11 +1,11 @@
 TARGET  := makebax
 
 CXXFLAGS := -std=c++1z -O2 -Wall -Wextra -fopenmp
-LDFLAGS  := -lgomp -llz4 -lvpx
+LDFLAGS  := -lpthread -lgomp -llz4 -lvpx
 
 ifeq ($(OS),Windows_NT)
 	CFLAGS  := $(CFLAGS) -mno-ms-bitfields
-	LDFLAGS := -static $(LDFLAGS)
+	LDFLAGS := -static $(LDFLAGS) # all explicit libs should be MIT compatible
 	TARGET  := $(TARGET).exe
 endif
 

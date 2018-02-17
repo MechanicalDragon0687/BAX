@@ -4,8 +4,10 @@ endif
 
 include $(DEVKITARM)/base_tools
 
-export OUTDIR  := "$(shell pwd)/output"
-export COMMON  := "$(shell pwd)/common"
+OUTDIR  := "$(shell pwd)/output"
+COMMON  := "$(shell pwd)/common"
+RELDIR  := "$(shell pwd)/release"
+RELFILE := $(RELDIR).zip
 
 export INCLUDE := -I$(COMMON)
 export ARCH    := -marm -mno-thumb-interwork
@@ -24,13 +26,19 @@ all: firm
 clean:
 	@$(foreach elf, $(ELF), \
 		$(MAKE) --no-print-directory -C $$(dirname $(elf)) clean;)
-	@rm -rf $(FIRM) $(OUTDIR)
+	@rm -rf $(FIRM) $(OUTDIR) $(RELDIR) $(RELFILE)
 
 %.elf: .FORCE
 	@echo "Building $@"
 	@$(MAKE) --no-print-directory -C $(@D)
 
-firm: $(ELF)
-	firmtool build $(FIRM) -i -D $(ELF) -C NDMA XDMA
+$(FIRM): $(ELF)
+	firmtool build $@ -i -D $(ELF) -C NDMA XDMA
+
+release: $(ELF) $(FIRM)
+	@mkdir -p $(RELDIR)
+	@cp -av $^ $(RELDIR)
+	@cp -av README.md $(RELDIR)
+	@zip -r $(RELFILE) $(RELDIR)
 
 .FORCE:
