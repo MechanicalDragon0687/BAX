@@ -2,16 +2,16 @@
 
 ## ARM9:
 
-| Name     | Start      | Size  |  IP   |  DP   |  IDB  |   Usage         | Notes |
-| :------- | :--------: | :---: | :---: | :---: | :---: | :-------------- | :---- |
-| ITCM     | 0x00000000 | 128MB | RO_NA | RW_NA |  nnn  | Code            | None |
-| ARM9 RAM | 0x08000000 |  1MB  | RO_NA | RW_NA |  yyy  | Boot code       | None |
-| MMIO     | 0x10000000 |  2MB  | NA_NA | RW_NA |  nnn  | IO              | None |
-| VRAM     | 0x18000000 |  8MB  | NA_NA | RW_NA |  nnn  | VRAM            | Physically 6MB |
-| AXIRAM   | 0x1FF00000 |  1MB  | NA_NA | RW_NA |  nnn  | ARM11 bin       | DO. NOT. TOUCH. |
-| FCRAM    | 0x20000000 | 128MB | NA_NA | RW_NA |  nnn  | None            | None |
-| DTCM     | 0x30000000 |  16KB | NA_NA | RW_NA |  nnn  | Data/BSS/stacks | None |
-| BootROM  | 0xFFFF0000 |  32KB | RO_NA | RO_NA |  ynn  | Aux routines    | None |
+| Name     | Start      | Size  | IP    | DP    | IDB   | Usage                      | Notes |
+| :------- | :--------: | :---: | :---: | :---: | :---: | :------------------------- | :---- |
+| ITCM     | 0x00000000 | 128MB | RO_NA | RW_NA |  nnn  | Code                       | None |
+| ARM9 RAM | 0x08000000 |  1MB  | RO_NA | RW_NA |  yyy  | Boot code, data/BSS/stacks | None |
+| MMIO     | 0x10000000 |  2MB  | NA_NA | RW_NA |  nnn  | Device IO                  | None |
+| VRAM     | 0x18000000 |  8MB  | NA_NA | RW_NA |  nnn  | VRAM                       | Physically 6MB |
+| AXIRAM   | 0x1FF00000 |  1MB  | NA_NA | RW_NA |  nnn  | MPCore executable/data     | DO. NOT. TOUCH. |
+| FCRAM    | 0x20000000 | 128MB | NA_NA | RW_NA |  nnn  | None                       | None |
+| DTCM     | 0x30000000 |  16KB | NA_NA | RW_NA |  nnn  | None                       | None |
+| BootROM  | 0xFFFF0000 |  32KB | RO_NA | RO_NA |  ynn  | High exception vectors     | None |
 
 
 

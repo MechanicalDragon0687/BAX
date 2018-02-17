@@ -32,9 +32,7 @@ FS_File *FS_FileOpen(const char *path)
     assert(path != NULL);
 
     pathlen = strlen(path);
-    if (pathlen > FS_MAXPATH) {
-        BUG(BUGSTR("FS_LONGPATH", path), 2, BUGINT(pathlen), 1);
-    }
+    assert(pathlen < FS_MAXPATH);
 
     ret = LockMalloc(sizeof(FS_File));
     assert(ret != NULL);
@@ -113,8 +111,7 @@ FS_Dir *FS_DirOpen(const char *path)
     assert(path != NULL);
 
     pathlen = strlen(path);
-    if (pathlen > FS_MAXPATH)
-        BUG(BUGSTR("FS_LONGPATH", path), 2, BUGINT(pathlen), 1);
+    assert(pathlen < FS_MAXPATH);
 
     ret = LockMalloc(sizeof(FS_Dir));
     assert(ret != NULL);
@@ -219,7 +216,6 @@ size_t FS_DirSearchCount(const FS_Dir *d)
 char *FS_DirSearchResult(const FS_Dir *d, size_t n)
 {
     assert(d != NULL);
-    if (n >= d->srchn)
-        BUG(BUGSTR("FS_DIRSEARCHRESULT"), 1, BUGINT(n, d->srchn), 2);
+    assert(n < d->srchn);
     return d->srch[n];
 }

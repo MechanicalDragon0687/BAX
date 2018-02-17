@@ -3,7 +3,7 @@
 #include <types.h>
 #include "lib/ff/ff.h"
 
-#define FS_MAXPATH (255)
+#define FS_MAXPATH (FF_MAX_LFN + 1)
 #define FS_MAXSRCH (512)
 
 typedef FATFS FS_Mount;

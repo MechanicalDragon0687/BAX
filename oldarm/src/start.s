@@ -183,7 +183,7 @@ ASM_FUNCTION start_itcm
 
     @ PXI Setup
     mov r0, #IRQ_PXI_SYNC
-    ldr r1, =pxi_handler
+    ldr r1, =PXICMD_Handler
     bl IRQ_Register
     bl PXI_Reset
 

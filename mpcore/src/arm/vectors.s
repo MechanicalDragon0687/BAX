@@ -103,7 +103,7 @@ ASM_FUNCTION XRQ_IRQ
 .section .rodata.XRQ_FatalStrings
 XRQ_ResetString:         .asciz "RESET"
 XRQ_UndefinedString:     .asciz "UNDEFINED"
-XRQ_SoftwareIntString:   .asciz "SOFTWARE INTERRUPT"
+XRQ_SoftwareIntString:   .asciz "SOFT INTERRUPT"
 XRQ_PrefetchAbortString: .asciz "PREFETCH ABORT"
 XRQ_DataAbortString:     .asciz "DATA ABORT"
 XRQ_ReservedString:      .asciz "RESERVED"

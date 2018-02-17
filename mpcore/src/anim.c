@@ -28,10 +28,11 @@ int BAX_Validate(FS_File *bax_f)
 
     FS_FileSetPos(bax_f, 0L);
     bax_s = FS_FileSize(bax_f);
-    FS_FileRead(bax_f, &hdr, sizeof(BAX));
 
-    if (bax_s <= sizeof(BAX))
+    if (!bound(bax_s, sizeof(BAX), ANIM_MAX_SIZE))
         return ANIM_ERR_SIZE;
+
+    FS_FileRead(bax_f, &hdr, sizeof(BAX));
 
     if (!bound(hdr.version, ANIM_MIN_VER, ANIM_MAX_VER))
         return ANIM_ERR_VERSION;
@@ -230,9 +231,8 @@ void BAX_Play(FS_File *bax_f)
         CACHE_WbDCRange(framebuffer, fsz);
         while(RingBuffer_Store(&FrameRB, framebuffer, fsz) == false) CPU_WFI();
 
-        frame++;
-
         LockFree(compfb);
+        frame++;
     }
 
     // If the animation was exited, drain the buffer

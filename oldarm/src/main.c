@@ -9,7 +9,7 @@
 
 static FIRM *volatile firm;
 static char firm_path[256];
-void pxi_handler(u32 irqn)
+void PXICMD_Handler(u32 irqn)
 {
     u32 pxia[PXICMD_MAX_ARGC];
     int resp = 0, pxic;

@@ -183,7 +183,7 @@ ASM_FUNCTION __start
 
     @ PXI Setup
     mov r0, #IRQ_PXI_SYNC
-    ldr r1, =pxi_handler
+    ldr r1, =PXICMD_Handler
     mov r2, #0
     bl IRQ_Register
     bl PXI_Reset

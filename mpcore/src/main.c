@@ -1,5 +1,6 @@
 #include <common.h>
 #include <cpu.h>
+#include <lock.h>
 #include <pxicmd.h>
 
 #include "arm/bug.h"
@@ -17,7 +18,7 @@
 int FIRM_Launch(void *firm, size_t firm_sz, const char *firm_path);
 
 
-void pxi_handler(u32 irqn)
+void PXICMD_Handler(u32 irqn)
 {
     u32 pxia[PXICMD_MAX_ARGC];
     int resp = 0, pxic;
@@ -47,14 +48,16 @@ void load_boot_firm(void)
     if (firm_s > MAX_FIRM_SIZE)
         BUG(BUGSTR("FIRM_TOO_LARGE"), 1, BUGINT(firm_s), 1);
 
-    firm = malloc(firm_s);
+    firm = LockMalloc(firm_s);
     if (firm == NULL)
-        BUG(BUGSTR("FIRM_MALLOC"), 1, BUGINT(firm_s), 1);
+        BUG(BUGSTR("FIRM_ALLOC"), 1, BUGINT(firm_s), 1);
 
     FS_FileRead(firm_f, firm, firm_s);
     FS_FileClose(firm_f);
 
     firm_r = FIRM_Launch(firm, firm_s, BAX_FIRM);
+
+    LockFree(firm);
 
     BUG(BUGSTR("FIRM_ERR"), 1, BUGINT((u32)firm, firm_s, firm_r), 3);
     while(1) CPU_WFI();
