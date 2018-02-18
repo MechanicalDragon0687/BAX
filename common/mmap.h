@@ -12,8 +12,8 @@
 #define VRAM_SIZE        (0x00600000)
 #define VRAM_END         (VRAM_START + VRAM_SIZE)
 
-#define VRAM_TOP_DIM     (490 * 240 * 2)
-#define VRAM_BOTTOM_DIM  (320 * 240 * 2)
+#define VRAM_TOP_DIM     (400 * 240)
+#define VRAM_BOTTOM_DIM  (320 * 240)
 
 #define VRAM_TOP_SIZE    (VRAM_TOP_DIM * 2)
 #define VRAM_BOTTOM_SIZE (VRAM_BOTTOM_DIM * 2)
@@ -22,7 +22,7 @@
 #define VRAM_FRAMEBUFFER_B (VRAM_FRAMEBUFFER_A + VRAM_TOP_DIM * 2 + VRAM_BOTTOM_DIM)
 
 #define VRAM_TOPLEFT(x)    ((x))
-#define VRAM_TOPRIGHT(x)   ((x) + VRAM_TOP_DIM + VRAM_BOTTOM_DIM)
-#define VRAM_BOTTOM(x)     ((x) + VRAM_TOP_DIM)
+#define VRAM_TOPRIGHT(x)   ((x) + VRAM_TOP_SIZE + VRAM_BOTTOM_SIZE)
+#define VRAM_BOTTOM(x)     ((x) + VRAM_TOP_SIZE)
 
 #endif // MMAP_H

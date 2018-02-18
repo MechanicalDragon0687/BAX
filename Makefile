@@ -20,8 +20,8 @@ export LDFLAGS := -Tlink.ld -Wl,--gc-sections,--nmagic,-z,max-page-size=4 -nosta
 ELF  := oldarm/oldarm.elf mpcore/mpcore.elf
 FIRM := BAX.firm
 
-.PHONY: all firm clean
-all: firm
+.PHONY: all $(FIRM) clean release
+all: $(FIRM)
 
 clean:
 	@$(foreach elf, $(ELF), \
