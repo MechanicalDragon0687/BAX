@@ -62,3 +62,5 @@ void NDMA_Copy(u32 *dst, const u32 *src, size_t len);
 
 void NDMA_FillAsync(u32 *dst, u32 fill, size_t len);
 void NDMA_Fill(u32 *dst, u32 fill, size_t len);
+
+void NDMA_Operation(u32 *dst, u32 sv, u32 flags, size_t len);

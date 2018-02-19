@@ -1,5 +1,4 @@
 #include <common.h>
-#include <lock.h>
 
 #include "arm/bug.h"
 #include "lib/ff/ff.h"
@@ -34,10 +33,10 @@ FS_File *FS_FileOpen(const char *path)
     pathlen = strlen(path);
     assert(pathlen < FS_MAXPATH);
 
-    ret = LockMalloc(sizeof(FS_File));
+    ret = malloc(sizeof(FS_File));
     assert(ret != NULL);
 
-    ret->path = LockMalloc(pathlen + 1);
+    ret->path = malloc(pathlen + 1);
     assert(ret->path != NULL);
 
     strcpy(ret->path, path);
@@ -53,8 +52,8 @@ void FS_FileClose(FS_File *f)
 {
     assert(f != NULL);
     f_close(&f->ff);
-    LockFree(f->path);
-    LockFree(f);
+    free(f->path);
+    free(f);
 }
 
 char *FS_FilePath(FS_File *f)
@@ -113,10 +112,10 @@ FS_Dir *FS_DirOpen(const char *path)
     pathlen = strlen(path);
     assert(pathlen < FS_MAXPATH);
 
-    ret = LockMalloc(sizeof(FS_Dir));
+    ret = malloc(sizeof(FS_Dir));
     assert(ret != NULL);
 
-    ret->path = LockMalloc(pathlen + 1);
+    ret->path = malloc(pathlen + 1);
     assert(ret->path != NULL);
 
     strcpy(ret->path, path);
@@ -135,8 +134,8 @@ static void FS_DirSearchClear(FS_Dir *d)
     assert(d != NULL);
     if (d->srchn != 0) {
         for (size_t i = 0; i < d->srchn; i++)
-            LockFree(d->srch[i]);
-        LockFree(d->srch);
+            free(d->srch[i]);
+        free(d->srch);
     }
     d->srch  = NULL;
     d->srchn = 0;
@@ -146,8 +145,8 @@ void FS_DirClose(FS_Dir *d)
 {
     assert(d != NULL);
     FS_DirSearchClear(d);
-    LockFree(d->path);
-    LockFree(d);
+    free(d->path);
+    free(d);
 }
 
 char *FS_DirPath(FS_Dir *d)
@@ -160,14 +159,17 @@ void FS_DirSearch(FS_Dir *d, const char *ext, size_t n)
 {
     FRESULT res;
     FILINFO fno;
-    size_t count = 0, pathlen, extlen;
-    char *paths[n], *pathext;
+    size_t count = 0, pathlen, extlen, baselen;
+    char *paths[n], *pathext, *basepath;
 
     assert(d != NULL);
     assert(ext != NULL);
     assert(n < FS_MAXSRCH);
 
-    extlen = strlen(ext);
+    basepath = d->path;
+
+    baselen = strlen(basepath);
+    extlen  = strlen(ext);
 
     FS_DirSearchClear(d);
 
@@ -176,25 +178,31 @@ void FS_DirSearch(FS_Dir *d, const char *ext, size_t n)
         if (res != FR_OK || fno.fname[0] == 0)
             break;
 
+        if (fno.fattrib & AM_DIR)
+            continue;
+
         pathlen = strlen(fno.fname);
         if (pathlen < extlen)
             continue;
 
         pathext = &fno.fname[pathlen - extlen];
 
-        if ((fno.fattrib & AM_DIR) == 0 && strcmp(pathext, ext) == 0) {
+        if (strcmp(pathext, ext) == 0) {
             pathlen = strlen(fno.fname);
-            paths[count] = LockMalloc(pathlen + 1);
+            paths[count] = malloc(baselen + 1 + pathlen + 1);
             assert(paths[count] != NULL);
 
-            strcpy(paths[count], fno.fname);
+            strcpy(paths[count], basepath);
+            strcpy(&paths[count][baselen + 1], fno.fname);
+            paths[count][baselen] = '/';
+
             count++;
         }
     } while(res == FR_OK);
 
     if (count > 0) {
         d->srchn = count;
-        d->srch  = LockMalloc(sizeof(char*) * count);
+        d->srch  = malloc(sizeof(char*) * count);
         assert(d->srch != NULL);
 
         for (size_t i = 0; i < count; i++)

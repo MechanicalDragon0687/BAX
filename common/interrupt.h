@@ -53,6 +53,8 @@
 
     #define IRQ_SPURIOUS        (0x3FF)
 
+    #define IRQ_VBLANK_FREQ     (60)
+
 #endif // ARM9
 
 #endif // INTERRUPT_H

@@ -1,4 +1,9 @@
 
+ASAP:
+
+ - figure out how tf I should integrate locking into newlib's heap thing
+
+
 Mostly done:
 
 - testing, lots of it

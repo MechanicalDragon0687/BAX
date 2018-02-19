@@ -1,6 +1,5 @@
 #include <common.h>
 #include <cpu.h>
-#include <lock.h>
 #include <pxicmd.h>
 
 #include "arm/bug.h"
@@ -49,7 +48,7 @@ void load_boot_firm(void)
     if (firm_s > MAX_FIRM_SIZE)
         BUG(BUGSTR("FIRM_TOO_LARGE"), 1, BUGINT(firm_s), 1);
 
-    firm = LockMalloc(firm_s);
+    firm = malloc(firm_s);
     if (firm == NULL)
         BUG(BUGSTR("FIRM_ALLOC"), 1, BUGINT(firm_s), 1);
 
@@ -58,7 +57,7 @@ void load_boot_firm(void)
 
     firm_r = FIRM_Launch(firm, firm_s, BAX_FIRM);
 
-    LockFree(firm);
+    free(firm);
 
     BUG(BUGSTR("FIRM_ERR"), 1, BUGINT((u32)firm, firm_s, firm_r), 3);
     while(1) CPU_WFI();
@@ -69,6 +68,7 @@ void main(void)
     FS_File *bax_f;
     FS_Dir *bax_d;
     size_t bax_s;
+    char *bax_p;
     u32 randseed, bootenv;
 
     bootenv  = PXICMD_Send(PXICMD_ARM9_BOOTENV, NULL, 0);
@@ -87,11 +87,7 @@ void main(void)
     FS_DirSearch(bax_d, BAX_FILE, MAX_ANIMATIONS);
 
     if (FS_DirSearchCount(bax_d) > 0) {
-        char bax_p[FS_MAXPATH];
-
-        strcpy(bax_p, BAX_PATH "/");
-        strcat(bax_p, FS_DirSearchResult(bax_d, randseed % FS_DirSearchCount(bax_d)));
-
+        bax_p = FS_DirSearchResult(bax_d, randseed % FS_DirSearchCount(bax_d));
         bax_f = FS_FileOpen(bax_p);
         bax_s = FS_FileSize(bax_f);
 

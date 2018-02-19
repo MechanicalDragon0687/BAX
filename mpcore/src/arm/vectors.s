@@ -49,8 +49,8 @@ XRQ_FatalHandler:
     mov r2, r1
     mov r1, #1
     mov r3, #XRQ_REG_COUNT
-    ldr lr, =BUG
-    bx lr
+    ldr r12, =BUG
+    bx r12
 
 
 

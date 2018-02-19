@@ -24,9 +24,9 @@ static inline void CPU_SetCPSR(u32 cpsr) {
 }
 
 static inline CritStat CPU_EnterCritical(void) {
-    u32 stat = CPU_GetCPSR();
+    CritStat stat = CPU_GetCPSR();
     CPU_SetCPSR(stat | SR_NOIRQ);
-    return (CritStat)(stat & SR_NOIRQ);
+    return stat & SR_NOIRQ;
 }
 
 static inline void CPU_LeaveCritical(CritStat stat) {

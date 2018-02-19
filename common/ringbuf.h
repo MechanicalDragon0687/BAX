@@ -12,8 +12,6 @@ typedef struct {
     size_t Fetch;
     size_t Count;
     size_t MSize;
-
-    CritStat Lock;
 } RingBuffer;
 
 void RingBuffer_Init(RingBuffer *r, size_t n);
@@ -26,4 +24,3 @@ static inline size_t RingBuffer_Count(RingBuffer *r)
 {
     return r->Count;
 }
-

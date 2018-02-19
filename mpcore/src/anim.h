@@ -7,7 +7,7 @@
 #define ANIM_WIDTH_MULT     (240 * 2)
 
 // Arbitrary
-#define MAX_ALLOC_ATTEMPTS  (262144)
+#define MAX_ALLOC_ATTEMPTS  (1024)
 
 // Animation header limits/definitions
 #define ANIM_MAX_SIZE   (0x2000000) // 32MB
@@ -93,4 +93,4 @@ static inline u32 BAX_FDataCompSZ(BAX_FData *d) {
 
 
 // Play BAX file
-void BAX_Play(FS_File *bax_f, int skip_hid);
+void BAX_Play(FS_File *bax_f, u32 skip_hid);
