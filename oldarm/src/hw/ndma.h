@@ -1,4 +1,5 @@
-#pragma once
+#ifndef NDMA_H
+#define NDMA_H
 
 #include <common.h>
 
@@ -64,3 +65,5 @@ void NDMA_FillAsync(u32 *dst, u32 fill, size_t len);
 void NDMA_Fill(u32 *dst, u32 fill, size_t len);
 
 void NDMA_Operation(u32 *dst, u32 sv, u32 flags, size_t len);
+
+#endif // NDMA_H

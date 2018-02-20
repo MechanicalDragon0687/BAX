@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIM_H
+#define ANIM_H
 
 #include <common.h>
 #include "lib/fs/fs.h"
@@ -95,3 +96,5 @@ void BAX_DeltaDecode(void *bb, void *fb, size_t l);
 
 // Play BAX file
 void BAX_Play(FS_File *bax_f, u32 skip_hid);
+
+#endif // ANIM_H

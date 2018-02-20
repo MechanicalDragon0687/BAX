@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FS_H
+#define FS_H
 
 #include <types.h>
 #include "lib/ff/ff.h"
@@ -39,3 +40,5 @@ char   *FS_DirPath(FS_Dir *d);
 void    FS_DirSearch(FS_Dir *d, const char *ext, size_t n);
 size_t  FS_DirSearchCount(const FS_Dir *d);
 char   *FS_DirSearchResult(const FS_Dir *d, size_t n);
+
+#endif // FS_H

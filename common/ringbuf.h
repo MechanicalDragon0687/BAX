@@ -1,4 +1,5 @@
-#pragma once
+#ifndef RINGBUF_H
+#define RINGBUF_H
 
 #include <common.h>
 #include <cpu.h>
@@ -24,3 +25,5 @@ static inline size_t RingBuffer_Count(RingBuffer *r)
 {
     return r->Count;
 }
+
+#endif // RINGBUF_H

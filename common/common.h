@@ -34,9 +34,8 @@ static inline void assert(bool cond) {
 
 #endif // __ASSEMBLER__
 
-
-#define EXTENDET(x)  ((x) << 24 | (x) << 16 | (x) << 8 | (x))
-#define EXTENDST(x)  ((x) << 16 | (x))
-#define BIT(x)       (1<<(x))
+#define EXTENDET(x) ((x) << 24 | (x) << 16 | (x) << 8 | (x))
+#define EXTENDST(x) ((x) << 16 | (x))
+#define BIT(x)      (1<<(x))
 
 #endif // COMMON_H

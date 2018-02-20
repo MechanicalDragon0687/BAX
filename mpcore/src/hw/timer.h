@@ -1,4 +1,5 @@
-#pragma once
+#ifndef TIMER_H
+#define TIMER_H
 
 #include <common.h>
 
@@ -32,3 +33,5 @@ static inline u32 TIMER_MSToTicks(float ms) {
 static inline float TIMER_TicksToMS(u32 ticks) {
     return (float)ticks / TIMER_MS_FACTOR;
 }
+
+#endif // TIMER_H

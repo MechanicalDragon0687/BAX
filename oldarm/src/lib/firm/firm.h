@@ -1,6 +1,7 @@
-#pragma once
+#ifndef FIRM_H
+#define FIRM_H
 
-#include <common.h>
+#include <types.h>
 
 #define FIRM_MAGIC    ((u8[4]){'F', 'I', 'R', 'M'})
 #define FIRM_MAX_SIZE (0x400000)
@@ -38,3 +39,5 @@ typedef struct {
 
 int  FIRM_Validate(FIRM *f, size_t sz);
 void FIRM_Boot(FIRM *f, const char *path);
+
+#endif

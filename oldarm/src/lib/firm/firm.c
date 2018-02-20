@@ -1,5 +1,4 @@
 #include <common.h>
-
 #include "lib/firm/firm.h"
 
 static const u8  FIRM_Signature[4] = {'F', 'I', 'R', 'M'};
