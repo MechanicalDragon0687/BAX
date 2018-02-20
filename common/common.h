@@ -17,15 +17,14 @@
 
 #include <types.h>
 
-#define ALIGNV(x)    __attribute__((aligned((x))))
-#define UNUSED       __attribute__((unused))
-#define NORETURN     __attribute__((noreturn))
-#define NOINLINE     __attribute__((noinline))
-#define PACKED       __attribute__((packed))
+#define asmv __asm__ __volatile__
 
-#define asmv         __asm__ __volatile__
-
-#define assert(x)    do{if((x)==false){asmv("bkpt 0xFF\n\t");__builtin_unreachable();}}while(0)
+static inline void assert(bool cond) {
+    if (cond == false) {
+        asmv("bkpt\n\t");
+        __builtin_unreachable();
+    }
+}
 
 #define bound(x,a,b) (((x) >= (a)) && (((x) <= (b))))
 

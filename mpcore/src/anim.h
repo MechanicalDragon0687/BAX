@@ -91,6 +91,7 @@ static inline u32 BAX_FDataCompSZ(BAX_FData *d) {
     return d->compsz;
 }
 
+void BAX_DeltaDecode(void *bb, void *fb, size_t l);
 
 // Play BAX file
 void BAX_Play(FS_File *bax_f, u32 skip_hid);

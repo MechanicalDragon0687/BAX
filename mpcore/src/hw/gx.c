@@ -10,12 +10,11 @@ static u32 GX_CurrentFramebuffer;
 
 static inline u32 GX_FramebufferStride(int pdc_mode) {
     switch(pdc_mode) {
+        default:
         case PDC_RGBA8:  return 240 * 4;
         case PDC_BGR8:   return 240 * 3;
         case PDC_RGB565: return 240 * 2;
-        default: break;
     }
-    assert(0 != 0); // Force break
 }
 
 

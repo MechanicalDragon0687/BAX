@@ -11,23 +11,23 @@ static const u8 bug_font[];
 static int bug_draw_str(u16 *fb, int x, int y, const char *str)
 {
     u16 *px;
-    int mask, row, c, xpos = x;
+    int mask, row, xpos = x;
 
     while(1) {
-        c = *str++;
+        int c = *str++;
 
         if (c == 0)
             break;
 
         // lowercase -> uppercase conv
-        if (c >= 'a' && c < 'z')
+        if (c >= 'a' && c <= 'z')
             c &= ~0x20;;
 
         // unknown char, print a blob instead
         if (c < 0x20 || c > 0x5F)
             c = 0x61;
 
-        if (c == '\n' || xpos >= 400) {
+        if (xpos >= 400) {
             xpos = x;
             y += 8;
         }
