@@ -23,6 +23,17 @@ Parameters enclosed in `[ ]` are optional.
  - `i` is the same as above but for Information. Maximum length is 192 ASCII characters.
 
 
+### What on earth is an IVF file?
+
+[IVF](https://wiki.multimedia.cx/index.php/IVF) is a simple container for VP8/VP9 streams, unable to contain more than one stream. It was chosen as the input format due to it being both simplicity and straightforward to work with.
+
+You can transcode any video supported by `ffmpeg` into IVF by running `ffmpeg -i "input.video" -f ivf "output.ivf"`.
+
+If your source video resolution isn't the required you can also do `ffmpeg -i "input.video" -f ivf -vf scale=<WIDTH>:240,fps=<FRAMERATE> "output.ivf"`, with "WIDTH" being either 400, 320 or 720 and "FRAMERATE" being between 1 and 60.
+
+While having libav* support would be ideal, it's less than fit due to it's programming complexity (easy to make mistakes with) and labyrinth of dependencies (requires X11 libs, so it's unusable from servers, f.e.).
+
+
 ### Compiling
 
 Requires a C++14 compatible compiler with thread support, `OpenMP`, `lz4` and `libvpx`.
