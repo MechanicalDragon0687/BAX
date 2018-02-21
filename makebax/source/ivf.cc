@@ -45,6 +45,7 @@ IVF::IVF(const char *path)
     */
 
     FILE *IVF_File;
+    uint32_t FrameRateScale;
     uint16_t HeaderLen, Version;
     uint8_t IVF_Header[IVF_HEADER_SIZE];
     vpx_codec_iface_t *DXInterface = nullptr;
@@ -66,11 +67,15 @@ IVF::IVF(const char *path)
     HeaderLen = mem_le16(IVF_Header + 6);
     if (HeaderLen != IVF_HEADER_SIZE)
         Abort_Error("Not a valid IVF file (invalid header length).\n");
+        
+    FrameRateScale = mem_le32(IVF_Header + 20);
+    if (FrameRateScale == 0)
+        Abort_Error("Framerate timescale is zero.\n");
 
     this->Width  = mem_le16(IVF_Header + 12);
     this->Height = mem_le16(IVF_Header + 14);
 
-    this->FrameRate  = mem_le32(IVF_Header + 16);
+    this->FrameRate  = mem_le32(IVF_Header + 16) / FrameRateScale;
     this->FrameCount = mem_le32(IVF_Header + 24);
 
     this->Frames    = new uint8_t*[this->FrameCount] {nullptr};
