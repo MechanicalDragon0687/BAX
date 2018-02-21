@@ -1,5 +1,6 @@
 #include <common.h>
 
+#include <cpu.h>
 #include <pxi.h>
 #include <pxicmd.h>
 
@@ -14,8 +15,8 @@ void PXICMD_SendAsync(u32 cmd, const u32 *a, int c)
 
 int PXICMD_SendWait(void)
 {
+    while (PXI_RecvFIFOEmpty()) CPU_WFI();
     int ret = PXI_Recv();
-    PXI_SendSync(0);
     return ret;    
 }
 
@@ -36,5 +37,4 @@ int PXICMD_Recv(u32 *a, int *c)
 
 void PXICMD_Reply(int r) {
     PXI_Send(r);
-    PXI_SendSync(0);
 }

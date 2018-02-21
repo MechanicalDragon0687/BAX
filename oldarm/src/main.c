@@ -2,9 +2,7 @@
 #include <cpu.h>
 #include <pxicmd.h>
 
-#include "hw/irq.h"
 #include "hw/sdmmc.h"
-
 #include "lib/firm/firm.h"
 
 static FIRM *volatile firm = NULL;

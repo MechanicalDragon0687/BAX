@@ -32,19 +32,3 @@
 
   - none so far
 
-
-
-### Tricks:
-
-Since both screens have the same height (240px), they can be treated as a single, contiguous 720px width screen.
-This allows dual-screen animations to be contained within a single video frame stream.
-
-  - If both screens are to be used, the column offset should be set to 0 and the width to 720.
-
-  - If only the top screen is to be used, the column offset should be set to 0 and the width to 400.
-
-  - If only the bottom screen is to be used, then the column offset parameter can be set to 400 and the width to 240.
-
-  - If your animation only takes up a chunk of the screen and has a fixed background, you could tweak the column offset and width parameters to make it smaller.
-
-  - In any other case, feel free to experiment!

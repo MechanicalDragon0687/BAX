@@ -1,7 +1,7 @@
 #ifndef PXI_H
 #define PXI_H
 
-#include <common.h>
+#include <types.h>
 
 #ifdef ARM9
 
@@ -68,7 +68,7 @@ static inline void PXI_Sync(void) {
     REG_PXI_SYNC_CNT |= PXI_TRIGGER_IRQ;
 }
 
-static inline void PXI_SyncCnt(bool enable) {
+static inline void PXI_SyncIRQSet(bool enable) {
     if (enable == true) REG_PXI_SYNC_CNT |= PXI_SYNC_IRQ_ENABLE;
     else REG_PXI_SYNC_CNT &= ~PXI_SYNC_IRQ_ENABLE;
 }
@@ -81,7 +81,7 @@ static inline void PXI_SendSync(u8 b) {
     REG_PXI_SYNC_SEND = b;
 }
 
-static inline u32  PXI_Recv(void) {
+static inline u32 PXI_Recv(void) {
     while(PXI_RecvFIFOEmpty());
     return REG_PXI_RECV;
 }

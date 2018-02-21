@@ -185,6 +185,11 @@ ASM_FUNCTION start_itcm
     mov r0, #IRQ_PXI_SYNC
     ldr r1, =PXICMD_Handler
     bl IRQ_Register
+
+    mov r0, #IRQ_PXI_RECV_NOT_EMPTY
+    mov r1, #0
+    bl IRQ_Register
+
     bl PXI_Reset
 
 

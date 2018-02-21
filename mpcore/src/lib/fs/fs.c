@@ -1,4 +1,5 @@
 #include <common.h>
+#include <strings.h>
 
 #include "arm/bug.h"
 #include "lib/ff/ff.h"
@@ -70,7 +71,7 @@ void FS_FileRead(FS_File *f, void *b, size_t l)
     assert(f != NULL);
 
     res = f_read(&f->ff, b, l, &br);
-    if (res != FR_OK)
+    if (res != FR_OK || l != br)
         BUG(BUGSTR("FS_FILEREAD", f->path), 2, BUGINT(l, br), 2);
 }
 
@@ -188,7 +189,7 @@ void FS_DirSearch(FS_Dir *d, const char *ext, size_t n)
 
         pathext = &fno.fname[pathlen - extlen];
 
-        if (strcmp(pathext, ext) == 0) {
+        if (strcasecmp(pathext, ext) == 0) {
             pathlen = strlen(fno.fname);
             paths[count] = malloc(baselen + 1 + pathlen + 1);
             assert(paths[count] != NULL);

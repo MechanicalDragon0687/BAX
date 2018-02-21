@@ -21,8 +21,10 @@ void PXI_Reset(void)
     PXI_SendSync(PXI_INITIAL_SYNC_SEND);
     while(PXI_RecvSync() != PXI_INITIAL_SYNC_RECV);
 
-    // Enable SYNC interrupt by default
+    // Enable SYNC and RECV NOT EMPTY interrupts by default
     REG_PXI_SYNC_CNT = PXI_SYNC_IRQ_ENABLE;
+    REG_PXI_CNT |= PXI_RECV_FIFO_NEMPTY_IRQ;
+    PXI_SendSync(0);
     return;
 }
 

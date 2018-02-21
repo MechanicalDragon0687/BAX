@@ -4,7 +4,6 @@ endif
 
 include $(DEVKITARM)/base_tools
 
-OUTDIR  := "$(shell pwd)/output"
 COMMON  := "$(shell pwd)/common"
 RELDIR  := "$(shell pwd)/release"
 RELFILE := $(RELDIR).zip
@@ -26,7 +25,7 @@ all: $(FIRM)
 clean:
 	@$(foreach elf, $(ELF), \
 		$(MAKE) --no-print-directory -C $$(dirname $(elf)) clean;)
-	@rm -rf $(FIRM) $(OUTDIR) $(RELDIR) $(RELFILE)
+	@rm -rf $(FIRM) $(RELDIR) $(RELFILE)
 
 %.elf: .FORCE
 	@echo "Building $@"
