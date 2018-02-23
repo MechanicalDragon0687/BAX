@@ -25,13 +25,14 @@ typedef struct {
 void FS_Init(void);
 void FS_Stop(void);
 
+bool     FS_FileExists(const char *path);
 FS_File *FS_FileOpen(const char *path);
 void     FS_FileClose(FS_File *f);
 char    *FS_FilePath(FS_File *f);
 void     FS_FileRead(FS_File *f, void *b, size_t l);
 size_t   FS_FileSize(const FS_File *f);
-size_t   FS_FileGetPos(const FS_File *f);
-void     FS_FileSetPos(FS_File *f, size_t p);
+size_t   FS_FileTell(const FS_File *f);
+void     FS_FileSeek(FS_File *f, size_t p);
 
 
 FS_Dir *FS_DirOpen(const char *path);

@@ -28,7 +28,7 @@ int BAX_Validate(FS_File *bax_f)
 
     assert(bax_f != NULL);
 
-    FS_FileSetPos(bax_f, 0L);
+    FS_FileSeek(bax_f, 0L);
     bax_s = FS_FileSize(bax_f);
 
     if (!bound(bax_s, sizeof(BAX), ANIM_MAX_SIZE))
@@ -56,7 +56,7 @@ int BAX_Validate(FS_File *bax_f)
 
     bax_data_pos = sizeof(BAX) + (sizeof(BAX_FData) * hdr.frame_n);
     for (u32 i = 0; i < hdr.frame_n; i++) {
-        FS_FileSetPos(bax_f, sizeof(BAX) + (sizeof(BAX_FData) * i));
+        FS_FileSeek(bax_f, sizeof(BAX) + (sizeof(BAX_FData) * i));
         FS_FileRead(bax_f, &fdata, sizeof(BAX_FData));
         if (!bound(BAX_FDataPos(&fdata), bax_data_pos, bax_s))
             return ANIM_ERR_INFO_OFF;
@@ -77,6 +77,9 @@ static void ANIM_VBlankISR(u32 irqn)
     static int ANIM_VBlankISRCounter = IRQ_VBLANK_FREQ;
     void *frame;
     size_t fsz;
+
+    if (ANIM_PlaybackState < 0)
+        return;
 
     HID_Scan();
     if (HID_Down() & ANIM_PlaybackSkipKey) {
@@ -113,7 +116,7 @@ static inline void *ANIM_AttemptAlloc(size_t sz, size_t a, size_t n) {
         CPU_LeaveCritical(cs);
 
         if (ret != NULL) break;
-        if ((n_--) == 0) BUG(BUGSTR("ANIM_ALLOC"), 1, BUGINT(sz, n), 2);
+        if ((n_--) == 0) BUG(BUGSTR("ANIM ALLOC"), 1, BUGINT(sz, n), 2);
         CPU_WFI();
     }
     return ret;
@@ -134,17 +137,17 @@ void BAX_Play(FS_File *bax_f, u32 skip_hid)
     // Validate BAX header and frames
     res = BAX_Validate(bax_f);
     if (res != ANIM_OK)
-        BUG(BUGSTR("ANIM_VALIDATE", FS_FilePath(bax_f)), 2, BUGINT(res, FS_FileSize(bax_f)), 2);
+        BUG(BUGSTR("ANIM VALIDATE", FS_FilePath(bax_f)), 2, BUGINT(res, FS_FileSize(bax_f)), 2);
 
 
     // Read BAX header and frames (again...)
-    FS_FileSetPos(bax_f, 0L);
+    FS_FileSeek(bax_f, 0L);
     FS_FileRead(bax_f, &hdr, sizeof(BAX));
 
     fdata = malloc(sizeof(BAX_FData) * hdr.frame_n);
     assert(fdata != NULL);
 
-    FS_FileSetPos(bax_f, sizeof(BAX));
+    FS_FileSeek(bax_f, sizeof(BAX));
     FS_FileRead(bax_f, fdata, sizeof(BAX_FData) * hdr.frame_n);
 
 
@@ -186,12 +189,12 @@ void BAX_Play(FS_File *bax_f, u32 skip_hid)
 
         framebuffer = ANIM_AttemptAlloc(fsz, GX_TEXTURE_ALIGNMENT, MAX_ALLOC_ATTEMPTS);
 
-        FS_FileSetPos(bax_f, BAX_FDataPos(&fdata[frame]));
+        FS_FileSeek(bax_f, BAX_FDataPos(&fdata[frame]));
         FS_FileRead(bax_f, compfb, compsz);
 
         res = BAX_DecompressFrame((char*)framebuffer, fsz, (const char*)compfb, compsz);
         if ((u32)res != fsz)
-            BUG(BUGSTR("ANIM_DECOMPRESS", FS_FilePath(bax_f)), 2, BUGINT(frame, res, fsz, compsz), 4);
+            BUG(BUGSTR("ANIM DECOMPRESS", FS_FilePath(bax_f)), 2, BUGINT(frame, res, fsz, compsz), 4);
 
         // Perform delta decoding
         BAX_DeltaDecode(backbuffer, framebuffer, fsz);

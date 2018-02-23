@@ -24,6 +24,17 @@ void FS_Stop(void)
 
 
 /* File operations */
+bool FS_FileExists(const char *path)
+{
+    FIL fp;
+    FRESULT res;
+
+    assert(path != NULL);
+    res = f_open(&fp, path, FA_READ);
+    f_close(&fp);
+    return (res == FR_OK);
+}
+
 FS_File *FS_FileOpen(const char *path)
 {
     size_t pathlen;
@@ -81,13 +92,13 @@ size_t FS_FileSize(const FS_File *f)
     return f_size(&f->ff);
 }
 
-size_t FS_FileGetPos(const FS_File *f)
+size_t FS_FileTell(const FS_File *f)
 {
     assert(f != NULL);
     return f_tell(&f->ff);
 }
 
-void FS_FileSetPos(FS_File *f, size_t p)
+void FS_FileSeek(FS_File *f, size_t p)
 {
     size_t sz;
     assert(f != NULL);
@@ -95,7 +106,7 @@ void FS_FileSetPos(FS_File *f, size_t p)
     sz = FS_FileSize(f);
 
     if (p > sz)
-        BUG(BUGSTR("FS_FILESETPOS", f->path), 2, BUGINT(sz, p), 2);
+        BUG(BUGSTR("FS_FILESEEK", f->path), 2, BUGINT(sz, p), 2);
 
     f_lseek(&f->ff, p);
 }
@@ -133,7 +144,6 @@ FS_Dir *FS_DirOpen(const char *path)
 
 static void FS_DirSearchClear(FS_Dir *d)
 {
-    assert(d != NULL);
     if (d->srchn != 0) {
         for (size_t i = 0; i < d->srchn; i++)
             free(d->srch[i]);

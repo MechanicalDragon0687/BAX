@@ -17,7 +17,7 @@ Download the BAX FIRM from the release archive, and set up your bootloader so th
 
 Copy any BAX animation files to `sdmc:/bax/` ("bax" folder on the SD card). BAX will randomly choose one animation from all animations found in the folder.
 
-Put the FIRM to be loaded afterwards (CFW, secondary bootloader, Linux, etc) on `sdmc:/bax/boot.firm`. Compatibility appears to be perfect, although further testing is required.
+Put the FIRM to be loaded afterwards (CFW, secondary bootloader, Linux, etc) on `sdmc:/bax/boot.firm`. If for some reason you want to keep the FIRM elsewhere (easier to maintain/update, etc) you can also create a file `sdmc:/bax/boot.txt` that contains the plaintext ASCII path to the FIRM (f.e. `boot.txt` can contain the text `"sdmc:/firm/cfw.firm"` without the quotes). Compatibility appears to be perfect, although further testing is required.
 
 If you want to skip the animation playback, press `X` during playback. The animation will halt until you let go, giving you time to press any other necessary buttons until the next FIRM is loaded and executed.
 

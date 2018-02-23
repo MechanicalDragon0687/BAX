@@ -14,20 +14,19 @@ Those not marked in bold are bugs arising from either user error or invalid BAX 
 | **PREFETCH ABORT**  | Registers                      | Attempted to execute an instruction from an invalid address |
 | **DATA ABORT**      | Registers                      | Attempted to access data on an invalid address |
 
-| **OLDARM_PANIC**    | Registers                      | The ARM9 processor suffered an unrecoverable error |
+| **OLDARM PANIC**    | Registers                      | The ARM9 processor suffered an unrecoverable error |
 
-| **PXICMD_HANDLER**  | Command ID and argcount        | Received an unknown PXI command |
+| **PXICMD HANDLER**  | Command ID and argcount        | Received an unknown PXI command |
 
-| **FS_INIT**         | FF error code                  | Failed to initialize FatFS |
-| FS_FILEOPEN         | Path and FF error code         | Failed to open a file |
+| **FS_INIT**         | FatFS error code               | Failed to initialize FatFS |
+| FS_FILEOPEN         | Path and FatFS error code      | Failed to open a file |
 | FS_FILEREAD         | Path and data lengths          | Failed to read a file |
-| FS_FILESETPOS       | Path, size and position        | Failed to seek a file |
-| FS_DIROPEN          | Path and FF error code         | Failed to open a directory |
+| FS_FILESEEK         | Path, size and position        | Failed to seek a file |
+| FS_DIROPEN          | Path and FatFS error code      | Failed to open a directory |
 
-| **ANIM_ALLOC**      | Size and attempt count         | Failed to allocate space in the heap |
-| ANIM_VALIDATE       | Error code and size            | Attempted to load an invalid animation |
-| **ANIM_DECOMPRESS** | Path, index, result and sizes  | Failed to decompress an animation frame |
+| **ANIM ALLOC**      | Size and attempt count         | Failed to allocate space in the heap |
+| ANIM VALIDATE       | Error code and size            | Attempted to load an invalid animation |
+| **ANIM DECOMPRESS** | Path, index, result and sizes  | Failed to decompress an animation frame |
 
-| FIRM_TOO_LARGE      | FIRM size                      | The FIRM file is too large |
-| **FIRM_ALLOC**      | FIRM size                      | Couldn't allocate enough memory for the FIRM |
-| **FIRM_VALIDATE**   | FIRM size and error code       | Tried to boot an invalid FIRM |
+| FIRM TOO LARGE      | FIRM size                      | The FIRM file is too large |
+| **FIRM VALIDATE**   | FIRM size and error code       | Tried to boot an invalid FIRM |
