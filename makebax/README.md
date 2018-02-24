@@ -44,3 +44,5 @@ Requires a C++14 compatible compiler with thread support, `OpenMP`, `lz4` and `l
 Although it should be compatible with big endian platforms (PowerPC, Microblaze, etc) this has not been properly tested yet. Please report any issues regarding compilation/usage on big endian platforms.
 
 For best performance, the block size should be an integer multiple of the number of available hardware threads (logical processors). This is why the default block size is 48: it's a multiple of the most common PO2 and MO6 multithread setups.
+
+BAX files should not surpass the 32MiB mark. `makebax` doesn't enforce this limit, but `BAX` does.

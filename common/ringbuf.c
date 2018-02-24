@@ -74,4 +74,3 @@ bool RingBuffer_Fetch(RingBuffer *r, void **d, size_t *l)
 
     return ret;
 }
-

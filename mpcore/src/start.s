@@ -196,7 +196,7 @@ ASM_FUNCTION __start
 
 
     @ Enable interrupts
-    cpsie i
+    cpsie if
 
 
     @ Branch to C code

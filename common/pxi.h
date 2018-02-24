@@ -91,8 +91,8 @@ static inline void PXI_Send(u32 w) {
     REG_PXI_SEND = w;
 }
 
-int  PXI_RecvData(u32 *w, int wc);
-int  PXI_SendData(const u32 *w, int wc);
+int PXI_RecvData(u32 *w, int wc);
+int PXI_SendData(const u32 *w, int wc);
 #endif // __ASSMBLER__
 
 #endif // PXI_H

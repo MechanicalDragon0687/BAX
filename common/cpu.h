@@ -8,9 +8,6 @@
 
 typedef u32 CritStat;
 
-#define CRITSTAT_UNLOCKED (0)
-#define CRITSTAT_LOCKED   (SR_NOIRQ)
-
 static inline u32 CPU_GetCPSR(void) {
     u32 cpsr;
     asmv("mrs %0, cpsr\n\t"
@@ -25,12 +22,12 @@ static inline void CPU_SetCPSR(u32 cpsr) {
 
 static inline CritStat CPU_EnterCritical(void) {
     CritStat stat = CPU_GetCPSR();
-    CPU_SetCPSR(stat | SR_NOIRQ);
-    return stat & SR_NOIRQ;
+    CPU_SetCPSR(stat | SR_NOINT);
+    return stat & SR_NOINT;
 }
 
 static inline void CPU_LeaveCritical(CritStat stat) {
-    CPU_SetCPSR(stat | (CPU_GetCPSR() & ~SR_NOIRQ));
+    CPU_SetCPSR(stat | (CPU_GetCPSR() & ~SR_NOINT));
 }
 
 static inline u32 CPU_CoreID(void) {

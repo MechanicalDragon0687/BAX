@@ -2,8 +2,6 @@
 #include <mmap.h>
 #include <interrupt.h>
 
-@ TODO: implement tiny pages to map this to VA zero
-
 .global vectors_s
 .align 2
 .arm

@@ -2,33 +2,37 @@
 
 #include "hw/hid.h"
 
-static u32 KPrev, KCur;
+static u32 KDown, KHeld, KUp;
 
 void HID_Reset(void)
 {
-    KPrev = 0;
-    KCur = 0;
+    KDown = 0;
+    KHeld = 0;
+    KUp = 0;
     return;
 }
 
 void HID_Scan(void)
 {
-    KPrev = KCur;
-    KCur = ~REG_HID_BASE & HID_ANY;
+    u32 k = ~REG_HID_BASE & HID_ANY;
+
+    KUp   = KHeld & ~k;
+    KHeld = KDown & k;
+    KDown = k;
     return;
 }
 
 u32 HID_Down(void)
 {
-    return KCur;
+    return KDown;
 }
 
 u32 HID_Held(void)
 {
-    return KPrev & KCur;
+    return KHeld;
 }
 
 u32 HID_Up(void)
 {
-    return KPrev & ~KCur;
+    return KUp;
 }

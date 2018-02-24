@@ -1,4 +1,6 @@
 #include <common.h>
+
+#include "hw/sha.h"
 #include "lib/firm/firm.h"
 
 static const u8  FIRM_Signature[4] = {'F', 'I', 'R', 'M'};
@@ -12,6 +14,7 @@ static const u32 FIRM_MemWhiteList[][2] =
 
 int FIRM_Validate(FIRM *f, size_t sz)
 {
+    u8 *fv = (u8*)f;
     FSect *s;
     bool OldEntryFound = false;
 
@@ -25,7 +28,7 @@ int FIRM_Validate(FIRM *f, size_t sz)
 
     for (u32 i = 0; i < FIRM_SECTIONS; i++) {
         s = &f->Section[i];
-        u32 addr;
+        u32 addr, sha_hash[SHA_HashSizeWord(SHA_MODE_256)];
 
         if (s->Length == 0)
             continue;
@@ -52,11 +55,12 @@ int FIRM_Validate(FIRM *f, size_t sz)
                 FIRM_MemWhiteList[addr][1]))
                 break;
         }
-
         if (addr == FIRM_MemWhiteListRegions)
             return FIRM_SECT_LDADDR;
 
-        // TODO: SHA check
+        SHA_CalculateHash((u32*)(fv + s->Offset), s->Length, SHA_MODE_256, sha_hash);
+        if (memcmp(s->SecureHash, sha_hash, sizeof(s->SecureHash)) != 0)
+            return FIRM_SECT_HASH;
     }
 
     if (OldEntryFound == false)

@@ -103,7 +103,7 @@ CRTError:
         blo 1b
 
     @ ad infinitum
-    msr cpsr_c, #(SR_NOINT | SR_SVC)
+    msr cpsr_c, #(SR_SVC | SR_NOINT)
     mov r0, #0
     2:
         mcr p15, 0, r0, c7, c0, 4

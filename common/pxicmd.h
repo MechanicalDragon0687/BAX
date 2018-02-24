@@ -5,19 +5,19 @@
 #include <pxi.h>
 
 #define PXICMD_MAX_ARGC            (16)
-#define PXICMD_MAX_CMD_ID          (255)
+#define PXICMD_MAX_CMD_ID          (16)
 
 // ARM11 -> ARM9
-#define PXICMD_ARM9_SDMMC_INIT     (1)
-#define PXICMD_ARM9_SD_READSECTORS (2)
-#define PXICMD_ARM9_FIRMVERIFY     (3)
-#define PXICMD_ARM9_FIRMBOOT       (4)
-#define PXICMD_ARM9_HALT           (5)
-#define PXICMD_ARM9_BOOTENV        (6)
-#define PXICMD_ARM9_RANDOM         (7)
+#define PXICMD_ARM9_SDMMC_INIT     (0)
+#define PXICMD_ARM9_SD_READSECTORS (1)
+#define PXICMD_ARM9_FIRMVERIFY     (2)
+#define PXICMD_ARM9_FIRMBOOT       (3)
+#define PXICMD_ARM9_HALT           (4)
+#define PXICMD_ARM9_BOOTENV        (5)
+#define PXICMD_ARM9_RANDOM         (6)
 
 // ARM9 -> ARM11
-#define PXICMD_ARM11_PANIC         (1)
+#define PXICMD_ARM11_PANIC         (0)
 
 
 #ifndef __ASSEMBLER__

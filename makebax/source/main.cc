@@ -125,7 +125,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    // TODO move the very similar code to its own inline subroutine?
     if (blocksize == -1) blocksize = DEF_BLOCKSIZE;
     if (blocksize < MIN_BLOCKSIZE || blocksize > MAX_BLOCKSIZE) {
         cout << "Block size " << blocksize << " is out of bounds - using " << DEF_BLOCKSIZE << " instead.\n";

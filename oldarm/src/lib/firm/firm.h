@@ -38,6 +38,6 @@ typedef struct {
 } FIRM;
 
 int  FIRM_Validate(FIRM *f, size_t sz);
-void FIRM_Boot(FIRM *f, const char *path);
+void __attribute__((noreturn)) FIRM_Boot(void *firm, char *path);
 
 #endif

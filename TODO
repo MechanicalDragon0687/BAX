@@ -1,17 +1,7 @@
 
-ASAP:
-
- - figure out how tf I should integrate locking into newlib's heap thing
-
-
-Mostly done:
-
-- testing, lots of it
-
-
 Planned:
 
-- figure out EMMC + NDMA (dope af, maybe nocash knows?)
+- SMP
 
 - enable N3DS extra cache and FCRAM and higher freq
 
