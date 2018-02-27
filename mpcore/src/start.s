@@ -93,14 +93,6 @@ ASM_FUNCTION __start
 
 
     @ MMU Translation Table setup
-    @ BootROM
-    ldr r3, =(MMU_PAGE_DOMAIN(0) | MMU_MEM_NONCACHEABLE | MMU_AP_RO_NA | MMU_PAGE_SECTION)
-    mov r2, #1 
-    ldr r1, =0x00000000
-    mov r0, r1
-    bl MMU_MapSections
-
-
     @ IO Registers
     ldr r3, =(MMU_PAGE_DOMAIN(0) | MMU_MEM_DEVICE_NONSHARED | MMU_AP_RW_NA | MMU_PAGE_XN | MMU_PAGE_SECTION)
     mov r2, #4
@@ -163,8 +155,9 @@ ASM_FUNCTION __start
     NOP_SLED 4
 
 
-    @ Enable MMU, caches, enable program flow prediction, disable subpages, enable unaligned access
-    ldr r1, =0xC01805
+    @ Enable MMU, caches, enable program flow prediction, disable subpages,
+    @ enable unaligned access, use high exception vector table
+    ldr r1, =0xC03805
     mrc p15, 0, r0, c1, c0, 0
     orr r0, r0, r1
     mcr p15, 0, r0, c1, c0, 0

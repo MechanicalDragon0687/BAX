@@ -19,10 +19,9 @@
 
 | Name    | PA         | VA         | Size  | Attribute                 | AP    | XN    | Usage                   | Notes |
 | :------ | :--------: | :--------: | :---: | :------------------------ | :---: | :---: | :---------------------- | :---: |
-| BootROM | 0x00000000 | 0x00000000 | 1MB   | Non-cacheable             | RO_NA |   n   | Exception router        | None  |
 | MMIO    | 0x10100000 | 0x10100000 | 4MB   | Non-shared device         | RW_NA |   y   | IO                      | None  |
 | PMR     | 0x17E00000 | 0x17E00000 | 1MB   | Non-shared device         | RW_NA |   n   | Internal CPU registers  | None  |
 | VRAM    | 0x18000000 | 0x18000000 | 6MB   | Writethrough, no wr alloc | RW_NA |   y   | Framebuffers            | None  |
 | AXIRAM  | 0x1FF00000 | 0x1FF00000 | 1MB   | Writeback, wr alloc       | RW_NA |   n   | Code, data, BSS, stacks | None  |
 | FCRAM   | 0x20000000 | 0x20000000 | 128MB | Writeback, wr alloc       | RW_NA |   y   | Heap                    | None  |
-| BootROM | 0xFFF00000 | 0xFFF00000 | 1MB   | Non-cacheable             | RO_NA |   n   | BootROM mirror          | None  |
+| BootROM | 0xFFF00000 | 0xFFF00000 | 1MB   | Non-cacheable             | RO_NA |   n   | Exception router        | None  |
