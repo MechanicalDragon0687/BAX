@@ -11,7 +11,7 @@
 #define MAX_ALLOC_ATTEMPTS  (1024)
 
 // Animation header limits/definitions
-#define ANIM_MAX_SIZE   (0x2000000) // 32MB
+#define ANIM_MAX_SIZE   (0x7000000) // 112MiB
 
 #define ANIM_MAGIC      ((u8[]){'B', 'A', 'X'})
 
