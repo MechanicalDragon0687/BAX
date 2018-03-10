@@ -1,4 +1,5 @@
 #include <common.h>
+#include <cache.h>
 #include <cpu.h>
 #include <pxicmd.h>
 
@@ -42,7 +43,7 @@ void FIRM_LoadBoot(void)
     void *firm_dat;
     size_t firm_sz;
     FS_File *firm_fs;
-    char bax_path[FS_MAXPATH];
+    char bax_path[FS_MAXPATH] = {0};
 
     if (FS_FileExists(BAX_FIRMSRCP)) {
         firm_fs = FS_FileOpen(BAX_FIRMSRCP);
@@ -68,6 +69,7 @@ void FIRM_LoadBoot(void)
     FS_FileRead(firm_fs, firm_dat, firm_sz);
     FS_FileClose(firm_fs);
 
+    CACHE_WbDCRange(bax_path, FS_MAXPATH);
     firm_res = FIRM_Launch(firm_dat, firm_sz, bax_path);
 
     free(firm_dat);
