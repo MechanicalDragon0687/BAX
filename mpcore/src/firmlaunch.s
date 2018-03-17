@@ -75,4 +75,6 @@ ASM_FUNCTION FIRM_Launch
     ldr r4, =FIRMSTUB_LOC
     bl PXICMD_SendAsync
 
+    bl IRQ_Reset
+
     bx r4
