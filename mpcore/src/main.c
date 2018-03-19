@@ -63,7 +63,7 @@ void FIRM_LoadBoot(void)
     if (firm_sz > MAX_FIRM_SIZE)
         BUG(BUGSTR("FIRM TOO LARGE"), 1, BUGINT(firm_sz), 1);
 
-    firm_dat = malloc(firm_sz);
+    firm_dat = memalign(0x200, firm_sz);
     assert(firm_dat != NULL);
 
     FS_FileRead(firm_fs, firm_dat, firm_sz);

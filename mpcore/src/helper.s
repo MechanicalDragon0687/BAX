@@ -6,11 +6,11 @@ ASM_FUNCTION BAX_DeltaDecode
     push {r4-r8, lr}
 
     1:
-        subs r2, r2, #16
-        popmi {r4-r8, pc}
-
         ldmia r0, {r3, r4, r5, r6}
         ldmia r1, {r7, r8, r12, lr}
+
+        subs r2, r2, #16
+        popmi {r4-r8, pc}
 
         add r3, r3, r7
         add r4, r4, r8

@@ -21,8 +21,7 @@
 
 static inline void assert(bool cond) {
     if (cond == false) {
-        asmv("bkpt\n\t");
-        __builtin_unreachable();
+        __builtin_trap();
     }
 }
 

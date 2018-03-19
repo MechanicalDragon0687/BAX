@@ -184,7 +184,7 @@ void BAX_Play(FS_File *bax_f, u32 skip_hid)
     CPU_LeaveCritical(cs);
 
     frame = 0;
-    while((frame < hdr.frame_n) && (ANIM_PlaybackState >= 0)) {
+    while((frame < hdr.frame_n) && (ANIM_PlaybackState > 0)) {
         compsz = BAX_FDataCompSZ(&fdata[frame]);
 
         framebuffer = ANIM_AttemptAlloc(fsz, GX_TEXTURE_ALIGNMENT, MAX_ALLOC_ATTEMPTS);
@@ -200,24 +200,27 @@ void BAX_Play(FS_File *bax_f, u32 skip_hid)
         BAX_DeltaDecode(backbuffer, framebuffer, fsz);
 
         CACHE_WbDCRange(framebuffer, fsz);
-        while(RingBuffer_Store(&FrameRB, framebuffer, fsz) == false) CPU_WFI();
+        while(RingBuffer_Store(&FrameRB, framebuffer, fsz) == false) {
+            if (ANIM_PlaybackState < 0) {
+                free(framebuffer);
+                break;
+            } else {
+                CPU_WFI();
+            }
+        }
         frame++;
     }
 
     // If the animation was halted, drain the buffer
     cs = CPU_EnterCritical();
-    if (ANIM_PlaybackState < 0) {
-        void *b;
-        while(RingBuffer_Fetch(&FrameRB, &b, NULL) == true) {
-            free(b);
-        }
-    } else {
+    if (ANIM_PlaybackState > 0)
         ANIM_PlaybackState = 0;
-    }
     CPU_LeaveCritical(cs);
 
     // Wait until it's done playing
-    while(RingBuffer_Count(&FrameRB) > 0) CPU_WFI();
+    while((RingBuffer_Count(&FrameRB) > 0) && (ANIM_PlaybackState == 0)) {
+        CPU_WFI();
+    }
 
     // Disable VBlank interrupt
     // Deallocate used memory
@@ -226,6 +229,12 @@ void BAX_Play(FS_File *bax_f, u32 skip_hid)
     free(fdata);
     free(compfb);
     free(backbuffer);
+
+    while(RingBuffer_Count(&FrameRB) > 0) {
+        void *b;
+        RingBuffer_Fetch(&FrameRB, &b, NULL);
+        free(b);
+    }
     RingBuffer_Destroy(&FrameRB);
     CPU_LeaveCritical(cs);
     return;
