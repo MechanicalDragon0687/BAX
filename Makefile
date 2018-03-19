@@ -32,12 +32,13 @@ clean:
 	@$(MAKE) --no-print-directory -C $(@D)
 
 $(FIRM): $(ELF)
-	firmtool build $@ -i -D $(ELF) -C NDMA XDMA
+	@echo "Building $@"
+	@firmtool build $@ -i -D $(ELF) -C NDMA XDMA
 
-release: $(ELF) $(FIRM)
+release: $(FIRM)
 	@mkdir -p $(RELDIR)
-	@cp -av $^ $(RELDIR)
-	@cp -av README.md $(RELDIR)
-	@zip -r $(RELFILE) $(RELDIR)
+	@cp -a $^ $(RELDIR)
+	@cp -a README.md $(RELDIR)
+	@zip -jr $(RELFILE) $(RELDIR)
 
 .FORCE:
