@@ -6,6 +6,8 @@ release
 
 # Leftover data
 *.rgb
+*.mp4
+*.mkv
 *.bax
 *.ivf
 

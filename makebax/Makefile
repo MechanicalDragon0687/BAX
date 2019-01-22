@@ -1,7 +1,7 @@
 TARGET  := makebax
 
-CXXFLAGS := -std=c++11 -O2 -Wall -Wextra -fopenmp
-LDFLAGS  := -lpthread -lgomp -llz4 -lvpx
+CXXFLAGS := -std=c++1z -O2 -Wall -Wextra -fopenmp
+LDFLAGS  := -lpthread -lgomp -llz4 -lopencv_core -lopencv_videoio
 
 ifeq ($(OS),Windows_NT)
 	CFLAGS  := $(CFLAGS) -mno-ms-bitfields
@@ -9,9 +9,9 @@ ifeq ($(OS),Windows_NT)
 	TARGET  := $(TARGET).exe
 endif
 
-OBJDIR  := build
-SRCDIR  := source
-_OBJS   := bax.o main.o ivf.o
+OBJDIR  := bin
+SRCDIR  := src
+_OBJS   := bax.o compress.o main.o raw.o
 OBJS    := $(patsubst %,$(OBJDIR)/%,$(_OBJS))
 
 $(TARGET): $(OBJS)
