@@ -10,7 +10,7 @@ namespace RAW {
 	{
 		this->cap = new VideoCapture(filename);
 		if (!this->cap->isOpened())
-			throw std::runtime_error("failed to open video file");
+			throw std::runtime_error("failed to open video file \"" + filename + "\"");
 
 		this->rate = this->cap->get(CAP_PROP_FPS);
 		this->width = this->cap->get(CAP_PROP_FRAME_WIDTH);
