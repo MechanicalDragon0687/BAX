@@ -39,6 +39,5 @@ release: $(FIRM)
 	@mkdir -p $(RELDIR)
 	@cp -a $^ $(RELDIR)
 	@cp -a README.md $(RELDIR)
-	@zip -jr $(RELFILE) $(RELDIR)
 
 .FORCE:

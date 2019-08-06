@@ -1,4 +1,5 @@
-# BAX
+# BAX - By [Wolfram](https://github.com/Wolfvak)
+Forked by [Mechanical Dragon](https://github.com/MechanicalDragon0687)
 ###### Successor to BootAnim9
 
 ### What is this?

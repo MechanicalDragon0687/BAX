@@ -31,7 +31,7 @@ static inline void assert(bool cond) {
 #define BAX_FILE ".bax"
 
 #define BAX_FIRMSRCP BAX_PATH"/boot.txt"
-#define BAX_FIRMFILE BAX_PATH"/boot.firm"
+#define BAX_FIRMFILE "sdmc:/boot.firm"
 
 #endif // __ASSEMBLER__
 
