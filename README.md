@@ -1,5 +1,7 @@
-# BAX - By [Wolfram](https://github.com/Wolfvak) [Original BAX](https://gitlab.com/Wolfvak/BAX)
-Forked by [Mechanical Dragon](https://github.com/MechanicalDragon0687)
+# BAX - By [Wolfram](https://github.com/Wolfvak) 
+  * [Original BAX](https://gitlab.com/Wolfvak/BAX)
+### Forked by [Mechanical Dragon](https://github.com/MechanicalDragon0687)
+
 ###### Successor to BootAnim9
 
 ### What is this?
