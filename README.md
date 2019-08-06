@@ -14,11 +14,13 @@ Please note that while it's designed to boot another program, it does _not_ allo
 
 ### How do I use it?
 
-Download the BAX FIRM from the release archive, and set up your bootloader so that it's the first thing that gets loaded (or at least as early as possible).
+[See here](https://github.com/MechanicalDragon0687/BaxTools/wiki)
+
+Download the BAX FIRM from the release archive, and set up your bootloader so that it's the first thing that gets loaded (or at least as early as possible). 
 
 Copy any BAX animation files to `sdmc:/bax/` ("bax" folder on the SD card). BAX will randomly choose one animation from all animations found in the folder.
 
-Put the FIRM to be loaded afterwards (CFW, secondary bootloader, Linux, etc) on `sdmc:/bax/boot.firm`. If for some reason you want to keep the FIRM elsewhere (easier to maintain/update, etc) you can also create a file `sdmc:/bax/boot.txt` that contains the plaintext ASCII path to the FIRM (f.e. `boot.txt` can contain the text `"sdmc:/firm/cfw.firm"` without the quotes). Compatibility appears to be perfect, although further testing is required.
+Put the FIRM to be loaded afterwards (CFW, secondary bootloader, Linux, etc) on `sdmc:/boot.firm`. If for some reason you want to keep the FIRM elsewhere (easier to maintain/update, etc) you can also create a file `sdmc:/bax/boot.txt` that contains the plaintext ASCII path to the FIRM (f.e. `boot.txt` can contain the text `"sdmc:/firm/cfw.firm"` without the quotes). Compatibility appears to be perfect, although further testing is required.
 
 If you want to skip the animation playback, press `X` during playback. The animation will halt until you let go, giving you time to press any other necessary buttons until the next FIRM is loaded and executed.
 
@@ -34,31 +36,7 @@ If you want to skip the animation playback, press `X` during playback. The anima
 
 ### How do I create my own animations?
 
-Read `/makebax/README.md`.
-
-
-
-#### Example setups:
-
-B9S:
-
- - boot9strap installed on FIRM0.
- - BAX in `sdmc:/boot.firm`.
- - Luma3DS in `sdmc:/bax/boot.firm`.
- - Other FIRMs in `sdmc:/luma/payloads`.
-
-
-FB3DS:
-
- - fastboot3DS installed on FIRM0.
- - BAX in `sdmc:/firm/bax.firm` (with fastboot3DS default bootslot pointing to this).
- - Rei-Six in `sdmc:/bax/boot.firm`.
- - Other FIRMs in `sdmc:/firm`, selectable through fastboot3DS if desired.
-
-
-These are only examples, you can mix and match as you wish - the only requirement is to have BAX somewhere in the boot process, preferably as early as possible.
-
-
+[See here](https://github.com/MechanicalDragon0687/BaxTools/wiki)
 
 ### I get a "BUG!" thing, some text and a weird error code! What do I do?
 
